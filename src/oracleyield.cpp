@@ -113,7 +113,7 @@ void oracleyield::update_global_snapshots(snapshot report){
 }
 
 //attempt to record all values for a given snapshot
-//TODO : benchmark and calculate limits. Possibly need refactor to be batchable 
+//TODO : benchmark and calculate limits. Possibly need refactor to be batchable
 ACTION oracleyield::stamp(){
 
    require_auth(_self);
@@ -134,6 +134,8 @@ ACTION oracleyield::stamp(){
       //if the protocol has been approved for rewards
       if (p_itr->approved) {
 
+         oracleyield::tvl_item tvli;
+
          auto rex_itr = _rexbaltable.find(p_itr->contract.value);
 
          asset rex_qty = {0, SYSTEM_TOKEN_SYMBOL}; //fetch REX balance
@@ -147,16 +149,23 @@ ACTION oracleyield::stamp(){
 
          print("rex_qty : ", rex_qty, "\n");
          print("eos_qty : ", eos_qty, "\n");
-         print("usdt_qty : ", usdt_qty, "\n"); 
+         print("usdt_qty : ", usdt_qty, "\n");
+
+         eos_qty+=rex_qty;
 
          //add all balances
-         asset total = rex_qty + eos_qty;
+         asset total = eos_qty;
 
          total+= divide_assets(usdt_qty, report.eos_usd_rate, SYSTEM_TOKEN_SYMBOL) ; //convert USDT to EOS
 
          print("total value in EOS : ", total, "\n"); 
 
-         report.tvl_items[p_itr->contract] = total;
+         tvli.assets.push_back(eos_qty);
+         tvli.assets.push_back(usdt_qty);
+         
+         tvli.total_in_eos = total;
+         
+         report.tvl_items[p_itr->contract] = tvli;
          
       }
 

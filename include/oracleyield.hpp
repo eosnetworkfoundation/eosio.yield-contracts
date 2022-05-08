@@ -71,7 +71,7 @@ CONTRACT oracleyield : public contract {
          indexed_by<"timestamp"_n, const_mem_fun<delphi_datapoint, uint64_t, &delphi_datapoint::by_timestamp>>> delphipoints;
 
 
-      //eosio.yield tier structure
+/*      //eosio.yield tier structure
       struct tier {
 
         uint8_t number;
@@ -81,7 +81,7 @@ CONTRACT oracleyield : public contract {
 
         uint64_t primary_key()const { return number; }
 
-      };
+      };*/
 
       //eosio.yield protocol structure
       struct protocol {
@@ -89,7 +89,7 @@ CONTRACT oracleyield : public contract {
          name contract;
          name beneficiary;
 
-         tier current_tier;
+         //tier current_tier;
 
          time_point last_claim;
 
@@ -100,15 +100,22 @@ CONTRACT oracleyield : public contract {
       };
       typedef eosio::multi_index< "protocols"_n, protocol> protocols;
 
-      //INTERNAL STRUCTURES
+      //INTERNAL STRUCTURES 
 
-      TABLE snapshot {
+      struct tvl_item {
+        
+        std::vector<asset> assets;
+        asset total_in_eos ;
+
+      };
+
+      TABLE snapshot {  
 
          time_point timestamp; //timestamp of the snapshot
 
          asset eos_usd_rate; //measured EOS/USD rate at that snapshot time
 
-         std::map<name, asset> tvl_items;
+         std::map<name, tvl_item> tvl_items;
 
          uint64_t primary_key()const { return timestamp.sec_since_epoch(); }
 
