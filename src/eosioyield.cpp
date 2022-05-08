@@ -54,10 +54,6 @@ asset eosioyield::get_oracle_tvl(name contract ){
    int d1 = std::distance(p1_itr, p2_itr);
    int d2 = std::distance(p2_itr, p3_itr);
    int d3 = std::distance(p3_itr, _snapshots.end());
-
-   int f1 = 0;
-   int f2 = 0;
-   int f3 = 0;
    
    double avg_p1 = 0.0;
    double avg_p2 = 0.0;
@@ -74,40 +70,52 @@ asset eosioyield::get_oracle_tvl(name contract ){
    while (p1_itr!=p2_itr){
       //print("period 1 : ", p1_itr->timestamp.sec_since_epoch(), "\n" );
 
-      double tvl = asset_to_double(p1_itr->tvl_items.find(contract)->second.total_in_eos);
+      auto tvl_itr = p1_itr->tvl_items.find(contract);
 
+      double tvl = 0.0;
+
+      if ( tvl_itr!=p1_itr->tvl_items.end()) asset_to_double(tvl_itr->second.total_in_eos);
+      
       //print("  tvl : ", tvl ,"\n");
 
-      if (tvl==0.0) f1++;
+      //if (tvl==0.0) f1++;
       avg_p1+=tvl;
       p1_itr++;
    }
    while (p2_itr!=p3_itr){
       //print("period 2 : ", p2_itr->timestamp.sec_since_epoch(), "\n" );
 
-      double tvl = asset_to_double(p2_itr->tvl_items.find(contract)->second.total_in_eos);
+      auto tvl_itr = p2_itr->tvl_items.find(contract);
 
+      double tvl = = 0.0;
+      
+      if ( tvl_itr!=p2_itr->tvl_items.end()) asset_to_double(tvl_itr.total_in_eos);
+      
       //print("  tvl : ", tvl ,"\n");
 
-      if (tvl==0.0) f2++;
+      //if (tvl==0.0) f2++;
       avg_p2+=tvl;
       p2_itr++;
    }
    while (p3_itr!=_snapshots.end()){
       //print("period 3 : ", p3_itr->timestamp.sec_since_epoch(), "\n" );
 
-      double tvl = asset_to_double(p3_itr->tvl_items.find(contract)->second.total_in_eos);
+      auto tvl_itr = p3_itr->tvl_items.find(contract);
 
+      double tvl = = 0.0;
+
+      if ( tvl_itr!=p3_itr->tvl_items.end()) asset_to_double(tvl_itr.total_in_eos);
+      
       //print("  tvl : ", tvl ,"\n");
 
-      if (tvl==0.0) f3++;
+      //if (tvl==0.0) f3++;
       avg_p3+=tvl;
       p3_itr++;
    }
 
-   avg_p1 /= (d1-f1);
-   avg_p2 /= (d2-f2);
-   avg_p3 /= (d3-f3);
+   avg_p1 /= d1;
+   avg_p2 /= d2;
+   avg_p3 /= d3;
 
    //print("avg_p1 : ", avg_p1 ,"\n");
    //print("avg_p2 : ", avg_p2 ,"\n");
@@ -222,7 +230,6 @@ ACTION eosioyield::editprotocol( name contract, name beneficiary){
 ACTION eosioyield::approve( name contract){
 
    //print("approve\n");
-
 
    require_auth(_self);
 

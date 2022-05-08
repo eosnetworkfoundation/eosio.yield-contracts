@@ -24,6 +24,7 @@ CONTRACT eosioyield : public contract {
       struct tvl_item {
         
         std::vector<asset> assets;
+        asset eos_in_rex ;
         asset total_in_eos ;
 
       };
