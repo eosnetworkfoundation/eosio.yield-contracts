@@ -137,7 +137,7 @@ private :
       asset get_oracle_tvl(name contract);
       tier get_tier_from_tvl(asset tvl );
       asset get_contract_balance();
-      asset calculate_incentize_reward(asset tvl);
+      asset calculate_incentive_reward(asset tvl);
 
      double asset_to_double(asset a);
       

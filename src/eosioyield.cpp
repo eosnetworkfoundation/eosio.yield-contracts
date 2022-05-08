@@ -140,9 +140,9 @@ asset eosioyield::get_contract_balance(){
 }
 
 
-asset eosioyield::calculate_incentize_reward(asset tvl){
+asset eosioyield::calculate_incentive_reward(asset tvl){
 
-   print("calculate_incentize_reward\n");
+   print("calculate_incentive_reward\n");
 
    double d_quantity = (double)(tvl.amount);
    double d_multiplier = pow(10, (double)tvl.symbol.precision());
@@ -292,7 +292,7 @@ ACTION eosioyield::claim(name contract){
    if(new_tier.number == TIER_ZERO.number) return; // if tier is tier zero, no rewards
    
    asset balance = get_contract_balance();
-   asset claim = calculate_incentize_reward(tvl);
+   asset claim = calculate_incentive_reward(tvl);
 
    print("eosio.yield balance ", balance, "\n");
    print("claim ", claim, "\n");
