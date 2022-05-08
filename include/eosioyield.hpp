@@ -21,13 +21,20 @@ CONTRACT eosioyield : public contract {
       };
       typedef eosio::multi_index< "accounts"_n, account > accounts;
 
+      struct tvl_item {
+        
+        std::vector<asset> assets;
+        asset total_in_eos ;
+
+      };
+
       TABLE snapshot {
 
          time_point timestamp; //timestamp of the snapshot
 
          asset eos_usd_rate; //measured EOS/USD rate at that snapshot time
 
-         std::map<name, asset> tvl_items;
+         std::map<name, tvl_item> tvl_items;
 
          uint64_t primary_key()const { return timestamp.sec_since_epoch(); }
 
@@ -36,7 +43,7 @@ CONTRACT eosioyield : public contract {
 
       //INTERNAL STRUCTURES
 
-      TABLE tier {
+/*      TABLE tier {
 
         uint8_t number;
 
@@ -45,14 +52,14 @@ CONTRACT eosioyield : public contract {
 
         uint64_t primary_key()const { return number; }
 
-      };
+      };*/
 
       TABLE protocol {
 
          name contract;
          name beneficiary;
 
-         tier current_tier;
+         //tier current_tier;
 
          time_point last_claim;
 
@@ -70,9 +77,15 @@ CONTRACT eosioyield : public contract {
       const name SYSTEM_TOKEN_CONTRACT = "eosio.token"_n;
       const symbol SYSTEM_TOKEN_SYMBOL = symbol("EOS", 4); 
 
+#ifdef DEBUG
+      const double ANNUAL_YIELD = 0.0005;
+#else 
       const double ANNUAL_YIELD = 0.05;
+#endif
+
       const double DAYS_IN_YEAR = 365.25;
 
+      const asset MIN_REWARD = asset(2000000000, SYSTEM_TOKEN_SYMBOL); //200,000 EOS
       const asset MAX_REWARD = asset(120000000000, SYSTEM_TOKEN_SYMBOL); //12 million EOS
 
 #ifdef DEBUG
@@ -85,7 +98,7 @@ CONTRACT eosioyield : public contract {
 #endif
 
       const uint64_t CLAIM_INTERVAL = ONE_DAY;
-
+/*
       //TVL under 200,000 EOS (or value in EOS for approved assets)
       const tier TIER_ZERO = {0, asset(0, SYSTEM_TOKEN_SYMBOL), asset(2000000000, SYSTEM_TOKEN_SYMBOL)};
 
@@ -105,7 +118,7 @@ CONTRACT eosioyield : public contract {
       const tier TIER_FIVE = {5, asset(60000000000, SYSTEM_TOKEN_SYMBOL), asset(120000000000, SYSTEM_TOKEN_SYMBOL)};
 
       const std::vector<tier> TIERS = {TIER_ZERO, TIER_ONE, TIER_TWO, TIER_THREE, TIER_FOUR, TIER_FIVE};
-
+*/
       //ACTIONS 
 
       ACTION regprotocol(name contract, name beneficiary);
@@ -135,7 +148,7 @@ private :
       //INTERNAL FUNCTIONS DEFINITION
 
       asset get_oracle_tvl(name contract);
-      tier get_tier_from_tvl(asset tvl );
+      //tier get_tier_from_tvl(asset tvl );
       asset get_contract_balance();
       asset calculate_incentive_reward(asset tvl);
 

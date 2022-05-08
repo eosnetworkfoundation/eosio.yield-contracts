@@ -11,7 +11,7 @@ double eosioyield::asset_to_double(asset a){
 
 }
 
-//get the appropriate tier from TVL
+/*//get the appropriate tier from TVL
 eosioyield::tier eosioyield::get_tier_from_tvl(asset tvl ){
 
    print("get_tier_from_tvl\n");
@@ -28,7 +28,7 @@ eosioyield::tier eosioyield::get_tier_from_tvl(asset tvl ){
 
    check(false, "error retrieving TVL"); //should not happen
 
-}
+}*/
 
 //get average tvl recorded by oracle 
 asset eosioyield::get_oracle_tvl(name contract ){
@@ -74,7 +74,7 @@ asset eosioyield::get_oracle_tvl(name contract ){
    while (p1_itr!=p2_itr){
       print("period 1 : ", p1_itr->timestamp.sec_since_epoch(), "\n" );
 
-      double tvl = asset_to_double(p1_itr->tvl_items.find(contract)->second);
+      double tvl = asset_to_double(p1_itr->tvl_items.find(contract)->second.total_in_eos);
 
       print("  tvl : ", tvl ,"\n");
 
@@ -85,7 +85,7 @@ asset eosioyield::get_oracle_tvl(name contract ){
    while (p2_itr!=p3_itr){
       print("period 2 : ", p2_itr->timestamp.sec_since_epoch(), "\n" );
 
-      double tvl = asset_to_double(p2_itr->tvl_items.find(contract)->second);
+      double tvl = asset_to_double(p2_itr->tvl_items.find(contract)->second.total_in_eos);
 
       print("  tvl : ", tvl ,"\n");
 
@@ -96,7 +96,7 @@ asset eosioyield::get_oracle_tvl(name contract ){
    while (p3_itr!=_snapshots.end()){
       print("period 3 : ", p3_itr->timestamp.sec_since_epoch(), "\n" );
 
-      double tvl = asset_to_double(p3_itr->tvl_items.find(contract)->second);
+      double tvl = asset_to_double(p3_itr->tvl_items.find(contract)->second.total_in_eos);
 
       print("  tvl : ", tvl ,"\n");
 
@@ -144,6 +144,9 @@ asset eosioyield::calculate_incentive_reward(asset tvl){
 
    print("calculate_incentive_reward\n");
 
+   if (tvl<MIN_REWARD) return asset{0, SYSTEM_TOKEN_SYMBOL};
+   if (tvl>MAX_REWARD) tvl = MAX_REWARD;
+
    double d_quantity = (double)(tvl.amount);
    double d_multiplier = pow(10, (double)tvl.symbol.precision());
 
@@ -154,8 +157,6 @@ asset eosioyield::calculate_incentive_reward(asset tvl){
    asset value = {0, SYSTEM_TOKEN_SYMBOL};
 
    value.amount = uint64_t((d_reward * d_multiplier)+0.5);
-
-   if (value > MAX_REWARD) value = MAX_REWARD;
 
    return value;
 
@@ -185,7 +186,7 @@ ACTION eosioyield::regprotocol( name contract, name beneficiary){
    _protocols.emplace( get_self(), [&]( auto& p ) {
       p.contract = contract;
       p.beneficiary = beneficiary;
-      p.current_tier = TIER_ZERO;
+      //p.current_tier = TIER_ZERO;
       p.last_claim = time_point(eosio::seconds(0));
       p.approved = false;
    });
@@ -279,17 +280,18 @@ ACTION eosioyield::claim(name contract){
    check(claim_allowed, "can only claim once every 24h");
 
    asset tvl = get_oracle_tvl(contract);
-   tier new_tier = get_tier_from_tvl(tvl);
+   //tier new_tier = get_tier_from_tvl(tvl);
 
    print("tvl ", tvl, "\n");
-   print("new_tier ", new_tier.number, "\n");
+   //print("new_tier ", new_tier.number, "\n");
 
    _protocols.modify( itr, same_payer, [&]( auto& p ) {
-      p.current_tier = new_tier;
+      //p.current_tier = new_tier;
       p.last_claim = current_time_point();
    });
 
-   if(new_tier.number == TIER_ZERO.number) return; // if tier is tier zero, no rewards
+   //TODO : replace by min tvl
+   //if(new_tier.number == TIER_ZERO.number) return; // if tier is tier zero, no rewards
    
    asset balance = get_contract_balance();
    asset claim = calculate_incentive_reward(tvl);
@@ -297,8 +299,8 @@ ACTION eosioyield::claim(name contract){
    print("eosio.yield balance ", balance, "\n");
    print("claim ", claim, "\n");
 
+   check(claim.amount>0, "not elligible for a claim");
    check(balance.amount>= claim.amount, "yield program depleted");
-   check(claim.amount> 0, "claim must be higher than 0");
 
    action act(
      permission_level{_self, "active"_n},
