@@ -46,9 +46,9 @@ asset oracleyield::get_oracle_rate(){
 
    check(dtp_idx.rbegin() != dtp_idx.rend(), "no oracle datapoint available");
 
-   print("dtp_idx.begin()->median ", dtp_idx.begin()->median, "\n");
-   print("dtp_idx.begin()->owner ", dtp_idx.begin()->owner, "\n");
-   print("dtp_idx.begin()->timestamp ", dtp_idx.begin()->timestamp.sec_since_epoch(), "\n");
+   //print("dtp_idx.begin()->median ", dtp_idx.begin()->median, "\n");
+   //print("dtp_idx.begin()->owner ", dtp_idx.begin()->owner, "\n");
+   //print("dtp_idx.begin()->timestamp ", dtp_idx.begin()->timestamp.sec_since_epoch(), "\n");
       
    auto itr = dtp_idx.rbegin();
 
@@ -59,13 +59,13 @@ asset oracleyield::get_oracle_rate(){
 //fetch an account balance on a standard eosio.token contract. Returns 0 if no balance found.
 asset oracleyield::get_contract_balance(name account, std::pair<name, symbol> token){
 
-   print("get_contract_balance\n");
+   //print("get_contract_balance\n");
 
    auto n = token.first;
    auto s = token.second;
 
-   print("n ", n, "\n");
-   print("s ", s, "\n");
+   //print("n ", n, "\n");
+   //print("s ", s, "\n");
 
    accounts a_table(n, account.value);
 
@@ -73,14 +73,14 @@ asset oracleyield::get_contract_balance(name account, std::pair<name, symbol> to
 
    if (itr == a_table.end()) {
 
-      print("not found \n");
+      //print("not found \n");
 
       return asset(0, token.second);
 
    }
    else {
 
-      print("itr->balance ", itr->balance, "\n");
+      //print("itr->balance ", itr->balance, "\n");
 
       return itr->balance;
 
@@ -91,7 +91,7 @@ asset oracleyield::get_contract_balance(name account, std::pair<name, symbol> to
 //updates the list of global snapshots, and deletes any snapshots older than ONE_DAY
 void oracleyield::update_global_snapshots(snapshot report){
 
-   print("update_global_snapshots\n");
+   //print("update_global_snapshots\n");
 
    uint64_t c_ts = current_time_point().sec_since_epoch();
    uint64_t older_than_one_day = c_ts - ONE_DAY;
@@ -102,7 +102,7 @@ void oracleyield::update_global_snapshots(snapshot report){
    //erase old snapshots
    while (itr != end_itr){
 
-      print("erasing old snapshots : ", itr->timestamp.sec_since_epoch(), "\n");
+      //print("erasing old snapshots : ", itr->timestamp.sec_since_epoch(), "\n");
 
       _snapshots.erase(itr++);
 
@@ -129,7 +129,7 @@ ACTION oracleyield::stamp(){
 
    while (p_itr!=_protocols.end()){
 
-      print("protocol : ", p_itr->contract, "\n");
+      //print("protocol : ", p_itr->contract, "\n");
 
       //if the protocol has been approved for rewards
       if (p_itr->approved) {
@@ -147,9 +147,9 @@ ACTION oracleyield::stamp(){
          asset eos_qty = get_contract_balance(p_itr->contract, std::make_pair(SYSTEM_TOKEN_CONTRACT, SYSTEM_TOKEN_SYMBOL));  //get EOS balance
          asset usdt_qty = get_contract_balance(p_itr->contract, std::make_pair(TETHER_TOKEN_CONTRACT, TETHER_TOKEN_SYMBOL)); //get USDT balance
 
-         print("rex_qty : ", rex_qty, "\n");
-         print("eos_qty : ", eos_qty, "\n");
-         print("usdt_qty : ", usdt_qty, "\n");
+         //print("rex_qty : ", rex_qty, "\n");
+         //print("eos_qty : ", eos_qty, "\n");
+         //print("usdt_qty : ", usdt_qty, "\n");
 
          eos_qty+=rex_qty;
 
@@ -158,7 +158,7 @@ ACTION oracleyield::stamp(){
 
          total+= divide_assets(usdt_qty, report.eos_usd_rate, SYSTEM_TOKEN_SYMBOL) ; //convert USDT to EOS
 
-         print("total value in EOS : ", total, "\n"); 
+         //print("total value in EOS : ", total, "\n"); 
 
          tvli.assets.push_back(eos_qty);
          tvli.assets.push_back(usdt_qty);
