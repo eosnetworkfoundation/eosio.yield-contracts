@@ -11,25 +11,6 @@ double eosioyield::asset_to_double(asset a){
 
 }
 
-/*//get the appropriate tier from TVL
-eosioyield::tier eosioyield::get_tier_from_tvl(asset tvl ){
-
-   print("get_tier_from_tvl\n");
-
-   check (tvl.amount>=0, "TVL must be a positive value");
-
-   if (tvl < TIERS[0].max_tvl) return TIERS[0]; //tier zero
-   if (tvl > TIERS[TIERS.size()-1].max_tvl) return TIERS[TIERS.size()-1]; //max tier
-
-   //find correct tier for TVL
-   for (auto &tier : TIERS){  
-     if (tvl >= tier.min_tvl && tvl < tier.max_tvl) return tier;
-   }
-
-   check(false, "error retrieving TVL"); //should not happen
-
-}*/
-
 //get average tvl recorded by oracle 
 asset eosioyield::get_oracle_tvl(name contract ){
 
@@ -62,9 +43,6 @@ asset eosioyield::get_oracle_tvl(name contract ){
    //print("d1 : ", d1 ,"\n");
    //print("d2 : ", d2 ,"\n");
    //print("d3 : ", d3 ,"\n");
-   //print("f1 : ", f1 ,"\n");
-   //print("f2 : ", f2 ,"\n");
-   //print("f3 : ", f3 ,"\n");
 
    //for each slice, calculate average
    while (p1_itr!=p2_itr){
@@ -78,7 +56,6 @@ asset eosioyield::get_oracle_tvl(name contract ){
       
       //print("  tvl : ", tvl ,"\n");
 
-      //if (tvl==0.0) f1++;
       avg_p1+=tvl;
       p1_itr++;
    }
@@ -87,13 +64,12 @@ asset eosioyield::get_oracle_tvl(name contract ){
 
       auto tvl_itr = p2_itr->tvl_items.find(contract);
 
-      double tvl = = 0.0;
+      double tvl = 0.0;
       
-      if ( tvl_itr!=p2_itr->tvl_items.end()) asset_to_double(tvl_itr.total_in_eos);
+      if ( tvl_itr!=p2_itr->tvl_items.end()) asset_to_double(tvl_itr->second.total_in_eos);
       
       //print("  tvl : ", tvl ,"\n");
 
-      //if (tvl==0.0) f2++;
       avg_p2+=tvl;
       p2_itr++;
    }
@@ -102,13 +78,12 @@ asset eosioyield::get_oracle_tvl(name contract ){
 
       auto tvl_itr = p3_itr->tvl_items.find(contract);
 
-      double tvl = = 0.0;
+      double tvl = 0.0;
 
-      if ( tvl_itr!=p3_itr->tvl_items.end()) asset_to_double(tvl_itr.total_in_eos);
+      if ( tvl_itr!=p3_itr->tvl_items.end()) asset_to_double(tvl_itr->second.total_in_eos);
       
       //print("  tvl : ", tvl ,"\n");
 
-      //if (tvl==0.0) f3++;
       avg_p3+=tvl;
       p3_itr++;
    }
@@ -170,7 +145,7 @@ asset eosioyield::calculate_incentive_reward(asset tvl){
 
 }
 
-ACTION eosioyield::regprotocol( name contract, name beneficiary){
+ACTION eosioyield::regprotocol( name contract){
 
    //print("regprotocol\n");
 
@@ -193,7 +168,7 @@ ACTION eosioyield::regprotocol( name contract, name beneficiary){
    
    _protocols.emplace( get_self(), [&]( auto& p ) {
       p.contract = contract;
-      p.beneficiary = beneficiary;
+      //p.beneficiary = beneficiary;
       //p.current_tier = TIER_ZERO;
       p.last_claim = time_point(eosio::seconds(0));
       p.approved = false;
@@ -202,7 +177,7 @@ ACTION eosioyield::regprotocol( name contract, name beneficiary){
 }
 
 //change beneficary
-ACTION eosioyield::editprotocol( name contract, name beneficiary){
+ACTION eosioyield::editprotocol( name contract){
 
    //print("editprotocol\n");
 
@@ -221,7 +196,7 @@ ACTION eosioyield::editprotocol( name contract, name beneficiary){
    check(itr!=_protocols.end(), "protocol not found");
    
    _protocols.modify( itr, same_payer, [&]( auto& p ) {
-      p.beneficiary = beneficiary;
+      //p.beneficiary = beneficiary;
    });
 
 }
@@ -261,7 +236,7 @@ ACTION eosioyield::unapprove( name contract){
 }
 
 //claim rewards (if any)
-ACTION eosioyield::claim(name contract){
+ACTION eosioyield::claim(name contract, name beneficiary){
 
    //print("claim\n");
 
@@ -275,6 +250,8 @@ ACTION eosioyield::claim(name contract){
    require_auth(contract);
 #endif
 
+   if (beneficiary==""_n) beneficiary = contract;
+
    auto itr = _protocols.find(contract.value);
 
    check(itr!=_protocols.end(), "contract not found");
@@ -287,7 +264,6 @@ ACTION eosioyield::claim(name contract){
    check(claim_allowed, "can only claim once every 24h");
 
    asset tvl = get_oracle_tvl(contract);
-   //tier new_tier = get_tier_from_tvl(tvl);
 
    //print("tvl ", tvl, "\n");
    //print("new_tier ", new_tier.number, "\n");
@@ -297,9 +273,6 @@ ACTION eosioyield::claim(name contract){
       p.last_claim = current_time_point();
    });
 
-   //TODO : replace by min tvl
-   //if(new_tier.number == TIER_ZERO.number) return; // if tier is tier zero, no rewards
-   
    asset balance = get_contract_balance();
    asset claim = calculate_incentive_reward(tvl);
 
@@ -312,7 +285,7 @@ ACTION eosioyield::claim(name contract){
    action act(
      permission_level{_self, "active"_n},
      SYSTEM_TOKEN_CONTRACT, "transfer"_n,
-     std::make_tuple(_self, itr->beneficiary, claim, std::string("Yield+ TVL reward") )
+     std::make_tuple(_self, beneficiary, claim, std::string("Yield+ TVL reward") )
    );
    act.send();
 

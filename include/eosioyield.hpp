@@ -24,7 +24,6 @@ CONTRACT eosioyield : public contract {
       struct tvl_item {
         
         std::vector<asset> assets;
-        asset eos_in_rex ;
         asset total_in_eos ;
 
       };
@@ -44,23 +43,10 @@ CONTRACT eosioyield : public contract {
 
       //INTERNAL STRUCTURES
 
-/*      TABLE tier {
-
-        uint8_t number;
-
-        asset min_tvl;
-        asset max_tvl;
-
-        uint64_t primary_key()const { return number; }
-
-      };*/
-
       TABLE protocol {
 
          name contract;
-         name beneficiary;
-
-         //tier current_tier;
+         //name beneficiary;
 
          time_point last_claim;
 
@@ -99,32 +85,12 @@ CONTRACT eosioyield : public contract {
 #endif
 
       const uint64_t CLAIM_INTERVAL = ONE_DAY;
-/*
-      //TVL under 200,000 EOS (or value in EOS for approved assets)
-      const tier TIER_ZERO = {0, asset(0, SYSTEM_TOKEN_SYMBOL), asset(2000000000, SYSTEM_TOKEN_SYMBOL)};
 
-      //TVL is between 200,000 to 750,000
-      const tier TIER_ONE = {1, asset(2000000000, SYSTEM_TOKEN_SYMBOL), asset(7500000000, SYSTEM_TOKEN_SYMBOL)};
-
-      //TVL is between 750,000 to 1.5 million
-      const tier TIER_TWO = {2, asset(7500000000, SYSTEM_TOKEN_SYMBOL), asset(15000000000, SYSTEM_TOKEN_SYMBOL)};
-
-      //TVL is between 1.5 million to 3 million
-      const tier TIER_THREE = {3, asset(15000000000, SYSTEM_TOKEN_SYMBOL), asset(30000000000, SYSTEM_TOKEN_SYMBOL)};
-
-      //TVL is between 3 million to 6 million
-      const tier TIER_FOUR = {4, asset(30000000000, SYSTEM_TOKEN_SYMBOL), asset(60000000000, SYSTEM_TOKEN_SYMBOL)};
-
-      //TVL is more than 6 million (rewards capped at 12 million)
-      const tier TIER_FIVE = {5, asset(60000000000, SYSTEM_TOKEN_SYMBOL), asset(120000000000, SYSTEM_TOKEN_SYMBOL)};
-
-      const std::vector<tier> TIERS = {TIER_ZERO, TIER_ONE, TIER_TWO, TIER_THREE, TIER_FOUR, TIER_FIVE};
-*/
       //ACTIONS 
 
-      ACTION regprotocol(name contract, name beneficiary);
-      ACTION editprotocol(name contract, name beneficiary);
-      ACTION claim(name contract);
+      ACTION regprotocol(name contract);
+      ACTION editprotocol(name contract);
+      ACTION claim(name contract, name beneficiary);
       
       ACTION approve(name contract);
       ACTION unapprove(name contract);
