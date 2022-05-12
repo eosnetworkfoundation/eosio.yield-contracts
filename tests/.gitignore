@@ -4,3 +4,4 @@
 !.gitignore
 !deploy.sh
 !run-build.sh
+!*.sh
