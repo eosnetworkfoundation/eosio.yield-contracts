@@ -163,6 +163,7 @@ ACTION oracleyield::stamp(){
          tvli.assets.push_back(eos_qty);
          tvli.assets.push_back(usdt_qty);
          
+         //tvli.eos_in_rex = rex_qty;
          tvli.total_in_eos = total;
          
          report.tvl_items[p_itr->contract] = tvli;
