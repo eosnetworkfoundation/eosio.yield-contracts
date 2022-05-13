@@ -8,11 +8,10 @@ double eosioyield::asset_to_double(asset a){
    double n_val = d_a / d_multiplier;
 
    return n_val;
-
 }
 
-//get average tvl recorded by oracle 
-asset eosioyield::get_oracle_tvl(name contract ){
+//get average tvl recorded by oracle
+asset eosioyield::get_oracle_tvl( name contract ) {
 
    //print("get_oracle_tvl\n");
 
@@ -23,7 +22,7 @@ asset eosioyield::get_oracle_tvl(name contract ){
 
    uint64_t c_ts = current_time_point().sec_since_epoch();
 
-   //slice the datapoints into 3x eight hours periods 
+   //slice the datapoints into 3x eight hours periods
    uint64_t period_1 = c_ts - EIGHT_HOURS*3;
    uint64_t period_2 = c_ts - EIGHT_HOURS*2;
    uint64_t period_3 = c_ts - EIGHT_HOURS;
@@ -35,7 +34,7 @@ asset eosioyield::get_oracle_tvl(name contract ){
    int d1 = std::distance(p1_itr, p2_itr);
    int d2 = std::distance(p2_itr, p3_itr);
    int d3 = std::distance(p3_itr, _snapshots.end());
-   
+
    double avg_p1 = 0.0;
    double avg_p2 = 0.0;
    double avg_p3 = 0.0;
@@ -53,7 +52,6 @@ asset eosioyield::get_oracle_tvl(name contract ){
       double tvl = 0.0;
 
       if ( tvl_itr!=p1_itr->tvl_items.end()) asset_to_double(tvl_itr->second.total_in_eos);
-      
       //print("  tvl : ", tvl ,"\n");
 
       avg_p1+=tvl;
@@ -65,9 +63,7 @@ asset eosioyield::get_oracle_tvl(name contract ){
       auto tvl_itr = p2_itr->tvl_items.find(contract);
 
       double tvl = 0.0;
-      
       if ( tvl_itr!=p2_itr->tvl_items.end()) asset_to_double(tvl_itr->second.total_in_eos);
-      
       //print("  tvl : ", tvl ,"\n");
 
       avg_p2+=tvl;
@@ -81,7 +77,6 @@ asset eosioyield::get_oracle_tvl(name contract ){
       double tvl = 0.0;
 
       if ( tvl_itr!=p3_itr->tvl_items.end()) asset_to_double(tvl_itr->second.total_in_eos);
-      
       //print("  tvl : ", tvl ,"\n");
 
       avg_p3+=tvl;
@@ -95,22 +90,20 @@ asset eosioyield::get_oracle_tvl(name contract ){
    //print("avg_p1 : ", avg_p1 ,"\n");
    //print("avg_p2 : ", avg_p2 ,"\n");
    //print("avg_p3 : ", avg_p3 ,"\n");
-   
-   //calculate the average the 3x 8hours periods 
+
+   //calculate the average the 3x 8hours periods
    double avg_all = (avg_p1 + avg_p2 + avg_p3) / 3;
 
    //print("avg_all : ", avg_all ,"\n");
 
-   //round and convert back to asset 
+   //round and convert back to asset
    uint64_t i_result = uint64_t((avg_all * d_multiplier)+0.5);
 
    return asset(i_result, SYSTEM_TOKEN_SYMBOL);
-
-
 }
 
-asset eosioyield::get_contract_balance(){
-
+asset eosioyield::get_contract_balance()
+{
    //print("get_contract_balance\n");
 
    accounts a_table(SYSTEM_TOKEN_CONTRACT, _self.value);
@@ -119,12 +112,11 @@ asset eosioyield::get_contract_balance(){
 
    if (itr == a_table.end()) return asset(0, SYSTEM_TOKEN_SYMBOL);
    else return itr->balance;
-
 }
 
 
-asset eosioyield::calculate_incentive_reward(asset tvl){
-
+asset eosioyield::calculate_incentive_reward(asset tvl)
+{
    //print("calculate_incentive_reward\n");
 
    if (tvl<MIN_REWARD) return asset{0, SYSTEM_TOKEN_SYMBOL};
@@ -142,97 +134,39 @@ asset eosioyield::calculate_incentive_reward(asset tvl){
    value.amount = uint64_t((d_reward * d_multiplier)+0.5);
 
    return value;
-
 }
 
-ACTION eosioyield::regprotocol( name contract){
+[[eosio::action]]
+void yield::regprotocol( const name protocol, const map<string, string> metadata )
+{
+    require_auth( protocol );
 
-   //print("regprotocol\n");
+    yield::protocols_table _protocols( get_self(), get_self().value );
 
-   //print("has_auth(_self) ", has_auth(_self), "\n");
+    auto insert = [&]( auto& row ) {
+        // status => "pending" by default
+        row.protocol = protocol;
+        row.metadata = metadata;
+        row.balance.contract = TOKEN_CONTRACT;
+        row.balance.quantity.symbol = TOKEN_SYMBOL;
+    });
 
-
-#ifdef DEBUG
-
-   if (has_auth(_self) == false){
-      require_auth(contract);
-   }
-
-#else 
-   require_auth(contract);
-#endif
-
-   auto itr = _protocols.find(contract.value);
-
-   check(itr==_protocols.end(), "protocol already registered");
-   
-   _protocols.emplace( get_self(), [&]( auto& p ) {
-      p.contract = contract;
-      //p.beneficiary = beneficiary;
-      //p.current_tier = TIER_ZERO;
-      p.last_claim = time_point(eosio::seconds(0));
-      p.approved = false;
-   });
-
+    // modify or create
+    auto itr = _protocols.find( protocol.value );
+    if ( itr == _protocols.end() ) _protocols.emplace( get_self(), insert );
+    else _protocols.modify( itr, get_self(), insert );
 }
 
-//change beneficary
-ACTION eosioyield::editprotocol( name contract){
+[[eosio::action]]
+void yield::setstatus( const name protocol, const name status )
+{
+    require_auth( get_self() );
 
-   //print("editprotocol\n");
+    auto & itr = _protocols.get(protocol.value, "yield::approve: [protocol] does not exists");
 
-#ifdef DEBUG
-
-   if (has_auth(_self) == false){
-      require_auth(contract);
-   }
-
-#else 
-   require_auth(contract);
-#endif
-
-   auto itr = _protocols.find(contract.value);
-
-   check(itr!=_protocols.end(), "protocol not found");
-   
-   _protocols.modify( itr, same_payer, [&]( auto& p ) {
-      //p.beneficiary = beneficiary;
-   });
-
-}
-
-//approve a protocol
-ACTION eosioyield::approve( name contract){
-
-   //print("approve\n");
-
-   require_auth(_self);
-
-   auto itr = _protocols.find(contract.value);
-
-   check(itr!=_protocols.end(), "protocol not found");
-   
-   _protocols.modify( itr, same_payer, [&]( auto& p ) {
-      p.approved = true;
-   });
-
-}
-
-//unapprove a protocol
-ACTION eosioyield::unapprove( name contract){
-
-   //print("unapprove\n");
-
-   require_auth(_self);
-
-   auto itr = _protocols.find(contract.value);
-
-   check(itr!=_protocols.end(), "protocol not found");
-
-   _protocols.modify( itr, same_payer, [&]( auto& p ) {
-      p.approved = false;
-   });
-
+    _protocols.modify( itr, same_payer, [&]( auto& row ) {
+        row.status = status;
+    });
 }
 
 //claim rewards (if any)
@@ -246,7 +180,7 @@ ACTION eosioyield::claim(name contract, name beneficiary){
       require_auth(contract);
    }
 
-#else 
+#else
    require_auth(contract);
 #endif
 
