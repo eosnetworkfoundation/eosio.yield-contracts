@@ -31,6 +31,7 @@ public:
     const symbol TOKEN_SYMBOL = symbol{"EOS", 4};
     const set<name> SYSTEM_STATUS_TYPES = set<name>{"maintenance"_n, "active"_n};
     const set<name> PROTOCOL_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
+    const int64_t MAX_ANNUAL_RATE = 1000;
 
     // CONSTANTS
     const int32_t ANNUAL_YIELD = 500;
@@ -81,13 +82,15 @@ public:
      * ```json
      * {
      *     "status": "ok",
+     *     "annual_rate": 5000,
      *     "metadata_keys": ["name", "url", "defillama", "dappradar", "recover"]
      * }
      * ```
      */
     struct [[eosio::table("config")]] config_row {
-        name                status = "testing"_n;
-        name                metadata_keys = {"url"_n};
+        name            status = "testing"_n;
+        int64_t         annual_rate;
+        name            metadata_keys = {"url"_n};
     };
     typedef eosio::singleton< "config"_n, config_row > config_table;
 
@@ -174,6 +177,10 @@ public:
     // @system
     [[eosio::action]]
     void setrate( const int64 annual_rate );
+
+    // @system
+    [[eosio::action]]
+    void setmetakeys( const map<string, string> metadata_keys );
 
 private :
 
