@@ -1,140 +1,4 @@
-#include <eosioyield.hpp>
-
-//converts an asset to a double
-double eosioyield::asset_to_double(asset a){
-
-   double d_a = (double)(a.amount);
-   double d_multiplier = pow(10, (double)a.symbol.precision());
-   double n_val = d_a / d_multiplier;
-
-   return n_val;
-}
-
-//get average tvl recorded by oracle
-asset eosioyield::get_oracle_tvl( name contract ) {
-
-   //print("get_oracle_tvl\n");
-
-   //print("  contract : ", contract ,"\n");
-
-   //convert to double
-   double d_multiplier = pow(10, (double)SYSTEM_TOKEN_SYMBOL.precision());
-
-   uint64_t c_ts = current_time_point().sec_since_epoch();
-
-   //slice the datapoints into 3x eight hours periods
-   uint64_t period_1 = c_ts - EIGHT_HOURS*3;
-   uint64_t period_2 = c_ts - EIGHT_HOURS*2;
-   uint64_t period_3 = c_ts - EIGHT_HOURS;
-
-   auto p1_itr = _snapshots.upper_bound(period_1);
-   auto p2_itr = _snapshots.upper_bound(period_2);
-   auto p3_itr = _snapshots.upper_bound(period_3);
-
-   int d1 = std::distance(p1_itr, p2_itr);
-   int d2 = std::distance(p2_itr, p3_itr);
-   int d3 = std::distance(p3_itr, _snapshots.end());
-
-   double avg_p1 = 0.0;
-   double avg_p2 = 0.0;
-   double avg_p3 = 0.0;
-
-   //print("d1 : ", d1 ,"\n");
-   //print("d2 : ", d2 ,"\n");
-   //print("d3 : ", d3 ,"\n");
-
-   //for each slice, calculate average
-   while (p1_itr!=p2_itr){
-      //print("period 1 : ", p1_itr->timestamp.sec_since_epoch(), "\n" );
-
-      auto tvl_itr = p1_itr->tvl_items.find(contract);
-
-      double tvl = 0.0;
-
-      if ( tvl_itr!=p1_itr->tvl_items.end()) asset_to_double(tvl_itr->second.total_in_eos);
-      //print("  tvl : ", tvl ,"\n");
-
-      avg_p1+=tvl;
-      p1_itr++;
-   }
-   while (p2_itr!=p3_itr){
-      //print("period 2 : ", p2_itr->timestamp.sec_since_epoch(), "\n" );
-
-      auto tvl_itr = p2_itr->tvl_items.find(contract);
-
-      double tvl = 0.0;
-      if ( tvl_itr!=p2_itr->tvl_items.end()) asset_to_double(tvl_itr->second.total_in_eos);
-      //print("  tvl : ", tvl ,"\n");
-
-      avg_p2+=tvl;
-      p2_itr++;
-   }
-   while (p3_itr!=_snapshots.end()){
-      //print("period 3 : ", p3_itr->timestamp.sec_since_epoch(), "\n" );
-
-      auto tvl_itr = p3_itr->tvl_items.find(contract);
-
-      double tvl = 0.0;
-
-      if ( tvl_itr!=p3_itr->tvl_items.end()) asset_to_double(tvl_itr->second.total_in_eos);
-      //print("  tvl : ", tvl ,"\n");
-
-      avg_p3+=tvl;
-      p3_itr++;
-   }
-
-   avg_p1 /= d1;
-   avg_p2 /= d2;
-   avg_p3 /= d3;
-
-   //print("avg_p1 : ", avg_p1 ,"\n");
-   //print("avg_p2 : ", avg_p2 ,"\n");
-   //print("avg_p3 : ", avg_p3 ,"\n");
-
-   //calculate the average the 3x 8hours periods
-   double avg_all = (avg_p1 + avg_p2 + avg_p3) / 3;
-
-   //print("avg_all : ", avg_all ,"\n");
-
-   //round and convert back to asset
-   uint64_t i_result = uint64_t((avg_all * d_multiplier)+0.5);
-
-   return asset(i_result, SYSTEM_TOKEN_SYMBOL);
-}
-
-asset eosioyield::get_contract_balance()
-{
-   //print("get_contract_balance\n");
-
-   accounts a_table(SYSTEM_TOKEN_CONTRACT, _self.value);
-
-   auto itr = a_table.find(SYSTEM_TOKEN_SYMBOL.code().raw());
-
-   if (itr == a_table.end()) return asset(0, SYSTEM_TOKEN_SYMBOL);
-   else return itr->balance;
-}
-
-
-asset eosioyield::calculate_incentive_reward(asset tvl)
-{
-   //print("calculate_incentive_reward\n");
-
-   if (tvl<MIN_REWARD) return asset{0, SYSTEM_TOKEN_SYMBOL};
-   if (tvl>MAX_REWARD) tvl = MAX_REWARD;
-
-   double d_quantity = (double)(tvl.amount);
-   double d_multiplier = pow(10, (double)tvl.symbol.precision());
-
-   double n_quantity = d_quantity / d_multiplier;
-
-   double d_reward = (n_quantity * ANNUAL_YIELD) / DAYS_IN_YEAR;
-
-   asset value = {0, SYSTEM_TOKEN_SYMBOL};
-
-   value.amount = uint64_t((d_reward * d_multiplier)+0.5);
-
-   return value;
-}
+#include "./eosio.yield.hpp"
 
 [[eosio::action]]
 void yield::regprotocol( const name protocol, const map<string, string> metadata )
@@ -142,6 +6,14 @@ void yield::regprotocol( const name protocol, const map<string, string> metadata
     require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
+    const auto configs = get_configs();
+    const set<name> metadata_keys = configs.metadata_keys;
+
+    // validate input
+    check(configs.status == "active"_n, "yield::regprotocol: [status] must be `active`");
+    for ( const auto item : metadata ) {
+        check( metadata_keys.find(item.first) != metadata_keys.end(), "yield::regprotocol: invalid [metadata_keys]");
+    }
 
     auto insert = [&]( auto& row ) {
         // status => "pending" by default
@@ -149,6 +21,8 @@ void yield::regprotocol( const name protocol, const map<string, string> metadata
         row.metadata = metadata;
         row.balance.contract = TOKEN_CONTRACT;
         row.balance.quantity.symbol = TOKEN_SYMBOL;
+        if ( !row.created_at.sec_since_epoch() ) row.created_at = current_time_point();
+        row.updated_at = current_time_point();
     });
 
     // modify or create
@@ -163,77 +37,43 @@ void yield::setstatus( const name protocol, const name status )
     require_auth( get_self() );
 
     auto & itr = _protocols.get(protocol.value, "yield::approve: [protocol] does not exists");
+    check( PROTOCOL_STATUS_TYPES.find( status ) != PROTOCOL_STATUS_TYPES.end(), "yield::approve: [status] is invalid");
 
     _protocols.modify( itr, same_payer, [&]( auto& row ) {
         row.status = status;
     });
 }
 
-//claim rewards (if any)
-ACTION eosioyield::claim(name contract, name beneficiary){
+[[eosio::action]]
+void yield::claim( const name protocol, const optional<name> receiver )
+{
+   require_auth( protocol );
 
-   //print("claim\n");
+   if ( receiver ) check( is_account( *receiver ), "yield::claim: [receiver] does not exists");
 
-#ifdef DEBUG
+   auto & itr = _protocols.get(protocol.value, "yield::claim: [protocol] does not exists");
+   check( itr.status == "active"_n, "yield::claim: [status] must be `active`");
+   check( itr.balance.quantity.amount > 0, "yield::claim: [balance] is empty");
 
-   if (has_auth(_self) == false){
-      require_auth(contract);
-   }
+   // transfer funds to receiver
+   const name to = receiver ? *receiver : protocol;
+   transfer( get_self(), to, itr.balance, "Yield+ TVL reward");
 
-#else
-   require_auth(contract);
-#endif
-
-   if (beneficiary==""_n) beneficiary = contract;
-
-   auto itr = _protocols.find(contract.value);
-
-   check(itr!=_protocols.end(), "contract not found");
-   check(itr->approved, "contract not approved for rewards");
-
-   uint64_t c_ts = current_time_point().sec_since_epoch();
-
-   bool claim_allowed = c_ts>itr->last_claim.sec_since_epoch() + CLAIM_INTERVAL;
-
-   check(claim_allowed, "can only claim once every 24h");
-
-   asset tvl = get_oracle_tvl(contract);
-
-   //print("tvl ", tvl, "\n");
-   //print("new_tier ", new_tier.number, "\n");
-
-   _protocols.modify( itr, same_payer, [&]( auto& p ) {
-      //p.current_tier = new_tier;
-      p.last_claim = current_time_point();
+   _protocols.modify( itr, same_payer, [&]( auto& row ) {
+      row.balance.quantity.amount = 0;
+      row.last_claim = current_time_point();
    });
-
-   asset balance = get_contract_balance();
-   asset claim = calculate_incentive_reward(tvl);
-
-   //print("eosio.yield balance ", balance, "\n");
-   //print("claim ", claim, "\n");
-
-   check(claim.amount>0, "not elligible for a claim");
-   check(balance.amount>= claim.amount, "yield program depleted");
-
-   action act(
-     permission_level{_self, "active"_n},
-     SYSTEM_TOKEN_CONTRACT, "transfer"_n,
-     std::make_tuple(_self, beneficiary, claim, std::string("Yield+ TVL reward") )
-   );
-   act.send();
-
 }
 
-#ifdef DEBUG
+void yield::transfer( const name from, const name to, const extended_asset value, const string& memo )
+{
+    eosio::token::transfer_action transfer( value.contract, { from, "active"_n });
+    transfer.send( from, to, value.quantity, memo );
+}
 
-   //zero out the contract RAM
-   ACTION eosioyield::clear() {
-
-      require_auth(_self);
-
-       while (_protocols.begin() != _protocols.end()) _protocols.erase(_protocols.begin());
-
-   }
-
-#endif
+yield::configs_row yield::get_configs()
+{
+    yield::configs_table _configs( get_self(), get_self().value );
+    check( _configs.exists(), "yield::get_configs: contract is not initialized");
+    return _configs.get();
+}

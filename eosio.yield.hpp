@@ -29,6 +29,8 @@ public:
 
     const name TOKEN_CONTRACT = "eosio.token"_n;
     const symbol TOKEN_SYMBOL = symbol{"EOS", 4};
+    const set<name> SYSTEM_STATUS_TYPES = set<name>{"maintenance"_n, "active"_n};
+    const set<name> PROTOCOL_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
 
     // CONSTANTS
     const int32_t ANNUAL_YIELD = 500;
@@ -96,9 +98,11 @@ public:
      *
      * - `{name} owner` - primary protocol contract
      * - `{set<name} contracts` - (optional) additional supporting contracts
-     * - `{name} status="pending"` - status (`pending/open/denied`)
-     * - `{asset} balance` - balance
-     * - `{time_point_sec} last_claim_time` - last_claim
+     * - `{name} status="pending"` - status (`pending/active/denied`)
+     * - `{asset} balance` - active balance available to be claimed
+     * - `{time_point_sec} created_at` - created at time
+     * - `{time_point_sec} updated_at` - updated at time
+     * - `{time_point_sec} claimed_at` - claimed at time
      * - `{map<string, string} metadata` - metadata
      *
      * ### example
@@ -107,9 +111,11 @@ public:
      * {
      *     "owner": "contract",
      *     "contracts": ["contract", "a.contract", "b.contract"],
-     *     "status": "open",
+     *     "status": "active",
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
-     *     "last_claim": "2022-05-12T02:27:56",
+     *     "created_at": "2022-05-13T00:00:00",
+     *     "updated_at": "2022-05-13T00:00:00",
+     *     "claimed_at": "1970-01-01T00:00:00"
      *     "metadata": [{"key": "url", "value": "https://mywebsite.com"}],
      * }
      * ```
@@ -119,7 +125,9 @@ public:
         set<name>               contracts;
         name                    status = "pending"_n;
         extended_asset          balance;
-        time_point_sec          last_claim;
+        time_point_sec          created_at;
+        time_point_sec          updated_at;
+        time_point_sec          claimed_at;
         map<string, string>     metadata;
 
         uint64_t primary_key() const { return protocol.value; }
@@ -157,7 +165,7 @@ public:
 
     // @protocol
     [[eosio::action]]
-    void claim( const name protocol, const name receiver );
+    void claim( const name protocol, const optional<name> receiver );
 
     // @admin
     [[eosio::action]]
@@ -168,6 +176,8 @@ public:
     void setrate( const int64 annual_rate );
 
 private :
+
+    yield::configs_row get_configs();
 
     // //INTERNAL FUNCTIONS DEFINITION
 
