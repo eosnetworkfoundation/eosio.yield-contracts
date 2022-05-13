@@ -2,7 +2,7 @@
 
 //dividing a by b, expressed in output_symbol units
 asset divide_assets(asset a, asset b, symbol output_symbol){
-      
+
    check(a.symbol.precision() == b.symbol.precision(), "can only multiply assets of same precision");
 
    double d_a_quantity = (double)(a.amount);
@@ -29,9 +29,9 @@ asset oracleyield::get_rex_in_eos( const asset& rex_quantity ) {
 
    // print("rexitr->total_lendable.amount: ", rexitr->total_lendable.amount, "\n");
    // print("rexitr->total_rex.amount: ", rexitr->total_rex.amount, "\n");
-   
+
    int64_t p  = (uint128_t(rex_quantity.amount) * S0) / R0;
-   
+
    asset proceeds( p, SYSTEM_TOKEN_SYMBOL );
 
    return proceeds;
@@ -49,7 +49,7 @@ asset oracleyield::get_oracle_rate(){
    //print("dtp_idx.begin()->median ", dtp_idx.begin()->median, "\n");
    //print("dtp_idx.begin()->owner ", dtp_idx.begin()->owner, "\n");
    //print("dtp_idx.begin()->timestamp ", dtp_idx.begin()->timestamp.sec_since_epoch(), "\n");
-      
+
    auto itr = dtp_idx.rbegin();
 
    return asset(itr->median, USD_SYMBOL);
@@ -158,16 +158,15 @@ ACTION oracleyield::stamp(){
 
          total+= divide_assets(usdt_qty, report.eos_usd_rate, SYSTEM_TOKEN_SYMBOL) ; //convert USDT to EOS
 
-         //print("total value in EOS : ", total, "\n"); 
+         //print("total value in EOS : ", total, "\n");
 
          tvli.assets.push_back(eos_qty);
          tvli.assets.push_back(usdt_qty);
-         
+
          //tvli.eos_in_rex = rex_qty;
          tvli.total_in_eos = total;
-         
+
          report.tvl_items[p_itr->contract] = tvli;
-         
       }
 
       p_itr++;
@@ -195,15 +194,11 @@ ACTION oracleyield::report(snapshot report){
 
 }
 
-#ifdef DEBUG
+//zero out the contract RAM
+ACTION oracleyield::clear() {
 
-   //zero out the contract RAM
-   ACTION oracleyield::clear() {
+   require_auth(_self);
 
-      require_auth(_self);
+      while (_snapshots.begin() != _snapshots.end()) _snapshots.erase(_snapshots.begin());
 
-       while (_snapshots.begin() != _snapshots.end()) _snapshots.erase(_snapshots.begin());
-
-   }
-
-#endif
+}

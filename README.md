@@ -1,4 +1,4 @@
-# oracle-yield
+# EOSIO Oracle Yield+
 
 To compile in debug mode :
 

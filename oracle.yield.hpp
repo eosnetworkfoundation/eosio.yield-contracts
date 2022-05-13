@@ -10,52 +10,12 @@ CONTRACT oracleyield : public contract {
    public:
       using contract::contract;
 
-      //EXTERNAL STRUCTURES
-
-      //TODO : link header files instead of copying structs
-
-      //eosio.token balance object
-      struct account {
-        asset   balance;
-        uint64_t primary_key()const { return balance.symbol.code().raw(); }
-      };
-      typedef eosio::multi_index< "accounts"_n, account > accounts;
-      
-      //REX balance object
-      struct [[eosio::table]] rex_balance {
-        uint8_t version = 0;
-        name    owner;
-        asset   vote_stake;
-        asset   rex_balance;
-        int64_t matured_rex = 0;
-        std::deque<std::pair<time_point_sec, int64_t>> rex_maturities; /// REX daily maturity buckets
-
-        uint64_t primary_key()const { return owner.value; }
-      };
-      typedef eosio::multi_index< "rexbal"_n, rex_balance > rexbaltable;
-
-      //REX pool object
-      struct [[eosio::table]] rex_pool {
-          uint8_t    version = 0;
-          asset      total_lent;
-          asset      total_unlent;
-          asset      total_rent;
-          asset      total_lendable;
-          asset      total_rex;
-          asset      namebid_proceeds;
-          uint64_t   loan_num = 0;
-
-          uint64_t primary_key()const { return 0; }
-      };
-      typedef eosio::multi_index< "rexpool"_n, rex_pool > rexpooltable;
-
-
       //delphi datapoint structure
       struct delphi_datapoint {
 
          uint64_t id;
 
-         name owner; 
+         name owner;
 
          uint64_t value;
          uint64_t median;
@@ -67,7 +27,7 @@ CONTRACT oracleyield : public contract {
 
       };
       typedef eosio::multi_index<"datapoints"_n, delphi_datapoint,
-         indexed_by<"value"_n, const_mem_fun<delphi_datapoint, uint64_t, &delphi_datapoint::by_value>>, 
+         indexed_by<"value"_n, const_mem_fun<delphi_datapoint, uint64_t, &delphi_datapoint::by_value>>,
          indexed_by<"timestamp"_n, const_mem_fun<delphi_datapoint, uint64_t, &delphi_datapoint::by_timestamp>>> delphipoints;
 
 
