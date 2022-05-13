@@ -1,5 +1,6 @@
 #include "./eosio.yield.hpp"
 
+// @protocol
 [[eosio::action]]
 void yield::regprotocol( const name protocol, const map<string, string> metadata )
 {
@@ -31,19 +32,7 @@ void yield::regprotocol( const name protocol, const map<string, string> metadata
     else _protocols.modify( itr, get_self(), insert );
 }
 
-[[eosio::action]]
-void yield::setstatus( const name protocol, const name status )
-{
-    require_auth( get_self() );
-
-    auto & itr = _protocols.get(protocol.value, "yield::approve: [protocol] does not exists");
-    check( PROTOCOL_STATUS_TYPES.find( status ) != PROTOCOL_STATUS_TYPES.end(), "yield::approve: [status] is invalid");
-
-    _protocols.modify( itr, same_payer, [&]( auto& row ) {
-        row.status = status;
-    });
-}
-
+// @protocol
 [[eosio::action]]
 void yield::claim( const name protocol, const optional<name> receiver )
 {
@@ -65,9 +54,26 @@ void yield::claim( const name protocol, const optional<name> receiver )
     });
 }
 
+// @admin
+[[eosio::action]]
+void yield::setstatus( const name protocol, const name status )
+{
+    require_auth( get_self() );
+
+    auto & itr = _protocols.get(protocol.value, "yield::approve: [protocol] does not exists");
+    check( PROTOCOL_STATUS_TYPES.find( status ) != PROTOCOL_STATUS_TYPES.end(), "yield::approve: [status] is invalid");
+
+    _protocols.modify( itr, same_payer, [&]( auto& row ) {
+        row.status = status;
+    });
+}
+
+// @system
 [[eosio::action]]
 void setrate( const int64 annual_rate )
 {
+    require_auth( get_self() );
+
     yield::configs_table _configs( get_self(), get_self().value );
     auto config = _config.get_or_default();
     check( annual_rate <= MAX_ANNUAL_RATE, "yield::setrate: [annual_rate] exceeds maximum annual rate");
@@ -75,19 +81,12 @@ void setrate( const int64 annual_rate )
     _config.set(config, get_self());
 }
 
-[[eosio::action]]
-void setrate( const int64 annual_rate )
-{
-    yield::configs_table _configs( get_self(), get_self().value );
-    auto config = _config.get_or_default();
-    check( annual_rate <= MAX_ANNUAL_RATE, "yield::setrate: [annual_rate] exceeds maximum annual rate");
-    config.annual_rate = annual_rate;
-    _config.set(config, get_self());
-}
-
+// @system
 [[eosio::action]]
 void setmetakeys( const map<string, string> metadata_keys )
 {
+    require_auth( get_self() );
+
     yield::configs_table _configs( get_self(), get_self().value );
     auto config = _config.get_or_default();
     config.metadata_keys = metadata_keys;
