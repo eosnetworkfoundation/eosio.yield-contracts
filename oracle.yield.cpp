@@ -1,204 +1,179 @@
 #include <oracleyield.hpp>
 
-//dividing a by b, expressed in output_symbol units
-asset divide_assets(asset a, asset b, symbol output_symbol) {
+// @system
+[[eosio::action]]
+void oracle::addtoken( const symbol sym, const name contract, const uint64_t defibox_oracle_id, const name delphi_oracle_id )
+{
+    require_auth( get_self() );
 
-   check(a.symbol.precision() == b.symbol.precision(), "can only multiply assets of same precision");
+    oracle::tokens_table _tokens( get_self(), get_self().value );
 
-   double d_a_quantity = (double)(a.amount);
-   double d_b_quantity = (double)(b.amount);
+    check( _tokens.find( sym.code().raw() ) == _tokens.end(), "oracle::addtoken: [sym] already exists");
 
-   double d_multiplier = pow(10, (double)a.symbol.precision());
-
-   double n_a_quantity = d_a_quantity / d_multiplier;
-   double n_b_quantity = d_b_quantity / d_multiplier;
-
-   uint64_t i_result = uint64_t(((d_a_quantity / d_b_quantity) * d_multiplier)+0.5);
-
-   return asset(i_result, output_symbol);
-
+    _tokens.emplace( get_self(), [&]( auto& row ) {
+        row.sym = sym;
+        row.token = token;
+        row.defibox_oracle_id = defibox_oracle_id;
+        row.delphi_oracle_id = delphi_oracle_id;
+    });
 }
 
-// return amount of EOS that would be returned for a REX sale
-// derived from https://github.com/EOSIO/eosio.contracts/blob/master/contracts/eosio.system/src/rex.cpp#L772
-asset oracleyield::get_rex_in_eos( const asset& rex_quantity ) {
+// @system
+[[eosio::action]]
+void oracle::deltoken( const symbol_code symcode )
+{
+    require_auth( get_self() );
 
-   auto rexitr = _rexpooltable.begin();
-   int64_t S0 = rexitr->total_lendable.amount;
-   int64_t R0 = rexitr->total_rex.amount;
-
-   // print("rexitr->total_lendable.amount: ", rexitr->total_lendable.amount, "\n");
-   // print("rexitr->total_rex.amount: ", rexitr->total_rex.amount, "\n");
-
-   int64_t p  = (uint128_t(rex_quantity.amount) * S0) / R0;
-
-   asset proceeds( p, SYSTEM_TOKEN_SYMBOL );
-
-   return proceeds;
+    oracle::tokens_table _tokens( get_self(), get_self().value );
+    auto & itr = _tokens.get( symcode.raw(), "oracle::deltoken: [symcode] does not exists" );
+    _tokens.erase( itr );
 }
 
-//Get EOS/USD rate
-asset oracleyield::get_oracle_rate() {
+// @system
+[[eosio::action]]
+void oracle::setcontracts( const name protocol, const set<name> contracts )
+{
+    require_auth( get_self() );
 
-   delphipoints dtp_table(ORACLE_CONTRACT, EOS_USD.value);
+    yield::tvl_table _tvl( get_self(), get_self().value );
+    const auto configs = get_configs();
 
-   auto dtp_idx = dtp_table.get_index<"timestamp"_n>();
+    // TO-DO check `eosio.yield` if matches
 
-   check(dtp_idx.rbegin() != dtp_idx.rend(), "no oracle datapoint available");
+    auto insert = [&]( auto& row ) {
+        row.protocol = protocol;
+        row.contracts = contracts;
+    });
 
-   //print("dtp_idx.begin()->median ", dtp_idx.begin()->median, "\n");
-   //print("dtp_idx.begin()->owner ", dtp_idx.begin()->owner, "\n");
-   //print("dtp_idx.begin()->timestamp ", dtp_idx.begin()->timestamp.sec_since_epoch(), "\n");
-
-   auto itr = dtp_idx.rbegin();
-
-   return asset(itr->median, USD_SYMBOL);
-
+    // modify or create
+    auto itr = _tvl.find( protocol.value );
+    if ( itr == _tvl.end() ) _tvl.emplace( get_self(), insert );
+    else _tvl.modify( itr, get_self(), insert );
 }
 
-//fetch an account balance on a standard eosio.token contract. Returns 0 if no balance found.
-asset oracleyield::get_contract_balance(name account, std::pair<name, symbol> token){
+// @system
+[[eosio::action]]
+void oracle::delprotocol( const name protocol )
+{
+    require_auth( get_self() );
 
-   //print("get_contract_balance\n");
-
-   auto n = token.first;
-   auto s = token.second;
-
-   //print("n ", n, "\n");
-   //print("s ", s, "\n");
-
-   accounts a_table(n, account.value);
-
-   auto itr = a_table.find(s.code().raw());
-
-   if (itr == a_table.end()) {
-
-      //print("not found \n");
-
-      return asset(0, token.second);
-
-   }
-   else {
-
-      //print("itr->balance ", itr->balance, "\n");
-
-      return itr->balance;
-
-   }
-
-}
-
-//updates the list of global snapshots, and deletes any snapshots older than ONE_DAY
-void oracleyield::update_global_snapshots(snapshot report){
-
-   //print("update_global_snapshots\n");
-
-   uint64_t c_ts = current_time_point().sec_since_epoch();
-   uint64_t older_than_one_day = c_ts - ONE_DAY;
-
-   auto itr = _snapshots.begin();
-   auto end_itr = _snapshots.upper_bound(older_than_one_day);
-
-   //erase old snapshots
-   while (itr != end_itr){
-
-      //print("erasing old snapshots : ", itr->timestamp.sec_since_epoch(), "\n");
-
-      _snapshots.erase(itr++);
-
-   }
-
-   _snapshots.emplace( get_self(), [&]( auto& p ) {p = report;});
-
-}
-
-//attempt to record all values for a given snapshot
-//TODO : benchmark and calculate limits. Possibly need refactor to be batchable
-ACTION oracleyield::stamp(){
-
-   require_auth(_self);
-
-   snapshot report;
-
-   report.timestamp = current_time_point();
-
-   report.eos_usd_rate = get_oracle_rate(); //get EOS/USD rate from oracle
-
-   //Iterate through all approved protocols
-   auto p_itr = _protocols.begin();
-
-   while (p_itr!=_protocols.end()){
-
-      //print("protocol : ", p_itr->contract, "\n");
-
-      //if the protocol has been approved for rewards
-      if (p_itr->approved) {
-
-         oracleyield::tvl_item tvli;
-
-         auto rex_itr = _rexbaltable.find(p_itr->contract.value);
-
-         asset rex_qty = {0, SYSTEM_TOKEN_SYMBOL}; //fetch REX balance
-
-         if (rex_itr!= _rexbaltable.end()){
-            rex_qty.amount = get_rex_in_eos(rex_itr->rex_balance).amount; //convert REX to EOS
-         }
-
-         asset eos_qty = get_contract_balance(p_itr->contract, std::make_pair(SYSTEM_TOKEN_CONTRACT, SYSTEM_TOKEN_SYMBOL));  //get EOS balance
-         asset usdt_qty = get_contract_balance(p_itr->contract, std::make_pair(TETHER_TOKEN_CONTRACT, TETHER_TOKEN_SYMBOL)); //get USDT balance
-
-         //print("rex_qty : ", rex_qty, "\n");
-         //print("eos_qty : ", eos_qty, "\n");
-         //print("usdt_qty : ", usdt_qty, "\n");
-
-         eos_qty+=rex_qty;
-
-         //add all balances
-         asset total = eos_qty;
-
-         total+= divide_assets(usdt_qty, report.eos_usd_rate, SYSTEM_TOKEN_SYMBOL) ; //convert USDT to EOS
-
-         //print("total value in EOS : ", total, "\n");
-
-         tvli.assets.push_back(eos_qty);
-         tvli.assets.push_back(usdt_qty);
-
-         //tvli.eos_in_rex = rex_qty;
-         tvli.total_in_eos = total;
-
-         report.tvl_items[p_itr->contract] = tvli;
-      }
-
-      p_itr++;
-
-   }
-
-   //update snapshot data
-   update_global_snapshots(report);
-
-   //print report to block log
-   action act_report(
-     permission_level{_self, "active"_n},
-     _self, "report"_n,
-     std::make_tuple(report)
-   );
-   act_report.send();
-
+    oracle::tvl_table _tvl( get_self(), get_self().value );
+    auto & itr = _tvl.get( protocol.value, "oracle::delprotocol: [protocol] does not exists" );
+    _tvl.erase( itr );
 }
 
 
-//called inline when a stamp action successfully executes
-ACTION oracleyield::report(snapshot report){
+// @oracle
+[[eosio::action]]
+void update( const name protocol )
+{
+    require_auth( get_self() );
 
-   require_auth(_self);
+    oracle::tvl_table _tvl( get_self(), get_self().value );
+    oracle::tokens_table _tokens( get_self(), get_self().value );
+
+    const time_point_sec period = get_current_period();
+    auto & itr = _tvl.get( protocol.value, "oracle::update: [protocol] does not exists" );
+
+    // prevent duplicate updates
+    check( itr.period != period, "oracle::update: tvl already updated" );
+
+    // get contract balances
+    vector<asset> balances;
+    for ( const name contract : itr.contracts ) {
+        for ( const auto token : _tokens ) {
+            const asset balance = get_balance_amount( contract, token.contract, token.sym );
+            if ( balance.amount <= 0 ) continue;
+            balances.push_back( balance );
+        }
+    }
+    // calculate USD valuation
+    int64_t usd = 0;
+    for ( const asset balance : balances ) {
+        usd += calculate_usd_value( balance );
+    }
+
+    // calculate EOS valuation
+    int64_t eos = convert_usd_to_eos( usd );
+
+    // update token TVL
+    _tvl.modify( itr, get_self(), [&]( auto& row ) {
+        row.period = period;
+        row.tvl[period] = TVL{ balances, usd, eos };
+    });
+}
+
+// @oracle
+[[eosio::action]]
+void updateall()
+{
+    require_auth( get_self() );
+
+    const time_point_sec period = get_current_period();
+
+    limit = 3;
+    for ( const auto row : _tvl ) {
+        if ( row.period == period ) continue;
+        update( row.protocol );
+        limit -= 1;
+        if ( limit <= 0 ) break;
+    }
+}
+
+time_point_sec oracle::get_current_period()
+{
+    const uint32_t = current_time_point().sec_since_epoch();
+    return time_point_sec((now / PERIOD_INTERVAL) * PERIOD_INTERVAL);
+}
+
+asset oracle::get_balance_amount( const name& token_contract_account, const name& owner, const symbol& sym )
+{
+    token::accounts _accounts( token_contract_account, owner.value );
+    const auto itr = _accounts.find( sym.code().raw() );
+    if ( itr == _accounts.end() ) return { 0, sym };
+    check( itr->balance.symbol == sym, "oracle::get_balance_amount: [sym] does not match");
+    return { itr->balance.amount, sym };
+}
+
+int64_t oracle::calculate_usd_value( const asset quantity )
+{
 
 }
 
-//zero out the contract RAM
-ACTION oracleyield::clear() {
+int64_t oracle::convert_usd_to_eos( const int64_t usd )
+{
+    oracle::tokens_table _tokens( get_self(), get_self().value );
 
-   require_auth(_self);
+    auto token = _tokens.get( EOS.code().raw(), "oracle::convert_usd_to_eos: [EOS] does not exists");
 
-      while (_snapshots.begin() != _snapshots.end()) _snapshots.erase(_snapshots.begin());
+}
 
+int64_t oracle::get_delphi_price( const name delphi_oracle_id )
+{
+    delphioracle::pairs _pairs( DELPHI_ORACLE_CONTRACT, DELPHI_ORACLE_CONTRACT.value);
+    delphioracle::datapoints _datapoints( DELPHI_ORACLE_CONTRACT, delphi_oracle_id.value);
+    const auto pairs = _pairs.get(delphi_oracle_id.value, "oracle::get_delphi_price: [delphi_oracle_id] does not exists");
+    const auto datapoints = _datapoints.begin();
+    check(datapoints != datapoints.end(), "oracle::get_delphi_price: [delphi_oracle_id] is empty");
+    return normalize_price(datapoints->median, pairs.quoted_precision);
+}
+
+int64_t oracle::get_defibox_price( const uint64_t defibox_oracle_id )
+{
+    defi::oracle::prices _prices( DEFIBOX_ORACLE_CONTRACT, DEFIBOX_ORACLE_CONTRACT.value);
+    const auto prices = _prices.get(defibox_oracle_id, "oracle::get_defibox_price: [defibox_oracle_id] does not exists");
+    return normalize_price(prices.avg_price, prices.precision);
+}
+
+int64_t oracle::normalize_price( const int64_t price, const uint8_t precision )
+{
+    return price * pow(10, PRECISION) / pow(10, precision);
+}
+
+[[eosio::action]]
+void report( const name protocol, const int64_t eos, const int64_t usd, const time_point_sec period )
+{
+    require_auth( get_self() );
+
+    require_recipient("eosio.yield"_n);
 }
