@@ -75,6 +75,7 @@ public:
      * ## TABLE `config`
      *
      * - `{name} status` - contract status ("ok", "testing", "maintenance")
+     * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
      * - `{set<name>} metadata_keys` - list of keys allowed to include in bounty Metadata
      *
      * ### example
@@ -89,7 +90,7 @@ public:
      */
     struct [[eosio::table("config")]] config_row {
         name            status = "testing"_n;
-        int64_t         annual_rate;
+        uint16_t        annual_rate = 5000;
         name            metadata_keys = {"url"_n};
     };
     typedef eosio::singleton< "config"_n, config_row > config_table;
@@ -99,8 +100,8 @@ public:
      *
      * ### params
      *
-     * - `{name} owner` - primary protocol contract
-     * - `{set<name} contracts` - (optional) additional supporting contracts
+     * - `{name} protocol` - primary protocol contract
+     * - `{set<name>} contracts` - additional supporting contracts
      * - `{name} status="pending"` - status (`pending/active/denied`)
      * - `{asset} balance` - active balance available to be claimed
      * - `{time_point_sec} created_at` - created at time
@@ -124,7 +125,7 @@ public:
      * ```
      */
     struct [[eosio::table("protocols")]] protocols_row {
-        name                    id;
+        name                    protocol;
         set<name>               contracts;
         name                    status = "pending"_n;
         extended_asset          balance;
@@ -181,6 +182,10 @@ public:
     // @system
     [[eosio::action]]
     void setmetakeys( const map<string, string> metadata_keys );
+
+    // @system
+    [[eosio::action]]
+    void updatetvl( const name protocol, const asset tvl );
 
 private :
 
