@@ -1,7 +1,7 @@
 #include <oracleyield.hpp>
 
 //dividing a by b, expressed in output_symbol units
-asset divide_assets(asset a, asset b, symbol output_symbol){
+asset divide_assets(asset a, asset b, symbol output_symbol) {
 
    check(a.symbol.precision() == b.symbol.precision(), "can only multiply assets of same precision");
 
@@ -38,7 +38,7 @@ asset oracleyield::get_rex_in_eos( const asset& rex_quantity ) {
 }
 
 //Get EOS/USD rate
-asset oracleyield::get_oracle_rate(){
+asset oracleyield::get_oracle_rate() {
 
    delphipoints dtp_table(ORACLE_CONTRACT, EOS_USD.value);
 

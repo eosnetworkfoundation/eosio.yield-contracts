@@ -6,148 +6,112 @@
 
 using namespace eosio;
 
-CONTRACT oracleyield : public contract {
-   public:
-      using contract::contract;
+namespace eosio {
 
-      //delphi datapoint structure
-      struct delphi_datapoint {
+class [[eosio::contract("oracle.yield")]] oracle : public eosio::contract {
+public:
+    using contract::contract;
 
-         uint64_t id;
+    // delphi oracle constants
+    const name ORACLE_CONTRACT = "delphioracle"_n;
+    const name EOS_USD = "eosusd"_n;
 
-         name owner;
+    // CONSTANTS
+    const uint32_t TEN_MINUTES = minutes(10).to_seconds();
+    const uint32_t ONE_DAY = days(1).to_seconds();
+    const uint32_t PERIOD_INTERVAL = TEN_MINUTES;
 
-         uint64_t value;
-         uint64_t median;
-         time_point timestamp;
+    struct Balances {
+        vector<asset>   tokens;
+        asset           usd;
+        asset           eos;
+    };
 
-         uint64_t primary_key() const {return id;}
-         uint64_t by_timestamp() const {return timestamp.elapsed.to_seconds();}
-         uint64_t by_value() const {return value;}
+    /**
+     * ## TABLE `tokens`
+     *
+     * ### params
+     *
+     * - `{symbol} sym` - (primary key) symbol
+     * - `{name} contract` - token contract
+     * - `{vector<uint64_t>} defibox_oracle_id` - Defibox oracle ID
+     * - `{vector<name>} delphi_oracle_id` - Delphi oracle ID
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "sym": "4,EOS",
+     *     "contract": "eosio.token",
+     *     "defibox_oracle_id": 1,
+     *     "delphi_oracle_id": "eosusd"
+     * }
+     * ```
+     */
+    struct [[eosio::table("tokens")]] tokens_row {
+        symbol              sym;
+        name                contract;
+        uint64_t            defibox_oracle_id;
+        name                delphi_oracle_id;
 
-      };
-      typedef eosio::multi_index<"datapoints"_n, delphi_datapoint,
-         indexed_by<"value"_n, const_mem_fun<delphi_datapoint, uint64_t, &delphi_datapoint::by_value>>,
-         indexed_by<"timestamp"_n, const_mem_fun<delphi_datapoint, uint64_t, &delphi_datapoint::by_timestamp>>> delphipoints;
+        uint64_t primary_key() const { return sym.code().raw(); }
+    };
+    typedef eosio::multi_index< "tokens"_n, tokens_row> tokens_table;
 
+    /**
+     * ## TABLE `tvl`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - primary protocol contract
+     * - `{set<name>} contracts` - additional supporting contracts
+     * - `{time_point_sec} updated_at` - updated at time
+     * - `{asset} usd` - USD TVL averaged value
+     * - `{asset} eos` - EOS TVL averaged value
+     * - `{map<time_point_sec, Balances>} balances` - total assets balances in custody of protocol contracts
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "protocol": "mydapp",
+     *     "contracts": ["mydapp"],
+     *     "updated_at": "2022-05-13T00:00:00",
+     *     "usd": "2000 USD",
+     *     "eos": "2000 EOS",
+     *     "balances": [{
+     *         "key": "2022-05-13T00:00:00", {
+     *             "tokens": ["1000.0000 EOS", "1500.0000 USDT"],
+     *             "usd": "3000.0000 USD",
+     *             "eos": "2000.0000 EOS"
+     *          }
+     *      }]
+     * }
+     * ```
+     */
+    struct [[eosio::table("tvl")]] tvl_row {
+        name                            protocol;
+        set<name>                       contracts;
+        time_point_sec                  updated_at;
+        asset                           usd;
+        asset                           eos;
+        map<time_point_sec, Balances>   balances;
 
-/*      //eosio.yield tier structure
-      struct tier {
+        uint64_t primary_key() const { return protocol.value; }
+    };
+    typedef eosio::multi_index< "tvl"_n, snapshot> tvl;
 
-        uint8_t number;
+    [[eosio::action]]
+    void updatetvl( const name protocol );
 
-        asset min_tvl;
-        asset max_tvl;
+    // @protocol
+    [[eosio::action]]
+    void setcontracts( const name protocol, const set<name> contracts );
 
-        uint64_t primary_key()const { return number; }
+    [[eosio::action]]
+    void report( const name protocol, const asset tvl );
 
-      };*/
-
-      //eosio.yield protocol structure
-      struct protocol {
-
-         name contract;
-         name beneficiary;
-
-         //tier current_tier;
-
-         time_point last_claim;
-
-         bool approved;
-
-         uint64_t primary_key()const { return contract.value; }
-
-      };
-      typedef eosio::multi_index< "protocols"_n, protocol> protocols;
-
-      //INTERNAL STRUCTURES 
-
-      struct tvl_item {
-        
-        std::vector<asset> assets;
-        asset total_in_eos ;
-
-      };
-
-      TABLE snapshot {  
-
-         time_point timestamp; //timestamp of the snapshot
-
-         asset eos_usd_rate; //measured EOS/USD rate at that snapshot time
-
-         std::map<name, tvl_item> tvl_items;
-
-         uint64_t primary_key()const { return timestamp.sec_since_epoch(); }
-
-      };
-      typedef eosio::multi_index< "snapshots"_n, snapshot> snapshots;
-
-
-      //CONSTANTS
-
-      const name EOSIO_CONTRACT = "eosio"_n;
-
-      const name EOSIO_YIELD_CONTRACT = "testeosyield"_n;
-
-      //TODO : move symbols to a multi_index table
-      const name SYSTEM_TOKEN_CONTRACT = "eosio.token"_n;
-      const symbol SYSTEM_TOKEN_SYMBOL = symbol("EOS", 4);
-
-      const name TETHER_TOKEN_CONTRACT = "tethertether"_n;
-      const symbol TETHER_TOKEN_SYMBOL = symbol("USDT", 4);
-
-      const symbol USD_SYMBOL = symbol("USD", 4);
-
-      //Phase 1 : only EOS and USDT are supported
-      const std::vector<std::pair<name, symbol>> TOKENS = { std::make_pair(SYSTEM_TOKEN_CONTRACT, SYSTEM_TOKEN_SYMBOL), 
-                                                            std::make_pair(TETHER_TOKEN_CONTRACT, TETHER_TOKEN_SYMBOL)};
-
-      //delphi oracle constants         
-      const name ORACLE_CONTRACT = "delphioracle"_n;
-      const name EOS_USD = "eosusd"_n;
-
-#ifdef DEBUG
-
-      //shorten time units in debug mode for faster testing
-      const uint64_t TEN_MINUTES = seconds(30).to_seconds();
-      const uint64_t ONE_DAY = minutes(6).to_seconds();
-
-#else 
-
-      const uint64_t TEN_MINUTES = minutes(10).to_seconds();
-      const uint64_t ONE_DAY = days(1).to_seconds();
-
-#endif
-
-      const uint64_t PERIOD_INTERVAL = TEN_MINUTES;
-
-
-      //ACTIONS 
-
-      ACTION stamp();
-
-      ACTION report(snapshot report);
-
-#ifdef DEBUG
-      ACTION clear();
-#endif
-
-      //GLOBALS AND CONSTRUCTOR
-      
-      snapshots _snapshots;
-      protocols _protocols;
-
-      rexbaltable _rexbaltable;
-      rexpooltable _rexpooltable;
-
-      oracleyield( name receiver, name code, datastream<const char*> ds ) :
-        contract(receiver, code, ds),
-        _snapshots(receiver, receiver.value), 
-        _rexbaltable(EOSIO_CONTRACT, EOSIO_CONTRACT.value), 
-        _rexpooltable(EOSIO_CONTRACT, EOSIO_CONTRACT.value), 
-        _protocols(EOSIO_YIELD_CONTRACT, EOSIO_YIELD_CONTRACT.value) {}
-
-private: 
+private:
 
       //INTERNAL FUNCTIONS DEFINITION
 
