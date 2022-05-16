@@ -22,6 +22,7 @@ public:
     const uint32_t PERIOD_INTERVAL = TEN_MINUTES;
     const uint8_t PRECISION = 4;
     const symbol EOS = symbol{"EOS", 4};
+    const symbol USD = symbol{"USD", 4};
 
     // STRUCTS
     struct TVL {
@@ -196,6 +197,26 @@ public:
     [[eosio::action]]
     void deltoken( const symbol_code symcode );
 
+    /**
+     * ## ACTION `report`
+     *
+     * - **authority**: `get_self()`
+     *
+     * Delete token as supported asset
+     *
+     * ### params
+     *
+     * - `{name} protocol` - primary protocol contract
+     * - `{time_point_sec} period` - period time
+     * - `{int64_t} usd` - USD TVL averaged value
+     * - `{int64_t} eos` - EOS TVL averaged value
+     *
+     * ### example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield report '["mydapp", "2022-05-13T00:00:00", 30000000, 20000000]' -p oracle.yield
+     * ```
+     */
     [[eosio::action]]
     void report( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos );
 
