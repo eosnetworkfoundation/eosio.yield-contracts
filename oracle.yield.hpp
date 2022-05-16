@@ -197,26 +197,24 @@ public:
     void deltoken( const symbol_code symcode );
 
     [[eosio::action]]
-    void report( const name protocol, const int64_t eos, const int64_t usd, const time_point_sec period );
+    void report( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos );
+
+    // action wrappers
+    using report_action = eosio::action_wrapper<"report"_n, &oracle::report>;
 
 private:
+    // get time periods
     time_point_sec get_current_period();
-    asset get_balance_amount( const name& token_contract_account, const name& owner, const symbol& sym );
+
+    // get balances
+    asset get_balance_quantity( const name token_contract_account, const name owner, const symbol sym );
+    asset get_eos_staked( const name owner );
+
+    // calculate prices
     int64_t calculate_usd_value( const asset quantity )
     int64_t convert_usd_to_eos( const int64_t usd )
-
+    int64_t get_oracle_price( const symbol_code symcode );
     int64_t normalize_price( const int64_t price, const uint8_t precision );
     int64_t get_delphi_price( const name delphi_oracle_id );
     int64_t get_defibox_price( const uint64_t defibox_oracle_id );
-
-    //   //INTERNAL FUNCTIONS DEFINITION
-
-    //   asset get_contract_balance(name account, std::pair<name, symbol> token);
-
-    //   asset get_oracle_rate();
-
-    //   asset get_rex_in_eos( const asset& rex_quantity );
-
-    //   void update_global_snapshots(snapshot report);
-
 };

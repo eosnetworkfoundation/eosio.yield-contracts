@@ -62,7 +62,6 @@ void oracle::delprotocol( const name protocol )
     _tvl.erase( itr );
 }
 
-
 // @oracle
 [[eosio::action]]
 void update( const name protocol )
@@ -78,15 +77,22 @@ void update( const name protocol )
     // prevent duplicate updates
     check( itr.period != period, "oracle::update: tvl already updated" );
 
-    // get contract balances
+    // get all balances from protocol contracts
     vector<asset> balances;
     for ( const name contract : itr.contracts ) {
         for ( const auto token : _tokens ) {
+            // liquid balance
             const asset balance = get_balance_amount( contract, token.contract, token.sym );
             if ( balance.amount <= 0 ) continue;
             balances.push_back( balance );
+
+            // staked EOS (REX & delegated CPU/NET)
+            const asset staked = get_eos_staked( contract );
+            if ( staked.amount <= 0 ) continue;
+            stakeds.push_back( staked );
         }
     }
+
     // calculate USD valuation
     int64_t usd = 0;
     for ( const asset balance : balances ) {
@@ -94,24 +100,28 @@ void update( const name protocol )
     }
 
     // calculate EOS valuation
-    int64_t eos = convert_usd_to_eos( usd );
+    const int64_t eos = convert_usd_to_eos( usd );
 
     // update token TVL
     _tvl.modify( itr, get_self(), [&]( auto& row ) {
         row.period = period;
         row.tvl[period] = TVL{ balances, usd, eos };
     });
+
+    // report to Yield+
+    oracle::report_action report( get_self(), { get_self(), "active"_n });
+    report.send( protocol, period, usd, eos );
 }
 
 // @oracle
 [[eosio::action]]
-void updateall()
+void oracle::updateall()
 {
     require_auth( get_self() );
 
     const time_point_sec period = get_current_period();
 
-    limit = 3;
+    limit = 20;
     for ( const auto row : _tvl ) {
         if ( row.period == period ) continue;
         update( row.protocol );
@@ -120,13 +130,22 @@ void updateall()
     }
 }
 
+// @eosio.code
+[[eosio::action]]
+void report( const name protocol, const time_point_sec period, const int64_t eos, const int64_t usd )
+{
+    require_auth( get_self() );
+
+    require_recipient("eosio.yield"_n);
+}
+
 time_point_sec oracle::get_current_period()
 {
     const uint32_t = current_time_point().sec_since_epoch();
     return time_point_sec((now / PERIOD_INTERVAL) * PERIOD_INTERVAL);
 }
 
-asset oracle::get_balance_amount( const name& token_contract_account, const name& owner, const symbol& sym )
+asset oracle::get_balance_quantity( const name token_contract_account, const name owner, const symbol sym )
 {
     token::accounts _accounts( token_contract_account, owner.value );
     const auto itr = _accounts.find( sym.code().raw() );
@@ -135,17 +154,46 @@ asset oracle::get_balance_amount( const name& token_contract_account, const name
     return { itr->balance.amount, sym };
 }
 
+asset oracle::get_eos_staked( const name owner )
+{
+    eosiosystem::voter_info _voter( "eosio"_n, "eosio"_n.value );
+    const auto itr = _voter.find( owner.value );
+    if ( itr == _voter.end() ) return { 0, EOS };
+    return { itr->staked, EOS };
+}
+
 int64_t oracle::calculate_usd_value( const asset quantity )
 {
-
+    const int64_t price = get_oracle_price( quantity.symbol.code() );
+    return quantity.amount * price / pow(10, quantity.symbol.precision());
 }
 
 int64_t oracle::convert_usd_to_eos( const int64_t usd )
 {
+    const int64_t price = get_oracle_price( EOS.code() );
+    return ( price * usd ) / pow( 10, PRECISION );
+}
+
+int64_t oracle::get_oracle_price( const symbol_code symcode )
+{
     oracle::tokens_table _tokens( get_self(), get_self().value );
+    auto token = _tokens.get( quantity.symbol.code().raw(), "oracle::calculate_usd_value: [quantity.symbol.code] does not exists");
 
-    auto token = _tokens.get( EOS.code().raw(), "oracle::convert_usd_to_eos: [EOS] does not exists");
+    // Defibox Oracle
+    const int64_t price1 = get_defibox_price( token.defibox_oracle_id );
 
+    // Delphi Oracle
+    const int64_t price2 = get_delphi_price( token.delphi_oracle_id );
+
+    // in case oracles do not exists
+    if ( !price2 ) return price1;
+    if ( !price1 ) return price2;
+
+    // TO-DO add price variations checks
+    check( true, "oracle::get_oracle_price: invalid price deviation");
+
+    // average price
+    return ( price1 + price2 ) / 2;
 }
 
 int64_t oracle::get_delphi_price( const name delphi_oracle_id )
@@ -168,12 +216,4 @@ int64_t oracle::get_defibox_price( const uint64_t defibox_oracle_id )
 int64_t oracle::normalize_price( const int64_t price, const uint8_t precision )
 {
     return price * pow(10, PRECISION) / pow(10, precision);
-}
-
-[[eosio::action]]
-void report( const name protocol, const int64_t eos, const int64_t usd, const time_point_sec period )
-{
-    require_auth( get_self() );
-
-    require_recipient("eosio.yield"_n);
 }
