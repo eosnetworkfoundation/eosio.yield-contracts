@@ -32,7 +32,8 @@ $ cleos push action eosio.yield claim '[protocol, receiver]' -p protocol
 
 ```bash
 # approve protocol
-$ cleos push action eosio.yield approve '[protocol]' -p eosio.yield@amdin
+$ cleos push action eosio.yield approve '[protocol]' -p eosio.yield@admin
+# notifies => oracle.yield
 ```
 
 ### `ORACLE` (TVL Oracle)
