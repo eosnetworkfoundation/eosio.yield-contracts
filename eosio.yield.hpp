@@ -17,28 +17,29 @@ class [[eosio::contract("eosio.yield")]] yield : public eosio::contract {
 public:
     using contract::contract;
 
-    // const uint8_t TOKEN_PRECISION = 6;
-    // const uint16_t MAX_MARKET_FEE = 600;
-    // const uint16_t MAX_PROTOCOL_FEE = 200;
-    // const int64_t MAX_SUPPLY = 1'000'000'000'000000; // 1M
-    // const double ANNUAL_YIELD = 0.0005;
-
-    // const name ORACLE_YIELD_CONTRACT = "testorayield"_n;
-
+    // CONSTANTS
+    const name ORACLE_CONTRACT = "oracle.yield"_n;
+    const name EVM_CONTRACT = "eosio.evm"_n;
     const name TOKEN_CONTRACT = "eosio.token"_n;
     const symbol TOKEN_SYMBOL = symbol{"EOS", 4};
     const set<name> SYSTEM_STATUS_TYPES = set<name>{"maintenance"_n, "active"_n};
     const set<name> PROTOCOL_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
     const int64_t MAX_ANNUAL_RATE = 1000;
-
-    // CONSTANTS
     const int32_t ANNUAL_YIELD = 500;
     const uint32_t YEAR = 31536000;
     const uint32_t DAY = 86400;
     const uint32_t MINUTE = 60;
+    const uint32_t TEN_MINUTES = 600;
+    const uint32_t PERIOD_INTERVAL = TEN_MINUTES;
 
     // ERROR MESSAGES
     const string ERROR_CONFIG_NOT_EXISTS = "yield::error: contract is under maintenance";
+
+    // STRUCTS
+    struct Contracts {
+        set<name>       eos;
+        set<string>     evm;
+    };
 
     /**
      * ## TABLE `status`
@@ -49,7 +50,7 @@ public:
      *   - `{uint32_t} counters[0]` - total protocols
      *   - `{uint32_t} counters[1]` - total approved
      *   - `{uint32_t} counters[2]` - total claims
-     * - `{extended_asset} claimed` - total assets claimed
+     * - `{asset} claimed` - total assets claimed
      * - `{time_point_sec} last_updated`
      *
      * ### example
@@ -57,7 +58,7 @@ public:
      * ```json
      * {
      *     "counters": [100, 12, 30],
-     *     "claimed": {"quantity": "102.5000 EOS", "contract": "eosio.token"},
+     *     "claimed": "102.5000 EOS",
      *     "last_updated": "2021-04-12T12:23:42"
      * }
      * ```
@@ -74,6 +75,8 @@ public:
      *
      * - `{name} status` - contract status ("ok", "testing", "maintenance")
      * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
+     * - `{int64_t} min_eos_tvl_report` - minimum EOS TVL report (precision 4)
+     * - `{int64_t} max_eos_tvl_report` - maximum EOS TVL report (precision 4)
      * - `{set<name>} metadata_keys` - list of keys allowed to include in bounty Metadata
      *
      * ### example
@@ -82,6 +85,8 @@ public:
      * {
      *     "status": "ok",
      *     "annual_rate": 5000,
+     *     "min_eos_tvl_report": 200'000'0000,
+     *     "max_eos_tvl_report": 6'000'000'0000,
      *     "metadata_keys": ["name", "url", "defillama", "dappradar", "recover"]
      * }
      * ```
@@ -89,6 +94,8 @@ public:
     struct [[eosio::table("config")]] config_row {
         name                    status = "testing"_n;
         uint16_t                annual_rate = 5000;
+        int64_t                 min_eos_tvl_report = 200'000'0000;
+        int64_t                 max_eos_tvl_report = 6'000'000'0000;
         set<name>               metadata_keys = {"url"_n};
     };
     typedef eosio::singleton< "config"_n, config_row > config_table;
@@ -99,9 +106,11 @@ public:
      * ### params
      *
      * - `{name} protocol` - primary protocol contract
-     * - `{set<name>} contracts` - additional supporting contracts
+     * - `{set<name>} contracts.eos` - additional supporting EOS contracts
+     * - `{set<string>} contracts.evm` - additional supporting EVM contracts
      * - `{name} status="pending"` - status (`pending/active/denied`)
-     * - `{asset} balance` - active balance available to be claimed
+     * - `{extended_asset} balance` - balance available to be claimed
+     * - `{asset} claimed` - total claimed amount
      * - `{time_point_sec} created_at` - created at time
      * - `{time_point_sec} updated_at` - updated at time
      * - `{time_point_sec} claimed_at` - claimed at time
@@ -112,9 +121,13 @@ public:
      * ```json
      * {
      *     "protocol": "myprotocol",
-     *     "contracts": ["myprotocol", "a.myprotocol", "b.myprotocol"],
+     *     "contracts": {
+     *       "eos": ["myprotocol", "mytreasury"],
+     *       "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
+     *     },
      *     "status": "active",
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
+     *     "claimed": "0.0000 EOS",
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
      *     "claimed_at": "1970-01-01T00:00:00",
@@ -124,9 +137,10 @@ public:
      */
     struct [[eosio::table("protocols")]] protocols_row {
         name                    protocol;
-        set<name>               contracts;
+        Contracts               contracts;
         name                    status = "pending"_n;
         extended_asset          balance;
+        asset                   claimed;
         time_point_sec          created_at;
         time_point_sec          updated_at;
         time_point_sec          claimed_at;
@@ -161,9 +175,9 @@ public:
     [[eosio::action]]
     void unregister( const name protocol );
 
-    // @protocol
+    // @protocol or @system
     [[eosio::action]]
-    void setcontracts( const name protocol, const set<name> contracts );
+    void setcontracts( const name protocol, const set<name> eos, const set<string> evm );
 
     // @protocol
     [[eosio::action]]
@@ -171,29 +185,34 @@ public:
 
     // @admin
     [[eosio::action]]
-    void setstatus( const name protocol, const name status );
+    void approve( const name protocol );
+
+    // @admin
+    [[eosio::action]]
+    void deny( const name protocol );
 
     // @system
     [[eosio::action]]
-    void setrate( const int64_t annual_rate );
+    void setrate( const int16_t annual_rate, const int64_t min_eos_tvl_report, const int64_t max_eos_tvl_report );
 
     // @system
     [[eosio::action]]
     void setmetakeys( const set<name> metadata_keys );
 
+    // @system
+    [[eosio::action]]
+    void claimlog( const name protocol, const name receiver, const asset claimed );
+
     [[eosio::on_notify("oracle.yield::report")]]
     void on_report( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos );
 
-
-    // // @system
-    // [[eosio::action]]
-    // void updatetvl( const name protocol, const asset tvl );
+    // action wrappers
+    using claimlog_action = eosio::action_wrapper<"claimlog"_n, &yield::claimlog>;
 
 private :
 
     config_row get_config();
-
-    // utils
+    void set_status( const name protocol, const name status );
     void transfer( const name from, const name to, const extended_asset value, const string& memo );
 
     // //INTERNAL FUNCTIONS DEFINITION
