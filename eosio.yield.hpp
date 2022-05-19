@@ -13,8 +13,6 @@ using namespace std;
 
 #include <math.h>
 
-namespace eosio {
-
 class [[eosio::contract("eosio.yield")]] yield : public eosio::contract {
 public:
     using contract::contract;
@@ -89,9 +87,9 @@ public:
      * ```
      */
     struct [[eosio::table("config")]] config_row {
-        name            status = "testing"_n;
-        uint16_t        annual_rate = 5000;
-        name            metadata_keys = {"url"_n};
+        name                    status = "testing"_n;
+        uint16_t                annual_rate = 5000;
+        set<name>               metadata_keys = {"url"_n};
     };
     typedef eosio::singleton< "config"_n, config_row > config_table;
 
@@ -113,13 +111,13 @@ public:
      *
      * ```json
      * {
-     *     "owner": "contract",
-     *     "contracts": ["contract", "a.contract", "b.contract"],
+     *     "protocol": "myprotocol",
+     *     "contracts": ["myprotocol", "a.myprotocol", "b.myprotocol"],
      *     "status": "active",
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
-     *     "claimed_at": "1970-01-01T00:00:00"
+     *     "claimed_at": "1970-01-01T00:00:00",
      *     "metadata": [{"key": "url", "value": "https://mywebsite.com"}],
      * }
      * ```
@@ -132,11 +130,11 @@ public:
         time_point_sec          created_at;
         time_point_sec          updated_at;
         time_point_sec          claimed_at;
-        map<string, string>     metadata;
+        map<name, string>       metadata;
 
         uint64_t primary_key() const { return protocol.value; }
     };
-    typedef eosio::multi_index< "protocols"_n, protocol> protocols;
+    typedef eosio::multi_index< "protocols"_n, protocols_row> protocols_table;
 
     /**
      * ## ACTION `regprotocol`
@@ -148,7 +146,7 @@ public:
      * ### params
      *
      * - `{name} protocol` - protocol main contract
-     * - `{map<string, string>} metadata` - (optional) key/value
+     * - `{map<name, string>} metadata` - (optional) key/value
      *
      * ### Example
      *
@@ -157,7 +155,7 @@ public:
      * ```
      */
     [[eosio::action]]
-    void regprotocol( const name protocol, const map<string, string> metadata );
+    void regprotocol( const name protocol, const map<name, string> metadata );
 
     // @protocol
     [[eosio::action]]
@@ -177,19 +175,26 @@ public:
 
     // @system
     [[eosio::action]]
-    void setrate( const int64 annual_rate );
+    void setrate( const int64_t annual_rate );
 
     // @system
     [[eosio::action]]
-    void setmetakeys( const map<string, string> metadata_keys );
+    void setmetakeys( const set<name> metadata_keys );
 
-    // @system
-    [[eosio::action]]
-    void updatetvl( const name protocol, const asset tvl );
+    [[eosio::on_notify("oracle.yield::report")]]
+    void on_report( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos );
+
+
+    // // @system
+    // [[eosio::action]]
+    // void updatetvl( const name protocol, const asset tvl );
 
 private :
 
-    yield::configs_row get_configs();
+    config_row get_config();
+
+    // utils
+    void transfer( const name from, const name to, const extended_asset value, const string& memo );
 
     // //INTERNAL FUNCTIONS DEFINITION
 

@@ -1,17 +1,19 @@
+#include <eosio.token/eosio.token.hpp>
+
 #include "./eosio.yield.hpp"
 
 // @protocol
 [[eosio::action]]
-void yield::regprotocol( const name protocol, const map<string, string> metadata )
+void yield::regprotocol( const name protocol, const map<name, string> metadata )
 {
     require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
-    const auto configs = get_configs();
-    const set<name> metadata_keys = configs.metadata_keys;
+    const auto config = get_config();
+    const set<name> metadata_keys = config.metadata_keys;
 
     // validate input
-    check(configs.status == "active"_n, "yield::regprotocol: [status] must be `active`");
+    check(config.status == "active"_n, "yield::regprotocol: [status] must be `active`");
     for ( const auto item : metadata ) {
         check( metadata_keys.find(item.first) != metadata_keys.end(), "yield::regprotocol: invalid [metadata_keys]");
     }
@@ -24,7 +26,7 @@ void yield::regprotocol( const name protocol, const map<string, string> metadata
         row.balance.quantity.symbol = TOKEN_SYMBOL;
         if ( !row.created_at.sec_since_epoch() ) row.created_at = current_time_point();
         row.updated_at = current_time_point();
-    });
+    };
 
     // modify or create
     auto itr = _protocols.find( protocol.value );
@@ -38,6 +40,8 @@ void yield::claim( const name protocol, const optional<name> receiver )
 {
     require_auth( protocol );
 
+    yield::protocols_table _protocols( get_self(), get_self().value );
+
     if ( receiver ) check( is_account( *receiver ), "yield::claim: [receiver] does not exists");
 
     auto & itr = _protocols.get(protocol.value, "yield::claim: [protocol] does not exists");
@@ -50,7 +54,7 @@ void yield::claim( const name protocol, const optional<name> receiver )
 
     _protocols.modify( itr, same_payer, [&]( auto& row ) {
         row.balance.quantity.amount = 0;
-        row.last_claim = current_time_point();
+        row.claimed_at = current_time_point();
     });
 }
 
@@ -59,6 +63,8 @@ void yield::claim( const name protocol, const optional<name> receiver )
 void yield::setstatus( const name protocol, const name status )
 {
     require_auth( get_self() );
+
+    yield::protocols_table _protocols( get_self(), get_self().value );
 
     auto & itr = _protocols.get(protocol.value, "yield::approve: [protocol] does not exists");
     check( PROTOCOL_STATUS_TYPES.find( status ) != PROTOCOL_STATUS_TYPES.end(), "yield::approve: [status] is invalid");
@@ -70,11 +76,11 @@ void yield::setstatus( const name protocol, const name status )
 
 // @system
 [[eosio::action]]
-void setrate( const int64 annual_rate )
+void yield::setrate( const int64_t annual_rate )
 {
     require_auth( get_self() );
 
-    yield::configs_table _configs( get_self(), get_self().value );
+    yield::config_table _config( get_self(), get_self().value );
     auto config = _config.get_or_default();
     check( annual_rate <= MAX_ANNUAL_RATE, "yield::setrate: [annual_rate] exceeds maximum annual rate");
     config.annual_rate = annual_rate;
@@ -83,14 +89,34 @@ void setrate( const int64 annual_rate )
 
 // @system
 [[eosio::action]]
-void setmetakeys( const map<string, string> metadata_keys )
+void yield::setmetakeys( const set<name> metadata_keys )
 {
     require_auth( get_self() );
 
-    yield::configs_table _configs( get_self(), get_self().value );
+    yield::config_table _config( get_self(), get_self().value );
     auto config = _config.get_or_default();
     config.metadata_keys = metadata_keys;
     _config.set(config, get_self());
+}
+
+// @protocol
+[[eosio::action]]
+void yield::unregister( const name protocol )
+{
+    check(false, "TO-DO");
+}
+
+[[eosio::on_notify("oracle.yield::report")]]
+void yield::on_report( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos )
+{
+    check(false, "TO-DO");
+}
+
+// @protocol
+[[eosio::action]]
+void yield::setcontracts( const name protocol, const set<name> contracts )
+{
+    check(false, "TO-DO");
 }
 
 void yield::transfer( const name from, const name to, const extended_asset value, const string& memo )
@@ -99,9 +125,9 @@ void yield::transfer( const name from, const name to, const extended_asset value
     transfer.send( from, to, value.quantity, memo );
 }
 
-yield::configs_row yield::get_configs()
+yield::config_row yield::get_config()
 {
-    yield::configs_table _configs( get_self(), get_self().value );
-    check( _configs.exists(), "yield::get_configs: contract is not initialized");
-    return _configs.get();
+    yield::config_table _config( get_self(), get_self().value );
+    check( _config.exists(), "yield::get_config: contract is not initialized");
+    return _config.get();
 }
