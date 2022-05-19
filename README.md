@@ -38,8 +38,8 @@ $ cleos push action eosio.yield approve '[protocol]' -p eosio.yield
 ### `ORACLE` (TVL Oracle)
 
 ```bash
-# add balance to protocol
-$ cleos push action eosio.yield addbalance '[mycontract]' -p oracle.yield
+# report protocol TVL to Yield+
+$ cleos push action oracle.yield report '[protocol, "2021-04-12T12:20:00", <TVL USD>, <TVL EOS>]' -p oracle.yield
 ```
 
 ## Table of Content
