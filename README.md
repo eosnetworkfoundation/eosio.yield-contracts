@@ -23,6 +23,7 @@ $ cleos push action eosio.yield regprotocol '[protocol, [{"key": "url", "value":
 $ cleos push action eosio.yield setcontracts '[protocol, [a.protocol, b.protocol]]' -p protocol -p a.protocol -p b.protocol
 
 # claim rewards
+# > after 24 hours of being approved
 # > claimable every 10 minutes interval
 $ cleos push action eosio.yield claim '[protocol, receiver]' -p protocol
 ```
