@@ -13,6 +13,40 @@
 #include "./oracle.yield.hpp"
 #include "./src/notifiers.cpp"
 
+
+// @oracle
+[[eosio::action]]
+void oracle::regoracle( const name oracle, const map<name, string> metadata )
+{
+    require_auth( oracle );
+
+    oracle::oracles_table _oracles( get_self(), get_self().value );
+    const auto config = get_config();
+    const set<name> metadata_keys = config.metadata_keys;
+
+    // validate input
+    check(config.status == "active"_n, "yield::regoracle: [status] must be `active`");
+    for ( const auto item : metadata ) {
+        check( metadata_keys.find(item.first) != metadata_keys.end(), "yield::regoracle: invalid [metadata_keys]");
+    }
+
+    auto insert = [&]( auto& row ) {
+        // status => "pending" by default
+        row.oracle = oracle;
+        row.metadata = metadata;
+        row.balance.contract = TOKEN_CONTRACT;
+        row.balance.quantity.symbol = TOKEN_SYMBOL;
+        row.claimed.symbol = TOKEN_SYMBOL;
+        if ( !row.created_at.sec_since_epoch() ) row.created_at = current_time_point();
+        row.updated_at = current_time_point();
+    };
+
+    // modify or create
+    auto itr = _oracles.find( oracle.value );
+    if ( itr == _oracles.end() ) _oracles.emplace( get_self(), insert );
+    else _oracles.modify( itr, get_self(), insert );
+}
+
 // @system
 [[eosio::action]]
 void oracle::addtoken( const symbol_code symcode, const name contract, const optional<uint64_t> defibox_oracle_id, const optional<name> delphi_oracle_id )
