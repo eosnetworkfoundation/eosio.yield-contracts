@@ -1,3 +1,4 @@
+// eosio
 #include <eosio.token/eosio.token.hpp>
 
 #include "./eosio.yield.hpp"
@@ -154,7 +155,7 @@ void yield::on_report( const name protocol, const time_point_sec period, const i
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get(protocol.value, "yield::on_report: [protocol] does not exists");
 
-    // required if on_notify uses * wildcard as contract
+    // required if `on_notify` uses * wildcard for contract
     check( get_first_receiver() == ORACLE_CONTRACT, "yield::on_report: [get_first_receiver] is invalid");
     check( itr.period_at == period, "yield::on_report: [period] already updated"); // prevents double report
 

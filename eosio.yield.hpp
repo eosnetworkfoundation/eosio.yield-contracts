@@ -17,11 +17,15 @@ class [[eosio::contract("eosio.yield")]] yield : public eosio::contract {
 public:
     using contract::contract;
 
-    // CONSTANTS
+    // CONTRACTS
     const name ORACLE_CONTRACT = "oracle.yield"_n;
     const name EVM_CONTRACT = "eosio.evm"_n;
+
+    // TOKEN
     const name TOKEN_CONTRACT = "eosio.token"_n;
     const symbol TOKEN_SYMBOL = symbol{"EOS", 4};
+
+    // CONSTANTS
     const set<name> SYSTEM_STATUS_TYPES = set<name>{"maintenance"_n, "active"_n};
     const set<name> PROTOCOL_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
     const int64_t MAX_ANNUAL_RATE = 1000;
