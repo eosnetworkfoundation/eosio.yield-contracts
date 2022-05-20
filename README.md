@@ -25,8 +25,18 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 ### `ORACLE` (TVL Oracle)
 
 ```bash
+# register protocol
+$ cleos push action eosio.yield regprotocol '[protocol, [{"key": "url", "value": "https://myprotocol.com"}]]' -p protocol
+
 # report TVL
 $ cleos push action oracle.yield report '["mydapp", "2022-05-13T00:00:00", 30000000, 20000000]' -p oracle.yield
+```
+
+### `ADMIN` (Operators)
+
+```bash
+# approve oracle
+$ cleos push action oracle.yield approve '[oracle]' -p oracle.yield@admin
 ```
 
 ## Table of Content
