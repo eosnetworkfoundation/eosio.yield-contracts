@@ -15,8 +15,8 @@ Yield+ is a Rewards system that incentivizes DeFi protocols to retain long-term 
 ### `USER` (DeFi application protocol)
 
 ```bash
-# apply protocol
-$ cleos push action eosio.yield regprotocol '[protocol, [{"key": "url", "value": "https://mywebsite.com"}]]' -p protocol
+# register protocol
+$ cleos push action eosio.yield regprotocol '[protocol, [{"key": "url", "value": "https://myprotocol.com"}]]' -p protocol
 
 # set additional protocol contracts
 # > action can only be called during [status="pending"]

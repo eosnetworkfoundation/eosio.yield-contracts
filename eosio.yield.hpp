@@ -137,7 +137,7 @@ public:
      *     "updated_at": "2022-05-13T00:00:00",
      *     "claimed_at": "1970-01-01T00:00:00",
      *     "period_at": "1970-01-01T00:00:00",
-     *     "metadata": [{"key": "url", "value": "https://mywebsite.com"}],
+     *     "metadata": [{"key": "url", "value": "https://myprotocol.com"}]
      * }
      * ```
      */
