@@ -114,6 +114,7 @@ public:
      * - `{time_point_sec} created_at` - created at time
      * - `{time_point_sec} updated_at` - updated at time
      * - `{time_point_sec} claimed_at` - claimed at time
+     * - `{time_point_sec} period_at` - period at time
      * - `{map<string, string} metadata` - metadata
      *
      * ### example
@@ -131,6 +132,7 @@ public:
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
      *     "claimed_at": "1970-01-01T00:00:00",
+     *     "period_at": "1970-01-01T00:00:00",
      *     "metadata": [{"key": "url", "value": "https://mywebsite.com"}],
      * }
      * ```
@@ -144,6 +146,7 @@ public:
         time_point_sec          created_at;
         time_point_sec          updated_at;
         time_point_sec          claimed_at;
+        time_point_sec          period_at;
         map<name, string>       metadata;
 
         uint64_t primary_key() const { return protocol.value; }

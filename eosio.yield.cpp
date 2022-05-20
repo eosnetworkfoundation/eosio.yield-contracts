@@ -156,7 +156,7 @@ void yield::on_report( const name protocol, const time_point_sec period, const i
 
     // required if on_notify uses * wildcard as contract
     check( get_first_receiver() == ORACLE_CONTRACT, "yield::on_report: [get_first_receiver] is invalid");
-    check( itr.updated_at == period, "yield::on_report: [period] already updated"); // prevents double report
+    check( itr.period_at == period, "yield::on_report: [period] already updated"); // prevents double report
 
     // calculate rewards
     const auto config = get_config();
@@ -165,7 +165,7 @@ void yield::on_report( const name protocol, const time_point_sec period, const i
     // modify contracts
     _protocols.modify( itr, protocol, [&]( auto& row ) {
         row.balance.quantity.amount += rewards;
-        row.updated_at = period;
+        row.period_at = period;
     });
 }
 
