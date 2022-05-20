@@ -1,3 +1,5 @@
+#pragma once
+
 #include <eosio/eosio.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/system.hpp>
@@ -5,8 +7,7 @@
 #include <math.h>
 
 using namespace eosio;
-
-namespace eosio {
+using namespace std;
 
 class [[eosio::contract("oracle.yield")]] oracle : public eosio::contract {
 public:
@@ -29,6 +30,10 @@ public:
         vector<asset>   balances;
         int64_t         usd;
         int64_t         eos;
+    };
+    struct Contracts {
+        set<name>       eos;
+        set<string>     evm;
     };
 
     /**
@@ -68,8 +73,9 @@ public:
      * ### params
      *
      * - `{name} protocol` - primary protocol contract
-     * - `{set<name>} contracts` - additional supporting contracts
      * - `{time_point_sec} period` - updated at time
+     * - `{set<name>} contracts.eos` - additional supporting EOS contracts
+     * - `{set<string>} contracts.evm` - additional supporting EVM contracts
      * - `{int64_t} usd` - USD TVL averaged value
      * - `{int64_t} eos` - EOS TVL averaged value
      * - `{map<time_point_sec, Balances>} balances` - total assets balances in custody of protocol contracts
@@ -78,8 +84,11 @@ public:
      *
      * ```json
      * {
-     *     "protocol": "mydapp",
-     *     "contracts": ["mydapp"],
+     *     "protocol": "myprotocol",
+     *     "contracts": {
+     *       "eos": ["myprotocol", "mytreasury"],
+     *       "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
+     *     },
      *     "period": "2022-05-13T00:00:00",
      *     "usd": 30000000,
      *     "eos": 20000000,
@@ -95,44 +104,44 @@ public:
      */
     struct [[eosio::table("tvl")]] tvl_row {
         name                            protocol;
-        set<name>                       contracts;
-        time_point_sec                  updated_at;
+        Contracts                       contracts;
+        time_point_sec                  period;
         int64_t                         usd;
         int64_t                         eos;
         map<time_point_sec, TVL>        tvl;
 
         uint64_t primary_key() const { return protocol.value; }
     };
-    typedef eosio::multi_index< "tvl"_n, snapshot> tvl;
+    typedef eosio::multi_index< "tvl"_n, tvl_row> tvl_table;
 
     // @oracle
     [[eosio::action]]
-    void update( const name protocol );
+    void update( const name oracle, const name protocol );
 
     // @oracle
     [[eosio::action]]
-    void updateall();
+    void updateall( const name oracle, const optional<uint16_t> max_rows );
 
-    /**
-     * ## ACTION `setcontracts`
-     *
-     * - **authority**: `get_self()`
-     *
-     * Set contracts for protocol
-     *
-     * ### params
-     *
-     * - `{name} protocol` - (primary key) protocol
-     * - `{set<name>} contracts` - token contracts
-     *
-     * ### example
-     *
-     * ```bash
-     * $ cleos push action oracle.yield setcontracts '["mydapp", ["mydapp", "a.mydapp", "b.mydapp"]]' -p oracle.yield
-     * ```
-     */
-    [[eosio::action]]
-    void setcontracts( const name protocol, const set<name> contracts );
+    // /**
+    //  * ## ACTION `setcontracts`
+    //  *
+    //  * - **authority**: `get_self()`
+    //  *
+    //  * Set contracts for protocol
+    //  *
+    //  * ### params
+    //  *
+    //  * - `{name} protocol` - (primary key) protocol
+    //  * - `{set<name>} contracts` - token contracts
+    //  *
+    //  * ### example
+    //  *
+    //  * ```bash
+    //  * $ cleos push action oracle.yield setcontracts '["mydapp", ["mydapp", "a.mydapp", "b.mydapp"]]' -p oracle.yield
+    //  * ```
+    //  */
+    // [[eosio::action]]
+    // void setcontracts( const name protocol, const set<name> contracts );
 
     /**
      * ## ACTION `delprotocol`
@@ -163,10 +172,10 @@ public:
      *
      * ### params
      *
-     * - `{symbol} sym` - (primary key) token symbol
+     * - `{symbol_code} symcode` - token symbol code
      * - `{name} contract` - token contract
-     * - `{uint64_t} defibox_oracle_id` - Defibox oracle ID
-     * - `{name} delphi_oracle_id` - Delphi oracle ID
+     * - `{uint64_t} [defibox_oracle_id=""]` - (optional) Defibox oracle ID
+     * - `{name} [delphi_oracle_id=""]` - (optional) Delphi oracle ID
      *
      * ### example
      *
@@ -175,7 +184,7 @@ public:
      * ```
      */
     [[eosio::action]]
-    void addtoken( const symbol sym, const name contract, const uint64_t defibox_oracle_id, const name delphi_oracle_id );
+    void addtoken( const symbol_code symcode, const name contract, const optional<uint64_t> defibox_oracle_id, const optional<name> delphi_oracle_id );
 
     /**
      * ## ACTION `deltoken`
@@ -232,8 +241,8 @@ private:
     asset get_eos_staked( const name owner );
 
     // calculate prices
-    int64_t calculate_usd_value( const asset quantity )
-    int64_t convert_usd_to_eos( const int64_t usd )
+    int64_t calculate_usd_value( const asset quantity );
+    int64_t convert_usd_to_eos( const int64_t usd );
     int64_t get_oracle_price( const symbol_code symcode );
     int64_t normalize_price( const int64_t price, const uint8_t precision );
     int64_t get_delphi_price( const name delphi_oracle_id );

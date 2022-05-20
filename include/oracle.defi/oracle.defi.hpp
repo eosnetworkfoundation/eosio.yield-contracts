@@ -4,6 +4,8 @@
 #include <eosio/asset.hpp>
 #include <eosio/system.hpp>
 
+#include <math.h>
+
 using namespace eosio;
 
 constexpr extended_symbol value_symbol { symbol{"USDT",4}, "tethertether"_n };
