@@ -46,15 +46,41 @@ void oracle::deltoken( const symbol_code symcode )
     _tokens.erase( itr );
 }
 
-// @system
-[[eosio::action]]
-void oracle::delprotocol( const name protocol )
+[[eosio::on_notify("eosio.yield::approve")]]
+void oracle::on_approve( const name protocol )
 {
-    require_auth( get_self() );
+    register_protocol( protocol );
+}
 
+[[eosio::on_notify("eosio.yield::deny")]]
+void oracle::on_deny( const name protocol )
+{
+    erase_protocol( protocol );
+}
+
+[[eosio::on_notify("eosio.yield::unregister")]]
+void oracle::on_unregister( const name protocol )
+{
+    erase_protocol( protocol );
+}
+
+void oracle::erase_protocol( const name protocol )
+{
     oracle::tvl_table _tvl( get_self(), get_self().value );
-    auto & itr = _tvl.get( protocol.value, "oracle::delprotocol: [protocol] does not exists" );
-    _tvl.erase( itr );
+    auto itr = _tvl.find( protocol.value );
+    if ( itr != _tvl.end() ) _tvl.erase( itr );
+}
+
+void oracle::register_protocol( const name protocol )
+{
+    oracle::tvl_table _tvl( get_self(), get_self().value );
+    auto itr = _tvl.find( protocol.value );
+    if ( itr != _tvl.end() ) return; // skip already exists
+
+    // create initial protocol
+    _tvl.emplace( get_self(), [&]( auto& row ) {
+        row.protocol = protocol;
+    });
 }
 
 // @oracle
@@ -64,17 +90,19 @@ void oracle::update( const name oracle, const name protocol )
     require_auth( oracle );
 
     oracle::tvl_table _tvl( get_self(), get_self().value );
+    yield::protocols_table _protocols( get_self(), get_self().value );
     oracle::tokens_table _tokens( get_self(), get_self().value );
 
     const time_point_sec period = get_current_period();
-    auto & itr = _tvl.get( protocol.value, "oracle::update: [protocol] does not exists" );
+    const auto contracts = _protocols.get( protocol.value, "oracle::update: [protocol] does not exists" ).contracts;
+    auto & itr = _tvl.get( protocol.value, "oracle::update: [tvl.protocol] does not exists" );
 
     // prevent duplicate updates
-    check( itr.period != period, "oracle::update: tvl already updated" );
+    check( itr.period_at != period, "oracle::update: [tvl.period] tvl already updated" );
 
-    // get all balances from protocol contracts
+    // get all balances from protocol EOS contracts
     vector<asset> balances;
-    for ( const name contract : itr.contracts.eos ) {
+    for ( const name contract : contracts.eos ) {
         for ( const auto token : _tokens ) {
             // liquid balance
             const asset balance = get_balance_quantity( contract, token.contract, token.sym );
@@ -88,6 +116,10 @@ void oracle::update( const name oracle, const name protocol )
         }
     }
 
+    for ( const string contract : contracts.evm ) {
+        check(false, "NOT IMPLEMENTED");
+    }
+
     // calculate USD valuation
     int64_t usd = 0;
     for ( const asset balance : balances ) {
@@ -99,7 +131,7 @@ void oracle::update( const name oracle, const name protocol )
 
     // update token TVL
     _tvl.modify( itr, get_self(), [&]( auto& row ) {
-        row.period = period;
+        row.period_at = period;
         row.tvl[period] = TVL{ balances, usd, eos };
     });
 
@@ -119,7 +151,7 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
 
     int limit = max_rows ? *max_rows : 20;
     for ( const auto row : _tvl ) {
-        if ( row.period == period ) continue;
+        if ( row.period_at == period ) continue;
         update( oracle, row.protocol );
         limit -= 1;
         if ( limit <= 0 ) break;

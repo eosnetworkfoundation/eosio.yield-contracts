@@ -1,6 +1,6 @@
 #!/bin/bash
 
-blanc++ oracle.yield.cpp -I include
+blanc++ oracle.yield.cpp -I include -I ../
 
 if [ ! -f "./include/eosio.token/eosio.token.wasm" ]; then
     blanc++ ./include/eosio.token/eosio.token.cpp -I include -o include/eosio.token/eosio.token.wasm

@@ -73,9 +73,7 @@ public:
      * ### params
      *
      * - `{name} protocol` - primary protocol contract
-     * - `{time_point_sec} period` - updated at time
-     * - `{set<name>} contracts.eos` - additional supporting EOS contracts
-     * - `{set<string>} contracts.evm` - additional supporting EVM contracts
+     * - `{time_point_sec} period_at` - last period at time
      * - `{int64_t} usd` - USD TVL averaged value
      * - `{int64_t} eos` - EOS TVL averaged value
      * - `{map<time_point_sec, Balances>} balances` - total assets balances in custody of protocol contracts
@@ -85,11 +83,7 @@ public:
      * ```json
      * {
      *     "protocol": "myprotocol",
-     *     "contracts": {
-     *       "eos": ["myprotocol", "mytreasury"],
-     *       "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
-     *     },
-     *     "period": "2022-05-13T00:00:00",
+     *     "period_at": "2022-05-13T00:00:00",
      *     "usd": 30000000,
      *     "eos": 20000000,
      *     "tvl": [{
@@ -104,8 +98,7 @@ public:
      */
     struct [[eosio::table("tvl")]] tvl_row {
         name                            protocol;
-        Contracts                       contracts;
-        time_point_sec                  period;
+        time_point_sec                  period_at;
         int64_t                         usd;
         int64_t                         eos;
         map<time_point_sec, TVL>        tvl;
@@ -121,47 +114,6 @@ public:
     // @oracle
     [[eosio::action]]
     void updateall( const name oracle, const optional<uint16_t> max_rows );
-
-    // /**
-    //  * ## ACTION `setcontracts`
-    //  *
-    //  * - **authority**: `get_self()`
-    //  *
-    //  * Set contracts for protocol
-    //  *
-    //  * ### params
-    //  *
-    //  * - `{name} protocol` - (primary key) protocol
-    //  * - `{set<name>} contracts` - token contracts
-    //  *
-    //  * ### example
-    //  *
-    //  * ```bash
-    //  * $ cleos push action oracle.yield setcontracts '["mydapp", ["mydapp", "a.mydapp", "b.mydapp"]]' -p oracle.yield
-    //  * ```
-    //  */
-    // [[eosio::action]]
-    // void setcontracts( const name protocol, const set<name> contracts );
-
-    /**
-     * ## ACTION `delprotocol`
-     *
-     * - **authority**: `get_self()`
-     *
-     * Delete protocol
-     *
-     * ### params
-     *
-     * - `{name} protocol` - protocol
-     *
-     * ### example
-     *
-     * ```bash
-     * $ cleos push action oracle.yield delprotocol '["mydapp"]' -p oracle.yield
-     * ```
-     */
-    [[eosio::action]]
-    void delprotocol( const name protocol );
 
     /**
      * ## ACTION `addtoken`
@@ -229,6 +181,15 @@ public:
     [[eosio::action]]
     void report( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos );
 
+    [[eosio::on_notify("eosio.yield::approve")]]
+    void on_approve( const name protocol );
+
+    [[eosio::on_notify("eosio.yield::deny")]]
+    void on_deny( const name protocol );
+
+    [[eosio::on_notify("eosio.yield::unregister")]]
+    void on_unregister( const name protocol );
+
     // action wrappers
     using report_action = eosio::action_wrapper<"report"_n, &oracle::report>;
 
@@ -239,6 +200,10 @@ private:
     // get balances
     asset get_balance_quantity( const name token_contract_account, const name owner, const symbol sym );
     asset get_eos_staked( const name owner );
+
+    // notifiers
+    void erase_protocol( const name protocol );
+    void register_protocol( const name protocol );
 
     // calculate prices
     int64_t calculate_usd_value( const asset quantity );
