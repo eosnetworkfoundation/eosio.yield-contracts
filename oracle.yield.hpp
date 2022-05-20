@@ -13,7 +13,8 @@ class [[eosio::contract("oracle.yield")]] oracle : public eosio::contract {
 public:
     using contract::contract;
 
-    // EXTERNAL CONTRACTS
+    // CONTRACTS
+    const name YIELD_CONTRACT = "eosio.yield"_n;
     const name DELPHI_ORACLE_CONTRACT = "delphioracle"_n;
     const name DEFIBOX_ORACLE_CONTRACT = "oracle.defi"_n;
 

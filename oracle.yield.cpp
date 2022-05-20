@@ -6,9 +6,12 @@
 #include <oracle.defi/oracle.defi.hpp>
 #include <delphioracle/delphioracle.hpp>
 
-// internal
+// sibling
 #include <eosio.yield/eosio.yield.hpp>
+
+// local
 #include "./oracle.yield.hpp"
+#include "./src/notifiers.cpp"
 
 // @system
 [[eosio::action]]
@@ -44,43 +47,6 @@ void oracle::deltoken( const symbol_code symcode )
     oracle::tokens_table _tokens( get_self(), get_self().value );
     auto & itr = _tokens.get( symcode.raw(), "oracle::deltoken: [symcode] does not exists" );
     _tokens.erase( itr );
-}
-
-[[eosio::on_notify("eosio.yield::approve")]]
-void oracle::on_approve( const name protocol )
-{
-    register_protocol( protocol );
-}
-
-[[eosio::on_notify("eosio.yield::deny")]]
-void oracle::on_deny( const name protocol )
-{
-    erase_protocol( protocol );
-}
-
-[[eosio::on_notify("eosio.yield::unregister")]]
-void oracle::on_unregister( const name protocol )
-{
-    erase_protocol( protocol );
-}
-
-void oracle::erase_protocol( const name protocol )
-{
-    oracle::tvl_table _tvl( get_self(), get_self().value );
-    auto itr = _tvl.find( protocol.value );
-    if ( itr != _tvl.end() ) _tvl.erase( itr );
-}
-
-void oracle::register_protocol( const name protocol )
-{
-    oracle::tvl_table _tvl( get_self(), get_self().value );
-    auto itr = _tvl.find( protocol.value );
-    if ( itr != _tvl.end() ) return; // skip already exists
-
-    // create initial protocol
-    _tvl.emplace( get_self(), [&]( auto& row ) {
-        row.protocol = protocol;
-    });
 }
 
 // @oracle
@@ -164,7 +130,7 @@ void oracle::report( const name protocol, const time_point_sec period, const int
 {
     require_auth( get_self() );
 
-    require_recipient("eosio.yield"_n);
+    require_recipient(YIELD_CONTRACT);
 }
 
 time_point_sec oracle::get_current_period()
