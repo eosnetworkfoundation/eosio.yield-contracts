@@ -13,7 +13,6 @@
 #include "./oracle.yield.hpp"
 #include "./src/notifiers.cpp"
 
-
 // @oracle
 [[eosio::action]]
 void oracle::regoracle( const name oracle, const map<name, string> metadata )
@@ -45,6 +44,42 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
     auto itr = _oracles.find( oracle.value );
     if ( itr == _oracles.end() ) _oracles.emplace( get_self(), insert );
     else _oracles.modify( itr, get_self(), insert );
+}
+
+// @admin
+[[eosio::action]]
+void oracle::approve( const name oracle )
+{
+    require_auth( get_self() );
+    set_status( oracle, "active"_n );
+}
+
+// @admin
+[[eosio::action]]
+void oracle::deny( const name oracle )
+{
+    require_auth( get_self() );
+    set_status( oracle, "denied"_n );
+}
+
+void oracle::set_status( const name oracle, const name status )
+{
+    oracle::oracles_table _oracles( get_self(), get_self().value );
+
+    auto & itr = _oracles.get(oracle.value, "oracle::set_status: [protocol] does not exists");
+    check( ORACLE_STATUS_TYPES.find( status ) != ORACLE_STATUS_TYPES.end(), "oracle::set_status: [status] is invalid");
+
+    _oracles.modify( itr, same_payer, [&]( auto& row ) {
+        check( row.status != status, "oracle::set_status: [status] not modified");
+        row.status = status;
+    });
+}
+
+void oracle::check_oracle_active( const name oracle )
+{
+    oracle::oracles_table _oracles( get_self(), get_self().value );
+    auto & itr = _oracles.get(oracle.value, "oracle::set_status: [protocol] does not exists");
+    check( itr == "active"_n, "oracle::check_oracle_active: [status] must be active");
 }
 
 // @system
@@ -88,11 +123,14 @@ void oracle::deltoken( const symbol_code symcode )
 void oracle::update( const name oracle, const name protocol )
 {
     require_auth( oracle );
+    check_oracle_active( oracle );
 
+    // tables
     oracle::tvl_table _tvl( get_self(), get_self().value );
     yield::protocols_table _protocols( get_self(), get_self().value );
     oracle::tokens_table _tokens( get_self(), get_self().value );
 
+    // get protocol details
     const time_point_sec period = get_current_period();
     const auto contracts = _protocols.get( protocol.value, "oracle::update: [protocol] does not exists" ).contracts;
     auto & itr = _tvl.get( protocol.value, "oracle::update: [tvl.protocol] does not exists" );
@@ -129,15 +167,33 @@ void oracle::update( const name oracle, const name protocol )
     // calculate EOS valuation
     const int64_t eos = convert_usd_to_eos( usd );
 
-    // update token TVL
+    // add TVL to history
     _tvl.modify( itr, get_self(), [&]( auto& row ) {
         row.period_at = period;
-        row.tvl[period] = TVL{ balances, usd, eos };
+        row.history[period] = TVL{ balances, usd, eos };
     });
 
-    // report to Yield+
+    // report
+    generate_report( oracle, period, itr.history );
+
+    // log event
+    oracle::updatelog_action updatelog( get_self(), { get_self(), "active"_n });
+    updatelog.send( oracle, protocol, period, usd, eos, balances );
+}
+
+// generate report TVL to Yield+ Rewards
+void oracle::generate_report( const name protocol, const time_point_sec period, const map<time_point_sec, TVL> history )
+{
+    // TO-DO make sure report is valid (3x48 TVL buckets)
+    if ( false ) return;
+
     oracle::report_action report( get_self(), { get_self(), "active"_n });
     report.send( protocol, period, usd, eos );
+}
+
+int64_t oracle::compute_average_tvl( )
+{
+    // TO-DO
 }
 
 // @oracle
@@ -156,6 +212,38 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
         limit -= 1;
         if ( limit <= 0 ) break;
     }
+}
+
+// @eosio.code
+[[eosio::action]]
+void yield::updatelog( const name protocol, const time_point_sec period, const vector<asset> balances, const int64_t usd, const int64_t eos )
+{
+    require_auth( get_self() );
+}
+
+// @system
+[[eosio::action]]
+void oracle::setreward( const asset reward_per_update )
+{
+    require_auth( get_self() );
+
+    oracle::config_table _config( get_self(), get_self().value );
+    auto config = _config.get_or_default();
+    check( reward_per_update.symbol == TOKEN_SYMBOL, "oracle::setreward: [symbol] is invalid");
+    config.reward_per_update = reward_per_update;
+    _config.set(config, get_self());
+}
+
+// @system
+[[eosio::action]]
+void oracle::setmetakeys( const set<name> metadata_keys )
+{
+    require_auth( get_self() );
+
+    oracle::config_table _config( get_self(), get_self().value );
+    auto config = _config.get_or_default();
+    config.metadata_keys = metadata_keys;
+    _config.set(config, get_self());
 }
 
 // @eosio.code
@@ -244,4 +332,11 @@ int64_t oracle::get_defibox_price( const uint64_t defibox_oracle_id )
 int64_t oracle::normalize_price( const int64_t price, const uint8_t precision )
 {
     return price * pow(10, PRECISION) / pow(10, precision);
+}
+
+oracle::config_row oracle::get_config()
+{
+    oracle::config_table _config( get_self(), get_self().value );
+    check( _config.exists(), "oracle::get_config: contract is not initialized");
+    return _config.get();
 }

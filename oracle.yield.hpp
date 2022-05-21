@@ -23,6 +23,8 @@ public:
     const symbol TOKEN_SYMBOL = symbol{"EOS", 4};
 
     // CONSTANTS
+    const set<name> SYSTEM_STATUS_TYPES = set<name>{"maintenance"_n, "active"_n};
+    const set<name> ORACLE_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
     const uint32_t TEN_MINUTES = 600;
     const uint32_t ONE_DAY = 86400;
     const uint32_t PERIOD_INTERVAL = TEN_MINUTES;
@@ -36,56 +38,28 @@ public:
         int64_t         usd;
         int64_t         eos;
     };
-    struct Contracts {
-        set<name>       eos;
-        set<string>     evm;
-    };
-
-    /**
-     * ## TABLE `status`
-     *
-     * ### params
-     *
-     * - `{vector<uint32_t>} counters` - counters
-     *   - `{uint32_t} counters[0]` - total updates
-     * - `{asset} claimed` - total assets claimed
-     * - `{time_point_sec} last_updated`
-     *
-     * ### example
-     *
-     * ```json
-     * {
-     *     "counters": [100],
-     *     "claimed": "102.5000 EOS",
-     *     "last_updated": "2021-04-12T12:23:42"
-     * }
-     * ```
-     */
-    struct [[eosio::table("status")]] status_row {
-        vector<uint32_t>        counters;
-        asset                   claimed;
-        time_point_sec          last_updated;
-    };
-    typedef eosio::singleton< "status"_n, status_row > status_table;
 
     /**
      * ## TABLE `config`
      *
-     * - `{name} status` - contract status ("ok", "testing", "maintenance")
-     * - `{set<name>} metadata_keys` - list of keys allowed to include in bounty Metadata
+     * - `{name} status` - contract status ("ok", "maintenance")
+     * - `{asset} reward_per_update` - reward per update (ex: "0.0200 EOS")
+     * - `{set<name>} metadata_keys` - list of allowed metadata keys
      *
      * ### example
      *
      * ```json
      * {
      *     "status": "ok",
-     *     "metadata_keys": ["name", "url", "defillama", "dappradar", "recover"]
+     *     "reward_per_update": "0.0200 EOS",
+     *     "metadata_keys": ["name", "url"]
      * }
      * ```
      */
     struct [[eosio::table("config")]] config_row {
-        name                    status = "testing"_n;
-        set<name>               metadata_keys = {"url"_n};
+        name                status = "maintenance"_n;
+        asset               reward_per_update = {200, symbol{"EOS", 4}};
+        set<name>           metadata_keys = {"url"_n};
     };
     typedef eosio::singleton< "config"_n, config_row > config_table;
 
@@ -129,7 +103,7 @@ public:
      * - `{time_point_sec} period_at` - last period at time
      * - `{int64_t} usd` - USD TVL averaged value
      * - `{int64_t} eos` - EOS TVL averaged value
-     * - `{map<time_point_sec, Balances>} balances` - total assets balances in custody of protocol contracts
+     * - `{map<time_point_sec, TVL>} history` - historical assets balances & values by timestamp
      *
      * ### example
      *
@@ -139,7 +113,7 @@ public:
      *     "period_at": "2022-05-13T00:00:00",
      *     "usd": 30000000,
      *     "eos": 20000000,
-     *     "tvl": [{
+     *     "history": [{
      *         "key": "2022-05-13T00:00:00", {
      *             "balances": ["1000.0000 EOS", "1500.0000 USDT"],
      *             "usd": 30000000,
@@ -154,7 +128,7 @@ public:
         time_point_sec                  period_at;
         int64_t                         usd;
         int64_t                         eos;
-        map<time_point_sec, TVL>        tvl;
+        map<time_point_sec, TVL>        history;
 
         uint64_t primary_key() const { return protocol.value; }
     };
@@ -287,11 +261,23 @@ public:
      * ### example
      *
      * ```bash
-     * $ cleos push action oracle.yield report '["mydapp", "2022-05-13T00:00:00", 30000000, 20000000]' -p oracle.yield
+     * $ cleos push action oracle.yield report '["myprotocol", "2022-05-13T00:00:00", 30000000, 20000000]' -p oracle.yield
      * ```
      */
     [[eosio::action]]
     void report( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos );
+
+    // @eosio.code
+    [[eosio::action]]
+    void updatelog( const name oracle, const name protocol, const time_point_sec period, const vector<asset> balances, const int64_t usd, const int64_t eos );
+
+    // @system
+    [[eosio::action]]
+    void setreward( const asset reward_per_update );
+
+    // @system
+    [[eosio::action]]
+    void setmetakeys( const set<name> metadata_keys );
 
     [[eosio::on_notify("eosio.yield::approve")]]
     void on_approve( const name protocol );
@@ -304,12 +290,17 @@ public:
 
     // action wrappers
     using report_action = eosio::action_wrapper<"report"_n, &oracle::report>;
+    using updatelog_action = eosio::action_wrapper<"updatelog"_n, &oracle::updatelog>;
 
 private:
-    // get time periods
+    // utils
     time_point_sec get_current_period();
+    oracle::config_row get_config();
+    void set_status( const name oracle, const name status );
+    void check_oracle_active( const name oracle );
+    void generate_report( const name protocol, const time_point_sec period, const map<time_point_sec, TVL> history );
 
-    // get balances
+    // getters
     asset get_balance_quantity( const name token_contract_account, const name owner, const symbol sym );
     asset get_eos_staked( const name owner );
 
