@@ -46,42 +46,13 @@ public:
     };
 
     /**
-     * ## TABLE `status`
-     *
-     * ### params
-     *
-     * - `{vector<uint32_t>} counters` - counters
-     *   - `{uint32_t} counters[0]` - total protocols
-     *   - `{uint32_t} counters[1]` - total approved
-     *   - `{uint32_t} counters[2]` - total claims
-     * - `{asset} claimed` - total assets claimed
-     * - `{time_point_sec} last_updated`
-     *
-     * ### example
-     *
-     * ```json
-     * {
-     *     "counters": [100, 12, 30],
-     *     "claimed": "102.5000 EOS",
-     *     "last_updated": "2021-04-12T12:23:42"
-     * }
-     * ```
-     */
-    struct [[eosio::table("status")]] status_row {
-        vector<uint32_t>        counters;
-        asset                   claimed;
-        time_point_sec          last_updated;
-    };
-    typedef eosio::singleton< "status"_n, status_row > status_table;
-
-    /**
      * ## TABLE `config`
      *
-     * - `{name} status` - contract status ("ok", "testing", "maintenance")
+     * - `{name} status` - contract status ("ok", "maintenance")
      * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
      * - `{int64_t} min_eos_tvl_report` - minimum EOS TVL report (precision 4)
      * - `{int64_t} max_eos_tvl_report` - maximum EOS TVL report (precision 4)
-     * - `{set<name>} metadata_keys` - list of keys allowed to include in bounty Metadata
+     * - `{set<name>} metadata_keys` - list of allowed metadata keys
      *
      * ### example
      *
@@ -96,7 +67,7 @@ public:
      * ```
      */
     struct [[eosio::table("config")]] config_row {
-        name                    status = "testing"_n;
+        name                    status = "maintenance"_n;
         uint16_t                annual_rate = 5000;
         int64_t                 min_eos_tvl_report = 200'000'0000;
         int64_t                 max_eos_tvl_report = 6'000'000'0000;

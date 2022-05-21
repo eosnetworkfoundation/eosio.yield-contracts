@@ -68,7 +68,7 @@ void yield::claim( const name protocol, const optional<name> receiver )
     claimlog.send( protocol, to, claimable.quantity );
 }
 
-// @system
+// @eosio.code
 [[eosio::action]]
 void yield::claimlog( const name protocol, const name receiver, const asset claimed )
 {
