@@ -142,7 +142,6 @@ public:
      * - `{name} oracle` - primary oracle contract
      * - `{name} status="pending"` - status (`pending/active/denied`)
      * - `{extended_asset} balance` - balance available to be claimed
-     * - `{asset} claimed` - total claimed amount
      * - `{time_point_sec} created_at` - created at time
      * - `{time_point_sec} updated_at` - updated at time
      * - `{time_point_sec} claimed_at` - claimed at time
@@ -155,7 +154,6 @@ public:
      *     "oracle": "myoracle",
      *     "status": "active",
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
-     *     "claimed": "0.0000 EOS",
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
      *     "claimed_at": "1970-01-01T00:00:00",
@@ -167,7 +165,6 @@ public:
         name                    oracle;
         name                    status = "pending"_n;
         extended_asset          balance;
-        asset                   claimed;
         time_point_sec          created_at;
         time_point_sec          updated_at;
         time_point_sec          claimed_at;
@@ -315,4 +312,6 @@ private:
     int64_t normalize_price( const int64_t price, const uint8_t precision );
     int64_t get_delphi_price( const name delphi_oracle_id );
     int64_t get_defibox_price( const uint64_t defibox_oracle_id );
+
+    int64_t compute_average_tvl( );
 };

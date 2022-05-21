@@ -46,6 +46,17 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
     else _oracles.modify( itr, get_self(), insert );
 }
 
+// @protocol
+[[eosio::action]]
+void oracle::unregister( const name oracle )
+{
+    require_auth( oracle );
+
+    oracle::oracles_table _oracles( get_self(), get_self().value );
+    auto & itr = _oracles.get(oracle.value, "oracle::unregister: [oracle] does not exists");
+    _oracles.erase( itr );
+}
+
 // @admin
 [[eosio::action]]
 void oracle::approve( const name oracle )
@@ -79,7 +90,7 @@ void oracle::check_oracle_active( const name oracle )
 {
     oracle::oracles_table _oracles( get_self(), get_self().value );
     auto & itr = _oracles.get(oracle.value, "oracle::set_status: [protocol] does not exists");
-    check( itr == "active"_n, "oracle::check_oracle_active: [status] must be active");
+    check( itr.status == "active"_n, "oracle::check_oracle_active: [status] must be active");
 }
 
 // @system
@@ -178,7 +189,7 @@ void oracle::update( const name oracle, const name protocol )
 
     // log event
     oracle::updatelog_action updatelog( get_self(), { get_self(), "active"_n });
-    updatelog.send( oracle, protocol, period, usd, eos, balances );
+    updatelog.send( oracle, protocol, period, balances, usd, eos );
 }
 
 // generate report TVL to Yield+ Rewards
@@ -186,6 +197,10 @@ void oracle::generate_report( const name protocol, const time_point_sec period, 
 {
     // TO-DO make sure report is valid (3x48 TVL buckets)
     if ( false ) return;
+
+    // TO-DO calculations
+    const int64_t usd = 0;
+    const int64_t eos = 0;
 
     oracle::report_action report( get_self(), { get_self(), "active"_n });
     report.send( protocol, period, usd, eos );
@@ -216,7 +231,7 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
 
 // @eosio.code
 [[eosio::action]]
-void yield::updatelog( const name protocol, const time_point_sec period, const vector<asset> balances, const int64_t usd, const int64_t eos )
+void oracle::updatelog( const name oracle, const name protocol, const time_point_sec period, const vector<asset> balances, const int64_t usd, const int64_t eos )
 {
     require_auth( get_self() );
 }
