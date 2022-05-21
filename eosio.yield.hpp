@@ -81,11 +81,10 @@ public:
      * ### params
      *
      * - `{name} protocol` - primary protocol contract
+     * - `{name} status="pending"` - status (`pending/active/denied`)
      * - `{set<name>} contracts.eos` - additional supporting EOS contracts
      * - `{set<string>} contracts.evm` - additional supporting EVM contracts
-     * - `{name} status="pending"` - status (`pending/active/denied`)
      * - `{extended_asset} balance` - balance available to be claimed
-     * - `{asset} claimed` - total claimed amount
      * - `{time_point_sec} created_at` - created at time
      * - `{time_point_sec} updated_at` - updated at time
      * - `{time_point_sec} claimed_at` - claimed at time
@@ -97,13 +96,12 @@ public:
      * ```json
      * {
      *     "protocol": "myprotocol",
+     *     "status": "active",
      *     "contracts": {
      *       "eos": ["myprotocol", "mytreasury"],
      *       "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
      *     },
-     *     "status": "active",
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
-     *     "claimed": "0.0000 EOS",
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
      *     "claimed_at": "1970-01-01T00:00:00",
@@ -114,8 +112,8 @@ public:
      */
     struct [[eosio::table("protocols")]] protocols_row {
         name                    protocol;
-        Contracts               contracts;
         name                    status = "pending"_n;
+        Contracts               contracts;
         extended_asset          balance;
         asset                   claimed;
         time_point_sec          created_at;
@@ -188,19 +186,8 @@ public:
     using claimlog_action = eosio::action_wrapper<"claimlog"_n, &yield::claimlog>;
 
 private :
-
+    // utils
     config_row get_config();
     void set_status( const name protocol, const name status );
     void transfer( const name from, const name to, const extended_asset value, const string& memo );
-
-    // //INTERNAL FUNCTIONS DEFINITION
-
-    // asset get_oracle_tvl(name contract);
-    // //tier get_tier_from_tvl(asset tvl );
-    // asset get_contract_balance();
-    // asset calculate_incentive_reward(asset tvl);
-
-    // // double asset_to_double(asset a);
-
-
 };
