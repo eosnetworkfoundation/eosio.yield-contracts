@@ -78,6 +78,8 @@ public:
      * - `{name} status="pending"` - status (`pending/active/denied`)
      * - `{set<name>} contracts.eos` - additional supporting EOS contracts
      * - `{set<string>} contracts.evm` - additional supporting EVM contracts
+     * - `{int64_t} usd` - reported USD TVL averaged value
+     * - `{int64_t} eos` - reported EOS TVL averaged value
      * - `{extended_asset} balance` - balance available to be claimed
      * - `{time_point_sec} created_at` - created at time
      * - `{time_point_sec} updated_at` - updated at time
@@ -95,6 +97,8 @@ public:
      *       "eos": ["myprotocol", "mytreasury"],
      *       "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
      *     },
+     *     "usd": 30000000,
+     *     "eos": 20000000,
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
@@ -108,6 +112,8 @@ public:
         name                    protocol;
         name                    status = "pending"_n;
         Contracts               contracts;
+        int64_t                 usd;
+        int64_t                 eos;
         extended_asset          balance;
         asset                   claimed;
         time_point_sec          created_at;
@@ -303,7 +309,7 @@ public:
      * ### example
      *
      * ```bash
-     * $ cleos push action eosio.yield report '["myprotocol", "2022-05-13T00:00:00", 30000000, 20000000]' -p oracle.yield
+     * $ cleos push action eosio.yield report '["myprotocol", "2022-05-13T00:00:00", 3000000000, 2000000000]' -p oracle.yield
      * ```
      */
     [[eosio::action]]
@@ -358,8 +364,8 @@ public:
      * {
      *     "protocol": "myprotocol",
      *     "period", "2022-05-13T00:00:00",
-     *     "usd": 30000000,
-     *     "eos": 20000000,
+     *     "usd": 3000000000,
+     *     "eos": 2000000000,
      *     "rewards": "2.5500 EOS"
      *     "balance_before": "1.0000 EOS",
      *     "balance_after": "1.5500 EOS",
@@ -387,6 +393,7 @@ public:
 
 private :
     // utils
+    time_point_sec get_current_period();
     config_row get_config();
     void set_status( const name protocol, const name status );
     void transfer( const name from, const name to, const extended_asset value, const string& memo );

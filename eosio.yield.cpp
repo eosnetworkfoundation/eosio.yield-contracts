@@ -165,19 +165,24 @@ void yield::report( const name protocol, const time_point_sec period, const int6
     require_auth(ORACLE_CONTRACT);
     require_recipient(CHECK_CONTRACT);
 
+    // tables
     yield::protocols_table _protocols( get_self(), get_self().value );
 
-    auto & itr = _protocols.get(protocol.value, "yield::on_report: [protocol] does not exists");
-
-    // required if `on_notify` uses * wildcard for contract
-    check( get_first_receiver() == ORACLE_CONTRACT, "yield::on_report: [get_first_receiver] is invalid");
-    check( itr.period_at == period, "yield::on_report: [period] already updated"); // prevents double report
-
-    // calculate rewards
+    // config
     const auto config = get_config();
+    const time_point_sec now = current_time_point();
+    auto & itr = _protocols.get(protocol.value, "yield::report: [protocol] does not exists");
 
+    // prevents double report
+    check( itr.period_at != period, "yield::report: [period] already updated");
+    check( period <= now, "yield::report: [period] must be in the past");
+    check( period > itr.period_at, "yield::report: [period] must ahead of last");
+    // TO-DO ADD period does not match
+    // check( period == get_current_period(), "yield::report: [period] current period does not match");
+
+    // validate
     // skip if does not meet minimum TVL report threshold
-    if ( eos < config.min_eos_tvl_report ) return;
+    check( eos >= config.min_eos_tvl_report, "yield::report: [eos] does not meet minimum TVL report threshold");
 
     // limit TVL to maximum report threhsold
     const uint128_t tvl = (eos > config.max_eos_tvl_report) ? config.max_eos_tvl_report : eos;
@@ -185,6 +190,8 @@ void yield::report( const name protocol, const time_point_sec period, const int6
 
     // modify contracts
     _protocols.modify( itr, protocol, [&]( auto& row ) {
+        row.eos = eos;
+        row.usd = usd;
         row.balance.quantity.amount += rewards;
         row.period_at = period;
 
@@ -254,4 +261,10 @@ yield::config_row yield::get_config()
     yield::config_table _config( get_self(), get_self().value );
     check( _config.exists(), "yield::get_config: contract is not initialized");
     return _config.get();
+}
+
+time_point_sec yield::get_current_period()
+{
+    const uint32_t now = current_time_point().sec_since_epoch();
+    return time_point_sec((now / PERIOD_INTERVAL) * PERIOD_INTERVAL);
 }
