@@ -158,12 +158,15 @@ void yield::unregister( const name protocol )
     require_recipient(ORACLE_CONTRACT);
 }
 
-[[eosio::on_notify("oracle.yield::report")]]
-void yield::on_report( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos )
+// @oracle.yield
+[[eosio::action]]
+void yield::report( const name protocol, const time_point_sec period, const int64_t eos, const int64_t usd )
 {
+    require_auth(ORACLE_CONTRACT);
     require_recipient(CHECK_CONTRACT);
 
     yield::protocols_table _protocols( get_self(), get_self().value );
+
     auto & itr = _protocols.get(protocol.value, "yield::on_report: [protocol] does not exists");
 
     // required if `on_notify` uses * wildcard for contract
@@ -172,13 +175,30 @@ void yield::on_report( const name protocol, const time_point_sec period, const i
 
     // calculate rewards
     const auto config = get_config();
-    const int64_t rewards = static_cast<uint128_t>(eos) * config.annual_rate * PERIOD_INTERVAL / 10000 / YEAR;
+
+    // skip if does not meet minimum TVL report threshold
+    if ( eos < config.min_eos_tvl_report ) return;
+
+    // limit TVL to maximum report threhsold
+    const uint128_t tvl = (eos > config.max_eos_tvl_report) ? config.max_eos_tvl_report : eos;
+    const int64_t rewards = tvl * config.annual_rate * PERIOD_INTERVAL / 10000 / YEAR;
 
     // modify contracts
     _protocols.modify( itr, protocol, [&]( auto& row ) {
         row.balance.quantity.amount += rewards;
         row.period_at = period;
+
+        // log report
+        yield::reportlog_action reportlog( get_self(), { get_self(), "active"_n });
+        reportlog.send( protocol, period, usd, eos, asset{rewards, TOKEN_SYMBOL}, itr.balance.quantity, row.balance.quantity );
     });
+}
+
+[[eosio::action]]
+void yield::reportlog( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos, const asset rewards, const asset balance_before, const asset balance_after )
+{
+    require_auth( get_self() );
+    require_recipient(CHECK_CONTRACT);
 }
 
 // @protocol

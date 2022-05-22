@@ -287,15 +287,40 @@ public:
     void setmetakeys( const set<name> metadata_keys );
 
     /**
-     * ## ACTION `setmetakeys`
+     * ## ACTION `report`
      *
-     * > Set allowed metakeys
+     * - **authority**: `oracle.yield`
+     *
+     * Report TVL from oracle
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol
+     * - `{time_point_sec} period` - period time
+     * - `{int64_t} usd` - USD TVL averaged value
+     * - `{int64_t} eos` - EOS TVL averaged value
+     *
+     * ### example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield report '["myprotocol", "2022-05-13T00:00:00", 30000000, 20000000]' -p oracle.yield
+     * ```
+     */
+    [[eosio::action]]
+    void report( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos );
+
+    /**
+     * ## ACTION `claimlog`
+     *
+     * > Claim logging
      *
      * - **authority**: `get_self()`
      *
      * ### params
      *
-     * - `{set<name>} metadata_keys` - list of allowed metadata keys
+     * - `{name} protocol` - protocol
+     * - `{name} receiver` - receiver of rewards
+     * - `{asset} claimed` - claimed funds
      *
      * ### Example
      *
@@ -310,8 +335,39 @@ public:
     [[eosio::action]]
     void claimlog( const name protocol, const name receiver, const asset claimed );
 
-    [[eosio::on_notify("oracle.yield::report")]]
-    void on_report( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos );
+    /**
+     * ## ACTION `reportlog`
+     *
+     * > Balance logging
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol
+     * - `{time_point_sec} period` - period time
+     * - `{int64_t} usd` - USD TVL averaged value
+     * - `{int64_t} eos` - EOS TVL averaged value
+     * - `{asset} rewards` - TVL rewards
+     * - `{asset} balance_before` - balance before
+     * - `{asset} balance_after` - balance after
+     *
+     * ### Example
+     *
+     * ```json
+     * {
+     *     "protocol": "myprotocol",
+     *     "period", "2022-05-13T00:00:00",
+     *     "usd": 30000000,
+     *     "eos": 20000000,
+     *     "rewards": "2.5500 EOS"
+     *     "balance_before": "1.0000 EOS",
+     *     "balance_after": "1.5500 EOS",
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void reportlog( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos, const asset rewards, const asset before, const asset after );
 
     [[eosio::on_notify("*::transfer")]]
     void on_transfer( const name from, const name to, const asset quantity, const std::string memo );
@@ -325,7 +381,9 @@ public:
     using deny_action = eosio::action_wrapper<"deny"_n, &yield::deny>;
     using setrate_action = eosio::action_wrapper<"setrate"_n, &yield::setrate>;
     using setmetakeys_action = eosio::action_wrapper<"setmetakeys"_n, &yield::setmetakeys>;
+    using report_action = eosio::action_wrapper<"report"_n, &yield::report>;
     using claimlog_action = eosio::action_wrapper<"claimlog"_n, &yield::claimlog>;
+    using reportlog_action = eosio::action_wrapper<"reportlog"_n, &yield::reportlog>;
 
 private :
     // utils
