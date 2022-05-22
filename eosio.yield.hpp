@@ -19,6 +19,7 @@ public:
 
     // CONTRACTS
     const name ORACLE_CONTRACT = "oracle.yield"_n;
+    const name CHECK_CONTRACT = "check.yield"_n;
     const name EVM_CONTRACT = "eosio.evm"_n;
 
     // TOKEN
@@ -26,14 +27,10 @@ public:
     const symbol TOKEN_SYMBOL = symbol{"EOS", 4};
 
     // CONSTANTS
-    const set<name> SYSTEM_STATUS_TYPES = set<name>{"maintenance"_n, "active"_n};
     const set<name> PROTOCOL_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
-    const int64_t MAX_ANNUAL_RATE = 1000;
-    const int32_t ANNUAL_YIELD = 500;
-    const uint32_t YEAR = 31536000;
-    const uint32_t DAY = 86400;
-    const uint32_t MINUTE = 60;
-    const uint32_t TEN_MINUTES = 600;
+    const uint16_t MAX_ANNUAL_RATE = 1000; // maximum rate of 10%
+    const uint32_t YEAR = 31536000; // 365 days in seconds
+    const uint32_t TEN_MINUTES = 600; // 10 minutes in seconds
     const uint32_t PERIOD_INTERVAL = TEN_MINUTES;
 
     // ERROR MESSAGES
@@ -48,7 +45,6 @@ public:
     /**
      * ## TABLE `config`
      *
-     * - `{name} status` - contract status ("ok", "maintenance")
      * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
      * - `{int64_t} min_eos_tvl_report` - minimum EOS TVL report (precision 4)
      * - `{int64_t} max_eos_tvl_report` - maximum EOS TVL report (precision 4)
@@ -58,7 +54,6 @@ public:
      *
      * ```json
      * {
-     *     "status": "ok",
      *     "annual_rate": 5000,
      *     "min_eos_tvl_report": 200'000'0000,
      *     "max_eos_tvl_report": 6'000'000'0000,
@@ -67,7 +62,6 @@ public:
      * ```
      */
     struct [[eosio::table("config")]] config_row {
-        name                    status = "maintenance"_n;
         uint16_t                annual_rate = 5000;
         int64_t                 min_eos_tvl_report = 200'000'0000;
         int64_t                 max_eos_tvl_report = 6'000'000'0000;
@@ -141,48 +135,196 @@ public:
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield regprotocol '[mycontract, [{"key": "url", "value":"https://mycontract.com"}]]' -p mycontract
+     * $ cleos push action eosio.yield regprotocol '[myprotocol, [{"key": "url", "value":"https://myprotocol.com"}]]' -p myprotocol
      * ```
      */
     [[eosio::action]]
     void regprotocol( const name protocol, const map<name, string> metadata );
 
-    // @protocol
+    /**
+     * ## ACTION `unregister`
+     *
+     * > Un-registry protocol
+     *
+     * - **authority**: `protocol`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield unregister '[myprotocol]' -p myprotocol
+     * ```
+     */
     [[eosio::action]]
     void unregister( const name protocol );
 
-    // @protocol or @system
+    /**
+     * ## ACTION `setcontracts`
+     *
+     * > Set contracts
+     *
+     * - **authority**: `protocol`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol
+     * - `{set<name>} eos` - EOS contracts
+     * - `{set<string>} evm` - EVM contracts
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield setcontracts '[myprotocol, ["myprotocol"], ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
+     * ```
+     */
     [[eosio::action]]
     void setcontracts( const name protocol, const set<name> eos, const set<string> evm );
 
-    // @protocol
+    /**
+     * ## ACTION `claim`
+     *
+     * > Claim TVL rewards
+     *
+     * - **authority**: `protocol`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol
+     * - `{name} [receiver=""]` - (optional) receiver of rewards (default=protocol)
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield claim '[myprotocol, "myreceiver"]' -p myprotocol
+     * ```
+     */
     [[eosio::action]]
     void claim( const name protocol, const optional<name> receiver );
 
-    // @admin
+    /**
+     * ## ACTION `approve`
+     *
+     * > Approve protocol
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol to approve
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield approve '["myprotocol"]' -p eosio.yield@admin
+     * ```
+     */
     [[eosio::action]]
     void approve( const name protocol );
 
-    // @admin
+    /**
+     * ## ACTION `deny`
+     *
+     * > Deny protocol
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol to deny
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield deny '["myprotocol"]' -p eosio.yield@admin
+     * ```
+     */
     [[eosio::action]]
     void deny( const name protocol );
 
-    // @system
+    /**
+     * ## ACTION `setrate`
+     *
+     * > Set rewards rate
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
+     * - `{int64_t} min_eos_tvl_report` - minimum EOS TVL report (precision 4)
+     * - `{int64_t} max_eos_tvl_report` - maximum EOS TVL report (precision 4)
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield setrate '[5000, 2000000000, 60000000000]' -p eosio.yield
+     * ```
+     */
     [[eosio::action]]
     void setrate( const int16_t annual_rate, const int64_t min_eos_tvl_report, const int64_t max_eos_tvl_report );
 
-    // @system
+    /**
+     * ## ACTION `setmetakeys`
+     *
+     * > Set allowed metakeys
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{set<name>} metadata_keys` - list of allowed metadata keys
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield setmetakeys '[["name", "url", "defillama", "dappradar", "recover"]]' -p eosio.yield@admin
+     * ```
+     */
     [[eosio::action]]
     void setmetakeys( const set<name> metadata_keys );
 
-    // @system
+    /**
+     * ## ACTION `setmetakeys`
+     *
+     * > Set allowed metakeys
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{set<name>} metadata_keys` - list of allowed metadata keys
+     *
+     * ### Example
+     *
+     * ```json
+     * {
+     *     "protocol": "myprotocol",
+     *     "receiver": "myreceiver",
+     *     "claimed": "1.5500 EOS"
+     * }
+     * ```
+     */
     [[eosio::action]]
     void claimlog( const name protocol, const name receiver, const asset claimed );
 
     [[eosio::on_notify("oracle.yield::report")]]
     void on_report( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos );
 
+    [[eosio::on_notify("*::transfer")]]
+    void on_transfer( const name from, const name to, const asset quantity, const std::string memo );
+
     // action wrappers
+    using regprotocol_action = eosio::action_wrapper<"regprotocol"_n, &yield::regprotocol>;
+    using unregister_action = eosio::action_wrapper<"unregister"_n, &yield::unregister>;
+    using setcontracts_action = eosio::action_wrapper<"setcontracts"_n, &yield::setcontracts>;
+    using claim_action = eosio::action_wrapper<"claim"_n, &yield::claim>;
+    using approve_action = eosio::action_wrapper<"approve"_n, &yield::approve>;
+    using deny_action = eosio::action_wrapper<"deny"_n, &yield::deny>;
+    using setrate_action = eosio::action_wrapper<"setrate"_n, &yield::setrate>;
+    using setmetakeys_action = eosio::action_wrapper<"setmetakeys"_n, &yield::setmetakeys>;
     using claimlog_action = eosio::action_wrapper<"claimlog"_n, &yield::claimlog>;
 
 private :
@@ -190,4 +332,5 @@ private :
     config_row get_config();
     void set_status( const name protocol, const name status );
     void transfer( const name from, const name to, const extended_asset value, const string& memo );
+    void check_metadata_keys(const map<name, string> metadata );
 };
