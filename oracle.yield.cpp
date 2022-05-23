@@ -11,7 +11,6 @@
 
 // local
 #include "./oracle.yield.hpp"
-#include "./src/notifiers.cpp"
 
 // @oracle
 [[eosio::action]]
@@ -75,7 +74,7 @@ void oracle::set_status( const name oracle, const name status )
 {
     oracle::oracles_table _oracles( get_self(), get_self().value );
 
-    auto & itr = _oracles.get(oracle.value, "oracle::set_status: [protocol] does not exists");
+    auto & itr = _oracles.get(oracle.value, "oracle::set_status: [oracle] does not exists");
     check( ORACLE_STATUS_TYPES.find( status ) != ORACLE_STATUS_TYPES.end(), "oracle::set_status: [status] is invalid");
 
     _oracles.modify( itr, same_payer, [&]( auto& row ) {
@@ -156,17 +155,17 @@ void oracle::update( const name oracle, const name protocol )
     check_oracle_active( oracle );
 
     // tables
-    oracle::tvl_table _tvl( get_self(), get_self().value );
-    yield::protocols_table _protocols( YIELD_CONTRACT, YIELD_CONTRACT.value );
     oracle::tokens_table _tokens( get_self(), get_self().value );
+    oracle::periods_table _periods( get_self(), protocol.value );
+    yield::protocols_table _protocols( YIELD_CONTRACT, YIELD_CONTRACT.value );
 
     // get protocol details
     const time_point_sec period = get_current_period();
-    const auto contracts = _protocols.get( protocol.value, "oracle::update: [protocol] does not exists" ).contracts;
-    auto & itr = _tvl.get( protocol.value, "oracle::update: [tvl.protocol] does not exists" );
+    const yield::Contracts contracts = _protocols.get( protocol.value, "oracle::update: [protocol] does not exists" ).contracts;
+    auto itr = _periods.find( period.sec_since_epoch() );
 
     // prevent duplicate updates
-    check( itr.period_at != period, "oracle::update: [tvl.period] tvl already updated" );
+    check( itr == _periods.end(), "oracle::update: [period] for [protocol] is already updated" );
 
     // get all balances from protocol EOS contracts
     vector<asset> balances;
@@ -198,43 +197,60 @@ void oracle::update( const name oracle, const name protocol )
 
     // calculate EOS valuation
     const int64_t eos = convert_usd_to_eos( usd );
-    const TVL tvl = {{ usd, USD }, { eos, EOS }};
+    const yield::TVL tvl = {{ usd, USD }, { eos, EOS }};
 
     // add TVL to history
-    _tvl.modify( itr, get_self(), [&]( auto& row ) {
-        row.period_at = period;
-        row.history[period] = History{ balances, tvl };
+    _periods.emplace( get_self(), [&]( auto& row ) {
+        row.period = period;
+        row.protocol = protocol;
+        row.contracts = contracts;
+        row.balances = balances;
+        row.tvl = tvl;
     });
 
     // report
-    generate_report( protocol, period, itr.history );
+    generate_report( protocol, period );
+
+    // update rewards
+    allocate_oracle_rewards( oracle );
 
     // log event
     oracle::updatelog_action updatelog( get_self(), { get_self(), "active"_n });
     updatelog.send( oracle, protocol, period, balances, tvl );
 }
 
+void oracle::allocate_oracle_rewards( const name oracle )
+{
+    oracle::oracles_table _oracles( get_self(), get_self().value );
+    auto config = get_config();
+
+    auto & itr = _oracles.get(oracle.value, "oracle::add_oracle_rewards: [oracle] does not exists");
+    _oracles.modify( itr, same_payer, [&]( auto& row ) {
+        row.balance.quantity += config.reward_per_update;
+    });
+}
+
 // generate report TVL to Yield+ Rewards
-void oracle::generate_report( const name protocol, const time_point_sec period, const map<time_point_sec, History> history )
+void oracle::generate_report( const name protocol, const time_point_sec period )
 {
     // TO-DO make sure report is valid (3x48 TVL buckets)
     if ( false ) return;
 
-    // TO-DO calculations
-    yield::TVL tvl;
+    // // TO-DO calculations
+    // yield::TVL tvl;
 
-    for ( const auto row : history ) {
-        tvl.usd = row.second.tvl.usd;
-        tvl.eos = row.second.tvl.eos;
-    }
-    print("eos:", tvl.eos, " usd:", tvl.usd, "\n");
+    // for ( const auto row : history ) {
+    //     tvl.usd = row.second.tvl.usd;
+    //     tvl.eos = row.second.tvl.eos;
+    // }
+    // print("eos:", tvl.eos, " usd:", tvl.usd, "\n");
     return;
     // const yield::TVL tvl = {{ usd, USD }, { eos, EOS }};
 
-    check(false, tvl.eos.to_string() + " usd: " + tvl.usd.to_string());
+    // check(false, tvl.eos.to_string() + " usd: " + tvl.usd.to_string());
 
-    yield::report_action report( YIELD_CONTRACT, { get_self(), "active"_n });
-    report.send( protocol, period, tvl );
+    // yield::report_action report( YIELD_CONTRACT, { get_self(), "active"_n });
+    // report.send( protocol, period, tvl );
 }
 
 int64_t oracle::compute_average_tvl( )
@@ -245,7 +261,7 @@ int64_t oracle::compute_average_tvl( )
 
 // @eosio.code
 [[eosio::action]]
-void oracle::updatelog( const name oracle, const name protocol, const time_point_sec period, const vector<asset> balances, const TVL tvl )
+void oracle::updatelog( const name oracle, const name protocol, const time_point_sec period, const vector<asset> balances, const yield::TVL tvl )
 {
     require_auth( get_self() );
     require_recipient(NOTIFY_CONTRACT);
