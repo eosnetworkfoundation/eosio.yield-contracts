@@ -24,3 +24,7 @@ cleos push action eosio.token issue '["eosio", "5000000.0000 EOS", "init"]' -p e
 
 cleos push action tethertether create '["tethertether", "100000000.0000 USDT"]' -p tethertether
 cleos push action tethertether issue '["tethertether", "5000000.0000 USDT", "init"]' -p tethertether
+
+# transfer tokens
+cleos transfer eosio myprotocol "300000.0000 EOS"
+cleos transfer tethertether myprotocol "300000.0000 USDT" --contract tethertether

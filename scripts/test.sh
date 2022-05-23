@@ -13,3 +13,6 @@ cleos push action oracle.yield regoracle '[myoracle, [{"key": "url", "value":"ht
 
 # approve
 cleos push action oracle.yield approve '[myoracle]' -p oracle.yield
+
+# updateall
+cleos push action oracle.yield updateall '[myoracle, null]' -p myoracle

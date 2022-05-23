@@ -129,6 +129,24 @@ void oracle::deltoken( const symbol_code symcode )
 
 // @oracle
 [[eosio::action]]
+void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
+{
+    require_auth( oracle );
+
+    oracle::tvl_table _tvl( get_self(), get_self().value );
+    const time_point_sec period = get_current_period();
+
+    int limit = max_rows ? *max_rows : 20;
+    for ( const auto row : _tvl ) {
+        if ( row.period_at == period ) continue;
+        update( oracle, row.protocol );
+        limit -= 1;
+        if ( limit <= 0 ) break;
+    }
+}
+
+// @oracle
+[[eosio::action]]
 void oracle::update( const name oracle, const name protocol )
 {
     require_auth( oracle );
@@ -136,7 +154,7 @@ void oracle::update( const name oracle, const name protocol )
 
     // tables
     oracle::tvl_table _tvl( get_self(), get_self().value );
-    yield::protocols_table _protocols( get_self(), get_self().value );
+    yield::protocols_table _protocols( YIELD_CONTRACT, get_self().value );
     oracle::tokens_table _tokens( get_self(), get_self().value );
 
     // get protocol details
@@ -210,24 +228,6 @@ int64_t oracle::compute_average_tvl( )
 {
     // TO-DO
     return 0;
-}
-
-// @oracle
-[[eosio::action]]
-void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
-{
-    require_auth( oracle );
-
-    oracle::tvl_table _tvl( get_self(), get_self().value );
-    const time_point_sec period = get_current_period();
-
-    int limit = max_rows ? *max_rows : 20;
-    for ( const auto row : _tvl ) {
-        if ( row.period_at == period ) continue;
-        update( oracle, row.protocol );
-        limit -= 1;
-        if ( limit <= 0 ) break;
-    }
 }
 
 // @eosio.code
