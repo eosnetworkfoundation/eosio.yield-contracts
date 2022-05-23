@@ -23,8 +23,10 @@ public:
     const name EVM_CONTRACT = "eosio.evm"_n;
 
     // TOKEN
+    const symbol EOS = symbol{"EOS", 4};
+    const symbol USD = symbol{"USD", 4};
     const name TOKEN_CONTRACT = "eosio.token"_n;
-    const symbol TOKEN_SYMBOL = symbol{"EOS", 4};
+    const symbol TOKEN_SYMBOL = EOS;
 
     // CONSTANTS
     const set<name> PROTOCOL_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
@@ -42,29 +44,40 @@ public:
         set<string>     evm;
     };
 
+    struct TVL {
+        asset           usd;
+        asset           eos;
+    };
+
     /**
      * ## TABLE `config`
      *
      * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
-     * - `{int64_t} min_eos_tvl_report` - minimum EOS TVL report (precision 4)
-     * - `{int64_t} max_eos_tvl_report` - maximum EOS TVL report (precision 4)
+     * - `{TVL} min_tvl_report` - minimum TVL report
+     * - `{TVL} max_tvl_report` - maximum TVL report
      * - `{set<name>} metadata_keys` - list of allowed metadata keys
      *
      * ### example
      *
      * ```json
      * {
-     *     "annual_rate": 5000,
-     *     "min_eos_tvl_report": 200'000'0000,
-     *     "max_eos_tvl_report": 6'000'000'0000,
+     *     "annual_rate": 500,
+     *     "min_tvl_report": {
+     *         "eos": "200000.0000 EOS",
+     *         "usd": "300000.0000 USD"
+     *     },
+     *     "max_tvl_report": {
+     *         "eos": "6000000.0000 EOS",
+     *         "usd": "9000000.0000 USD"
+     *     },
      *     "metadata_keys": ["name", "url", "defillama", "dappradar", "recover"]
      * }
      * ```
      */
     struct [[eosio::table("config")]] config_row {
-        uint16_t                annual_rate = 5000;
-        int64_t                 min_eos_tvl_report = 200'000'0000;
-        int64_t                 max_eos_tvl_report = 6'000'000'0000;
+        uint16_t                annual_rate = 500;
+        TVL                     min_tvl_report;
+        TVL                     max_tvl_report;
         set<name>               metadata_keys = {"url"_n};
     };
     typedef eosio::singleton< "config"_n, config_row > config_table;
@@ -78,8 +91,8 @@ public:
      * - `{name} status="pending"` - status (`pending/active/denied`)
      * - `{set<name>} contracts.eos` - additional supporting EOS contracts
      * - `{set<string>} contracts.evm` - additional supporting EVM contracts
-     * - `{int64_t} usd` - reported USD TVL averaged value
-     * - `{int64_t} eos` - reported EOS TVL averaged value
+     * - `{asset} usd` - reported USD TVL averaged value
+     * - `{asset} eos` - reported EOS TVL averaged value
      * - `{extended_asset} balance` - balance available to be claimed
      * - `{time_point_sec} created_at` - created at time
      * - `{time_point_sec} updated_at` - updated at time
@@ -97,8 +110,10 @@ public:
      *       "eos": ["myprotocol", "mytreasury"],
      *       "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
      *     },
-     *     "usd": 30000000,
-     *     "eos": 20000000,
+     *     "tvl": {
+     *        "usd": "300000.0000 USD",
+     *        "eos": "200000.0000 EOS"
+     *     },
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
@@ -112,8 +127,7 @@ public:
         name                    protocol;
         name                    status = "pending"_n;
         Contracts               contracts;
-        int64_t                 usd;
-        int64_t                 eos;
+        TVL                     tvl;
         extended_asset          balance;
         asset                   claimed;
         time_point_sec          created_at;
@@ -260,17 +274,17 @@ public:
      * ### params
      *
      * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
-     * - `{int64_t} min_eos_tvl_report` - minimum EOS TVL report (precision 4)
-     * - `{int64_t} max_eos_tvl_report` - maximum EOS TVL report (precision 4)
+     * - `{TVL} min_tvl_report` - minimum TVL report
+     * - `{TVL} max_tvl_report` - maximum TVL report
      *
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield setrate '[5000, 2000000000, 60000000000]' -p eosio.yield
+     * $ cleos push action eosio.yield setrate '[500, ["300000.0000 USD", "200000.0000 EOS"], ["9000000.0000 USD", "6000000.0000 EOS"]]' -p eosio.yield
      * ```
      */
     [[eosio::action]]
-    void setrate( const int16_t annual_rate, const int64_t min_eos_tvl_report, const int64_t max_eos_tvl_report );
+    void setrate( const int16_t annual_rate, const TVL min_tvl_report, const TVL max_tvl_report );
 
     /**
      * ## ACTION `setmetakeys`
@@ -303,17 +317,16 @@ public:
      *
      * - `{name} protocol` - protocol
      * - `{time_point_sec} period` - period time
-     * - `{int64_t} usd` - USD TVL averaged value
-     * - `{int64_t} eos` - EOS TVL averaged value
+     * - `{TVL} tvl` - TVL averaged value in EOS & USD
      *
      * ### example
      *
      * ```bash
-     * $ cleos push action eosio.yield report '["myprotocol", "2022-05-13T00:00:00", 3000000000, 2000000000]' -p oracle.yield
+     * $ cleos push action eosio.yield report '["myprotocol", "2022-05-13T00:00:00", ["300000.0000 USD", "200000.0000 EOS"]]' -p oracle.yield
      * ```
      */
     [[eosio::action]]
-    void report( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos );
+    void report( const name protocol, const time_point_sec period, const TVL tvl );
 
     /**
      * ## ACTION `claimlog`
@@ -352,8 +365,7 @@ public:
      *
      * - `{name} protocol` - protocol
      * - `{time_point_sec} period` - period time
-     * - `{int64_t} usd` - USD TVL averaged value
-     * - `{int64_t} eos` - EOS TVL averaged value
+     * - `{TVL} tvl` - TVL averaged value in EOS & USD
      * - `{asset} rewards` - TVL rewards
      * - `{asset} balance_before` - balance before
      * - `{asset} balance_after` - balance after
@@ -364,16 +376,18 @@ public:
      * {
      *     "protocol": "myprotocol",
      *     "period", "2022-05-13T00:00:00",
-     *     "usd": 3000000000,
-     *     "eos": 2000000000,
+     *     "tvl": {
+     *         "usd": "300000.0000 USD",
+     *         "eos": "200000.0000 EOS"
+     *     },
      *     "rewards": "2.5500 EOS"
      *     "balance_before": "1.0000 EOS",
-     *     "balance_after": "1.5500 EOS",
+     *     "balance_after": "1.5500 EOS"
      * }
      * ```
      */
     [[eosio::action]]
-    void reportlog( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos, const asset rewards, const asset before, const asset after );
+    void reportlog( const name protocol, const time_point_sec period, const TVL tvl, const asset rewards, const asset balance_before, const asset balance_after );
 
     [[eosio::on_notify("*::transfer")]]
     void on_transfer( const name from, const name to, const asset quantity, const std::string memo );

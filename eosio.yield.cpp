@@ -12,8 +12,11 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
     yield::protocols_table _protocols( get_self(), get_self().value );
 
     // validate
-    require_recipient(CHECK_CONTRACT);
+    require_recipient( CHECK_CONTRACT );
     check_metadata_keys( metadata );
+
+    // TO-DO
+    // CHECK protocol must have ABI
 
     auto insert = [&]( auto& row ) {
         // status => "pending" by default
@@ -116,18 +119,25 @@ void yield::deny( const name protocol )
 
 // @system
 [[eosio::action]]
-void yield::setrate( const int16_t annual_rate, const int64_t min_eos_tvl_report, const int64_t max_eos_tvl_report )
+void yield::setrate( const int16_t annual_rate, const TVL min_tvl_report, const TVL max_tvl_report )
 {
     require_auth( get_self() );
 
     yield::config_table _config( get_self(), get_self().value );
     auto config = _config.get_or_default();
     check( annual_rate <= MAX_ANNUAL_RATE, "yield::setrate: [annual_rate] exceeds maximum annual rate");
-    check( min_eos_tvl_report <= max_eos_tvl_report, "yield::setrate: [min_eos_tvl_report] must be less than [max_eos_tvl_report]");
+    check( min_tvl_report.eos <= max_tvl_report.eos, "yield::setrate: [min_tvl_report] must be less than [max_tvl_report]");
+    check( min_tvl_report.usd <= max_tvl_report.usd, "yield::setrate: [min_tvl_report] must be less than [max_tvl_report]");
+
+    // validate symbols
+    check( min_tvl_report.usd.symbol == USD, "yield::setrate: [min_tvl_report.usd] invalid USD symbol");
+    check( max_tvl_report.usd.symbol == USD, "yield::setrate: [min_tvl_report.usd] invalid USD symbol");
+    check( min_tvl_report.eos.symbol == EOS, "yield::setrate: [min_tvl_report.eos] invalid EOS symbol");
+    check( max_tvl_report.eos.symbol == EOS, "yield::setrate: [min_tvl_report.eos] invalid EOS symbol");
 
     config.annual_rate = annual_rate;
-    config.min_eos_tvl_report = min_eos_tvl_report;
-    config.max_eos_tvl_report = max_eos_tvl_report;
+    config.min_tvl_report = min_tvl_report;
+    config.max_tvl_report = max_tvl_report;
     _config.set(config, get_self());
 }
 
@@ -160,7 +170,7 @@ void yield::unregister( const name protocol )
 
 // @oracle.yield
 [[eosio::action]]
-void yield::report( const name protocol, const time_point_sec period, const int64_t eos, const int64_t usd )
+void yield::report( const name protocol, const time_point_sec period, const TVL tvl )
 {
     require_auth(ORACLE_CONTRACT);
     require_recipient(CHECK_CONTRACT);
@@ -172,6 +182,7 @@ void yield::report( const name protocol, const time_point_sec period, const int6
     const auto config = get_config();
     const time_point_sec now = current_time_point();
     auto & itr = _protocols.get(protocol.value, "yield::report: [protocol] does not exists");
+    check( itr.status == "active"_n, "yield::report: [status] is not active");
 
     // prevents double report
     check( itr.period_at != period, "yield::report: [period] already updated");
@@ -182,27 +193,32 @@ void yield::report( const name protocol, const time_point_sec period, const int6
 
     // validate
     // skip if does not meet minimum TVL report threshold
-    check( eos >= config.min_eos_tvl_report, "yield::report: [eos] does not meet minimum TVL report threshold");
+    check( tvl.eos.symbol == EOS, "yield::report: [tvl.eos] does not match EOS symbol");
+    check( tvl.usd.symbol == USD, "yield::report: [tvl.usd] does not match USD symbol");
+    check( tvl.eos >= config.min_tvl_report.eos, "yield::report: [eos] does not meet minimum TVL report threshold");
 
     // limit TVL to maximum report threhsold
-    const uint128_t tvl = (eos > config.max_eos_tvl_report) ? config.max_eos_tvl_report : eos;
-    const int64_t rewards = tvl * config.annual_rate * PERIOD_INTERVAL / 10000 / YEAR;
+    const uint128_t eos = ((tvl.eos > config.max_tvl_report.eos) ? config.max_tvl_report.eos : tvl.eos).amount;
+    const int64_t rewards_amount = eos * config.annual_rate * PERIOD_INTERVAL / 10000 / YEAR;
+    const asset rewards = { rewards_amount, EOS };
+
+    // before balance used for report logging
+    const asset balance_before = itr.balance.quantity;
 
     // modify contracts
     _protocols.modify( itr, protocol, [&]( auto& row ) {
-        row.eos = eos;
-        row.usd = usd;
-        row.balance.quantity.amount += rewards;
+        row.tvl = tvl;
+        row.balance.quantity += rewards;
         row.period_at = period;
-
-        // log report
-        yield::reportlog_action reportlog( get_self(), { get_self(), "active"_n });
-        reportlog.send( protocol, period, usd, eos, asset{rewards, TOKEN_SYMBOL}, itr.balance.quantity, row.balance.quantity );
     });
+
+    // log report
+    yield::reportlog_action reportlog( get_self(), { get_self(), "active"_n });
+    reportlog.send( protocol, period, tvl, rewards, balance_before, itr.balance.quantity );
 }
 
 [[eosio::action]]
-void yield::reportlog( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos, const asset rewards, const asset balance_before, const asset balance_after )
+void yield::reportlog( const name protocol, const time_point_sec period, const TVL tvl, const asset rewards, const asset balance_before, const asset balance_after )
 {
     require_auth( get_self() );
     require_recipient(CHECK_CONTRACT);
