@@ -140,7 +140,6 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
 
     int limit = max_rows ? *max_rows : 20;
     for ( const auto row : _protocols ) {
-        print("protocol:", row.protocol);
         if ( row.period_at == period ) continue;
         if ( row.status != "active"_n ) continue;
         update( oracle, row.protocol );
@@ -174,7 +173,7 @@ void oracle::update( const name oracle, const name protocol )
     for ( const name contract : contracts.eos ) {
         for ( const auto token : _tokens ) {
             // liquid balance
-            const asset balance = get_balance_quantity( contract, token.contract, token.sym );
+            const asset balance = get_balance_quantity( token.contract, contract, token.sym );
             if ( balance.amount <= 0 ) continue;
             balances.push_back( balance );
 
