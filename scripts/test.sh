@@ -5,7 +5,7 @@ cleos push action oracle.yield setreward '["0.0200 EOS"]' -p oracle.yield
 cleos push action oracle.yield setmetakeys '[["name", "url"]]' -p oracle.yield
 
 # add tokens
-cleos push action oracle.yield addtoken '["EOS", "eosio.token", 1, "eosusd"]' -p oracle.yield
+cleos push action oracle.yield addtoken '["EOS", "eosio.token", 1, null]' -p oracle.yield
 cleos push action oracle.yield addtoken '["USDT", "tethertether", null, null]' -p oracle.yield
 
 # register oracle

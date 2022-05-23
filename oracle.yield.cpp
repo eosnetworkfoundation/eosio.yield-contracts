@@ -133,12 +133,16 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
 {
     require_auth( oracle );
 
-    oracle::tvl_table _tvl( get_self(), get_self().value );
+    yield::protocols_table _protocols( YIELD_CONTRACT, YIELD_CONTRACT.value );
+
+    // oracle::tvl_table _tvl( get_self(), get_self().value );
     const time_point_sec period = get_current_period();
 
     int limit = max_rows ? *max_rows : 20;
-    for ( const auto row : _tvl ) {
+    for ( const auto row : _protocols ) {
+        print("protocol:", row.protocol);
         if ( row.period_at == period ) continue;
+        if ( row.status != "active"_n ) continue;
         update( oracle, row.protocol );
         limit -= 1;
         if ( limit <= 0 ) break;
@@ -154,7 +158,7 @@ void oracle::update( const name oracle, const name protocol )
 
     // tables
     oracle::tvl_table _tvl( get_self(), get_self().value );
-    yield::protocols_table _protocols( YIELD_CONTRACT, get_self().value );
+    yield::protocols_table _protocols( YIELD_CONTRACT, YIELD_CONTRACT.value );
     oracle::tokens_table _tokens( get_self(), get_self().value );
 
     // get protocol details
@@ -188,6 +192,8 @@ void oracle::update( const name oracle, const name protocol )
     // calculate USD valuation
     int64_t usd = 0;
     for ( const asset balance : balances ) {
+        print("balance:", balance, "\n");
+        print("usd:", usd, "\n");
         usd += calculate_usd_value( balance );
     }
 
@@ -202,7 +208,7 @@ void oracle::update( const name oracle, const name protocol )
     });
 
     // report
-    generate_report( oracle, period, itr.history );
+    generate_report( protocol, period, itr.history );
 
     // log event
     oracle::updatelog_action updatelog( get_self(), { get_self(), "active"_n });
@@ -216,9 +222,17 @@ void oracle::generate_report( const name protocol, const time_point_sec period, 
     if ( false ) return;
 
     // TO-DO calculations
-    const int64_t usd = 0;
-    const int64_t eos = 0;
-    const yield::TVL tvl = {{ usd, USD }, { eos, EOS }};
+    yield::TVL tvl;
+
+    for ( const auto row : history ) {
+        tvl.usd = row.second.tvl.usd;
+        tvl.eos = row.second.tvl.eos;
+    }
+    print("eos:", tvl.eos, " usd:", tvl.usd, "\n");
+    return;
+    // const yield::TVL tvl = {{ usd, USD }, { eos, EOS }};
+
+    check(false, tvl.eos.to_string() + " usd: " + tvl.usd.to_string());
 
     yield::report_action report( YIELD_CONTRACT, { get_self(), "active"_n });
     report.send( protocol, period, tvl );
@@ -303,6 +317,9 @@ int64_t oracle::get_oracle_price( const symbol_code symcode )
     oracle::tokens_table _tokens( get_self(), get_self().value );
     auto token = _tokens.get( symcode.raw(), "oracle::calculate_usd_value: [symbol] does not exists");
 
+    // USDT price = 1.0000 USD
+    if ( symcode == USDT.code() ) return 10000;
+
     // Defibox Oracle
     const int64_t price1 = get_defibox_price( token.defibox_oracle_id );
 
@@ -310,11 +327,12 @@ int64_t oracle::get_oracle_price( const symbol_code symcode )
     const int64_t price2 = get_delphi_price( token.delphi_oracle_id );
 
     // in case oracles do not exists
-    if ( !price2 ) return price1;
-    if ( !price1 ) return price2;
+    if ( !price2 && price1 ) return price1;
+    if ( !price1 && price2 ) return price2;
 
     // TO-DO add price variations checks
-    check( true, "oracle::get_oracle_price: invalid price deviation");
+    check( price1 && price2, "oracle::get_oracle_price: invalid prices");
+    check( false, "oracle::get_oracle_price: invalid price deviation");
 
     // average price
     return ( price1 + price2 ) / 2;
@@ -322,6 +340,7 @@ int64_t oracle::get_oracle_price( const symbol_code symcode )
 
 int64_t oracle::get_delphi_price( const name delphi_oracle_id )
 {
+    if ( !delphi_oracle_id ) return 0;
     delphioracle::pairstable _pairs( DELPHI_ORACLE_CONTRACT, DELPHI_ORACLE_CONTRACT.value );
     delphioracle::datapointstable _datapoints( DELPHI_ORACLE_CONTRACT, delphi_oracle_id.value );
     const auto pairs = _pairs.get(delphi_oracle_id.value, "oracle::get_delphi_price: [delphi_oracle_id] does not exists");
@@ -332,6 +351,7 @@ int64_t oracle::get_delphi_price( const name delphi_oracle_id )
 
 int64_t oracle::get_defibox_price( const uint64_t defibox_oracle_id )
 {
+    if ( !defibox_oracle_id ) return 0;
     defi::oracle::prices _prices( DEFIBOX_ORACLE_CONTRACT, DEFIBOX_ORACLE_CONTRACT.value);
     const auto prices = _prices.get(defibox_oracle_id, "oracle::get_defibox_price: [defibox_oracle_id] does not exists");
     return normalize_price(prices.avg_price, prices.precision);

@@ -23,6 +23,7 @@ public:
     // TOKEN
     const symbol EOS = symbol{"EOS", 4};
     const symbol USD = symbol{"USD", 4};
+    const symbol USDT = symbol{"USDT", 4};
     const name TOKEN_CONTRACT = "eosio.token"_n;
     const symbol TOKEN_SYMBOL = EOS;
 

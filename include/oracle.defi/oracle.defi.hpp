@@ -69,7 +69,7 @@ public:
     }
 
     [[eosio::action]]
-    void setprice( uint64_t id, eosio::extended_symbol ext_sym, uint8_t precision, uint64_t avg_price );
+    void setprice( const uint64_t id, const name contract, const symbol sym, const uint64_t avg_price );
     using setprice_action = eosio::action_wrapper<"setprice"_n, &defi::oracle::setprice>;
 };
 }
