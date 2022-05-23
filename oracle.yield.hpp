@@ -17,10 +17,14 @@ public:
     const name YIELD_CONTRACT = "eosio.yield"_n;
     const name DELPHI_ORACLE_CONTRACT = "delphioracle"_n;
     const name DEFIBOX_ORACLE_CONTRACT = "oracle.defi"_n;
+    const name NOTIFY_CONTRACT = "notify.yield"_n;
+    const name EVM_CONTRACT = "eosio.evm"_n;
 
     // TOKEN
+    const symbol EOS = symbol{"EOS", 4};
+    const symbol USD = symbol{"USD", 4};
     const name TOKEN_CONTRACT = "eosio.token"_n;
-    const symbol TOKEN_SYMBOL = symbol{"EOS", 4};
+    const symbol TOKEN_SYMBOL = EOS;
 
     // CONSTANTS
     const set<name> SYSTEM_STATUS_TYPES = set<name>{"maintenance"_n, "active"_n};
@@ -29,14 +33,19 @@ public:
     const uint32_t ONE_DAY = 86400;
     const uint32_t PERIOD_INTERVAL = TEN_MINUTES;
     const uint8_t PRECISION = 4;
-    const symbol EOS = symbol{"EOS", 4};
-    const symbol USD = symbol{"USD", 4};
 
     // STRUCTS
     struct TVL {
+        asset           usd;
+        asset           eos;
+    };
+    struct Contracts {
+        set<name>       eos;
+        set<string>     evm;
+    };
+    struct History {
         vector<asset>   balances;
-        int64_t         usd;
-        int64_t         eos;
+        TVL             tvl;
     };
 
     /**
@@ -101,9 +110,7 @@ public:
      *
      * - `{name} protocol` - primary protocol contract
      * - `{time_point_sec} period_at` - last period at time
-     * - `{int64_t} usd` - USD TVL averaged value
-     * - `{int64_t} eos` - EOS TVL averaged value
-     * - `{map<time_point_sec, TVL>} history` - historical assets balances & values by timestamp
+     * - `{map<time_point_sec, TVL>} history` - historical assets balances by timestamp
      *
      * ### example
      *
@@ -111,13 +118,13 @@ public:
      * {
      *     "protocol": "myprotocol",
      *     "period_at": "2022-05-13T00:00:00",
-     *     "usd": 30000000,
-     *     "eos": 20000000,
      *     "history": [{
      *         "key": "2022-05-13T00:00:00", {
      *             "balances": ["1000.0000 EOS", "1500.0000 USDT"],
-     *             "usd": 30000000,
-     *             "eos": 20000000
+     *             "tvl": {
+     *                 "usd": "300000.0000 USD",
+     *                 "eos": "200000.0000 EOS"
+     *              }
      *          }
      *      }]
      * }
@@ -126,9 +133,7 @@ public:
     struct [[eosio::table("tvl")]] tvl_row {
         name                            protocol;
         time_point_sec                  period_at;
-        int64_t                         usd;
-        int64_t                         eos;
-        map<time_point_sec, TVL>        history;
+        map<time_point_sec, History>    history;
 
         uint64_t primary_key() const { return protocol.value; }
     };
@@ -241,32 +246,9 @@ public:
     [[eosio::action]]
     void deltoken( const symbol_code symcode );
 
-    /**
-     * ## ACTION `report`
-     *
-     * - **authority**: `get_self()`
-     *
-     * Delete token as supported asset
-     *
-     * ### params
-     *
-     * - `{name} protocol` - primary protocol contract
-     * - `{time_point_sec} period` - period time
-     * - `{int64_t} usd` - USD TVL averaged value
-     * - `{int64_t} eos` - EOS TVL averaged value
-     *
-     * ### example
-     *
-     * ```bash
-     * $ cleos push action oracle.yield report '["myprotocol", "2022-05-13T00:00:00", 30000000, 20000000]' -p oracle.yield
-     * ```
-     */
-    [[eosio::action]]
-    void report( const name protocol, const time_point_sec period, const int64_t usd, const int64_t eos );
-
     // @eosio.code
     [[eosio::action]]
-    void updatelog( const name oracle, const name protocol, const time_point_sec period, const vector<asset> balances, const int64_t usd, const int64_t eos );
+    void updatelog( const name oracle, const name protocol, const time_point_sec period, const vector<asset> balances, const TVL tvl );
 
     // @system
     [[eosio::action]]
@@ -286,8 +268,17 @@ public:
     void on_unregister( const name protocol );
 
     // action wrappers
-    using report_action = eosio::action_wrapper<"report"_n, &oracle::report>;
+    using update_action = eosio::action_wrapper<"update"_n, &oracle::update>;
+    using updateall_action = eosio::action_wrapper<"updateall"_n, &oracle::updateall>;
+    using regoracle_action = eosio::action_wrapper<"regoracle"_n, &oracle::regoracle>;
+    using unregister_action = eosio::action_wrapper<"unregister"_n, &oracle::unregister>;
+    using approve_action = eosio::action_wrapper<"approve"_n, &oracle::approve>;
+    using deny_action = eosio::action_wrapper<"deny"_n, &oracle::deny>;
+    using addtoken_action = eosio::action_wrapper<"addtoken"_n, &oracle::addtoken>;
+    using deltoken_action = eosio::action_wrapper<"deltoken"_n, &oracle::deltoken>;
     using updatelog_action = eosio::action_wrapper<"updatelog"_n, &oracle::updatelog>;
+    using setreward_action = eosio::action_wrapper<"setreward"_n, &oracle::setreward>;
+    using setmetakeys_action = eosio::action_wrapper<"setmetakeys"_n, &oracle::setmetakeys>;
 
 private:
     // utils
@@ -295,7 +286,7 @@ private:
     oracle::config_row get_config();
     void set_status( const name oracle, const name status );
     void check_oracle_active( const name oracle );
-    void generate_report( const name protocol, const time_point_sec period, const map<time_point_sec, TVL> history );
+    void generate_report( const name protocol, const time_point_sec period, const map<time_point_sec, History> history );
 
     // getters
     asset get_balance_quantity( const name token_contract_account, const name owner, const symbol sym );

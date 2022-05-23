@@ -35,7 +35,6 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
         row.metadata = metadata;
         row.balance.contract = TOKEN_CONTRACT;
         row.balance.quantity.symbol = TOKEN_SYMBOL;
-        row.claimed.symbol = TOKEN_SYMBOL;
         if ( !row.created_at.sec_since_epoch() ) row.created_at = current_time_point();
         row.updated_at = current_time_point();
     };
@@ -177,11 +176,12 @@ void oracle::update( const name oracle, const name protocol )
 
     // calculate EOS valuation
     const int64_t eos = convert_usd_to_eos( usd );
+    const TVL tvl = {{ usd, USD }, { eos, EOS }};
 
     // add TVL to history
     _tvl.modify( itr, get_self(), [&]( auto& row ) {
         row.period_at = period;
-        row.history[period] = TVL{ balances, usd, eos };
+        row.history[period] = History{ balances, tvl };
     });
 
     // report
@@ -189,11 +189,11 @@ void oracle::update( const name oracle, const name protocol )
 
     // log event
     oracle::updatelog_action updatelog( get_self(), { get_self(), "active"_n });
-    updatelog.send( oracle, protocol, period, balances, usd, eos );
+    updatelog.send( oracle, protocol, period, balances, tvl );
 }
 
 // generate report TVL to Yield+ Rewards
-void oracle::generate_report( const name protocol, const time_point_sec period, const map<time_point_sec, TVL> history )
+void oracle::generate_report( const name protocol, const time_point_sec period, const map<time_point_sec, History> history )
 {
     // TO-DO make sure report is valid (3x48 TVL buckets)
     if ( false ) return;
@@ -201,14 +201,16 @@ void oracle::generate_report( const name protocol, const time_point_sec period, 
     // TO-DO calculations
     const int64_t usd = 0;
     const int64_t eos = 0;
+    const yield::TVL tvl = {{ usd, USD }, { eos, EOS }};
 
-    oracle::report_action report( get_self(), { get_self(), "active"_n });
-    report.send( protocol, period, usd, eos );
+    yield::report_action report( YIELD_CONTRACT, { get_self(), "active"_n });
+    report.send( protocol, period, tvl );
 }
 
 int64_t oracle::compute_average_tvl( )
 {
     // TO-DO
+    return 0;
 }
 
 // @oracle
@@ -231,9 +233,10 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
 
 // @eosio.code
 [[eosio::action]]
-void oracle::updatelog( const name oracle, const name protocol, const time_point_sec period, const vector<asset> balances, const int64_t usd, const int64_t eos )
+void oracle::updatelog( const name oracle, const name protocol, const time_point_sec period, const vector<asset> balances, const TVL tvl )
 {
     require_auth( get_self() );
+    require_recipient(NOTIFY_CONTRACT);
 }
 
 // @system
@@ -259,15 +262,6 @@ void oracle::setmetakeys( const set<name> metadata_keys )
     auto config = _config.get_or_default();
     config.metadata_keys = metadata_keys;
     _config.set(config, get_self());
-}
-
-// @eosio.code
-[[eosio::action]]
-void oracle::report( const name protocol, const time_point_sec period, const int64_t eos, const int64_t usd )
-{
-    require_auth( get_self() );
-
-    require_recipient(YIELD_CONTRACT);
 }
 
 time_point_sec oracle::get_current_period()
