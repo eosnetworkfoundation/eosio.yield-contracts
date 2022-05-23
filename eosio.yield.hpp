@@ -91,8 +91,7 @@ public:
      * - `{name} status="pending"` - status (`pending/active/denied`)
      * - `{set<name>} contracts.eos` - additional supporting EOS contracts
      * - `{set<string>} contracts.evm` - additional supporting EVM contracts
-     * - `{asset} usd` - reported USD TVL averaged value
-     * - `{asset} eos` - reported EOS TVL averaged value
+     * - `{TVL} tvl` - reported TVL averaged value in EOS & USD
      * - `{extended_asset} balance` - balance available to be claimed
      * - `{time_point_sec} created_at` - created at time
      * - `{time_point_sec} updated_at` - updated at time
