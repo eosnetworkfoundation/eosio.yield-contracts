@@ -12,7 +12,7 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
     yield::protocols_table _protocols( get_self(), get_self().value );
 
     // validate
-    require_recipient( CHECK_CONTRACT );
+    require_recipient( NOTIFY_CONTRACT );
     check_metadata_keys( metadata );
 
     // TO-DO
@@ -50,7 +50,7 @@ void yield::check_metadata_keys(const map<name, string> metadata )
 void yield::claim( const name protocol, const optional<name> receiver )
 {
     require_auth( protocol );
-    require_recipient(CHECK_CONTRACT);
+    require_recipient(NOTIFY_CONTRACT);
 
     yield::protocols_table _protocols( get_self(), get_self().value );
 
@@ -83,7 +83,7 @@ void yield::claim( const name protocol, const optional<name> receiver )
 void yield::claimlog( const name protocol, const name receiver, const asset claimed )
 {
     require_auth( get_self() );
-    require_recipient(CHECK_CONTRACT);
+    require_recipient(NOTIFY_CONTRACT);
 }
 
 void yield::set_status( const name protocol, const name status )
@@ -158,7 +158,7 @@ void yield::setmetakeys( const set<name> metadata_keys )
 void yield::unregister( const name protocol )
 {
     require_auth( protocol );
-    require_recipient(CHECK_CONTRACT);
+    require_recipient(NOTIFY_CONTRACT);
 
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get(protocol.value, "yield::unregister: [protocol] does not exists");
@@ -173,7 +173,7 @@ void yield::unregister( const name protocol )
 void yield::report( const name protocol, const time_point_sec period, const TVL tvl )
 {
     require_auth(ORACLE_CONTRACT);
-    require_recipient(CHECK_CONTRACT);
+    require_recipient(NOTIFY_CONTRACT);
 
     // tables
     yield::protocols_table _protocols( get_self(), get_self().value );
@@ -221,14 +221,14 @@ void yield::report( const name protocol, const time_point_sec period, const TVL 
 void yield::reportlog( const name protocol, const time_point_sec period, const TVL tvl, const asset rewards, const asset balance_before, const asset balance_after )
 {
     require_auth( get_self() );
-    require_recipient(CHECK_CONTRACT);
+    require_recipient(NOTIFY_CONTRACT);
 }
 
 // @protocol
 [[eosio::action]]
 void yield::setcontracts( const name protocol, const set<name> eos, const set<string> evm )
 {
-    require_recipient(CHECK_CONTRACT);
+    require_recipient(NOTIFY_CONTRACT);
 
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get(protocol.value, "yield::setcontracts: [protocol] does not exists");
@@ -263,7 +263,7 @@ void yield::setcontracts( const name protocol, const set<name> eos, const set<st
 [[eosio::on_notify("*::transfer")]]
 void yield::on_transfer( const name from, const name to, const asset quantity, const std::string memo )
 {
-    require_recipient(CHECK_CONTRACT);
+    require_recipient(NOTIFY_CONTRACT);
 }
 
 void yield::transfer( const name from, const name to, const extended_asset value, const string& memo )

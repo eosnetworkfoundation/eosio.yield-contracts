@@ -19,7 +19,7 @@ public:
 
     // CONTRACTS
     const name ORACLE_CONTRACT = "oracle.yield"_n;
-    const name CHECK_CONTRACT = "check.yield"_n;
+    const name NOTIFY_CONTRACT = "notify.yield"_n;
     const name EVM_CONTRACT = "eosio.evm"_n;
 
     // TOKEN
