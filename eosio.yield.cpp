@@ -187,7 +187,7 @@ void yield::report( const name protocol, const time_point_sec period, const TVL 
     // prevents double report
     check( itr.period_at != period, "yield::report: [period] already updated");
     check( period <= now, "yield::report: [period] must be in the past");
-    check( period > itr.period_at, "yield::report: [period] must ahead of last");
+    check( period > itr.period_at, "yield::report: [period] must be ahead of last");
     // TO-DO ADD period does not match
     // check( period == get_current_period(), "yield::report: [period] current period does not match");
 
