@@ -1,3 +1,5 @@
 *.wasm
 *.abi
 .vscode
+stderr
+nodeos

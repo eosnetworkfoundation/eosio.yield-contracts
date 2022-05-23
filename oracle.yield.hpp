@@ -51,7 +51,6 @@ public:
     /**
      * ## TABLE `config`
      *
-     * - `{name} status` - contract status ("ok", "maintenance")
      * - `{asset} reward_per_update` - reward per update (ex: "0.0200 EOS")
      * - `{set<name>} metadata_keys` - list of allowed metadata keys
      *
@@ -59,14 +58,12 @@ public:
      *
      * ```json
      * {
-     *     "status": "ok",
      *     "reward_per_update": "0.0200 EOS",
      *     "metadata_keys": ["name", "url"]
      * }
      * ```
      */
     struct [[eosio::table("config")]] config_row {
-        name                status = "maintenance"_n;
         asset               reward_per_update = {200, symbol{"EOS", 4}};
         set<name>           metadata_keys = {"url"_n};
     };
@@ -220,7 +217,7 @@ public:
      * ### example
      *
      * ```bash
-     * $ cleos push action oracle.yield addtoken '["4,EOS", "eosio.token", 1, "eosusd"]' -p oracle.yield
+     * $ cleos push action oracle.yield addtoken '["EOS", "eosio.token", 1, "eosusd"]' -p oracle.yield
      * ```
      */
     [[eosio::action]]

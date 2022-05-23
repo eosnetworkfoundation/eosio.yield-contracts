@@ -24,7 +24,6 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
     const set<name> metadata_keys = config.metadata_keys;
 
     // validate input
-    check(config.status == "active"_n, "yield::regoracle: [status] must be `active`");
     for ( const auto item : metadata ) {
         check( metadata_keys.find(item.first) != metadata_keys.end(), "yield::regoracle: invalid [metadata_keys]");
     }
