@@ -173,18 +173,20 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
     require_auth( oracle );
 
     yield::protocols_table _protocols( YIELD_CONTRACT, YIELD_CONTRACT.value );
-
-    // oracle::tvl_table _tvl( get_self(), get_self().value );
     const time_point_sec period = get_current_period();
 
     int limit = max_rows ? *max_rows : 20;
+    int count = 0;
+    check( limit, "oracle::updateall: [max_rows] must be above 0");
+
     for ( const auto row : _protocols ) {
-        if ( row.period_at == period ) continue;
-        if ( row.status != "active"_n ) continue;
+        if ( row.period_at == period ) continue; // period already updated
+        if ( row.status != "active"_n ) continue; // protocol not active
         update( oracle, row.protocol );
-        limit -= 1;
-        if ( limit <= 0 ) break;
+        count += 1;
+        if ( count >= limit ) break;
     }
+    check( count, "oracle::updateall: nothing to update");
 }
 
 // @oracle
