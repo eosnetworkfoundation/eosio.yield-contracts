@@ -70,6 +70,46 @@ void oracle::deny( const name oracle )
     set_status( oracle, "denied"_n );
 }
 
+// @oracle
+[[eosio::action]]
+void oracle::claim( const name oracle, const optional<name> receiver )
+{
+    require_auth( oracle );
+    require_recipient(NOTIFY_CONTRACT);
+
+    oracle::oracles_table _oracles( get_self(), get_self().value );
+
+    if ( receiver ) check( is_account( *receiver ), "oracle::claim: [receiver] does not exists");
+
+    // validate
+    auto & itr = _oracles.get(oracle.value, "oracle::claim: [oracle] does not exists");
+    const extended_asset claimable = itr.balance;
+    check( itr.status == "active"_n, "oracle::claim: [status] must be `active`");
+    check( claimable.quantity.amount > 0, "oracle::claim: nothing to claim");
+
+    // transfer funds to receiver
+    const name to = receiver ? *receiver : oracle;
+    transfer( get_self(), to, claimable, "oracle+ Oracle reward");
+
+    // modify balances
+    _oracles.modify( itr, same_payer, [&]( auto& row ) {
+        row.balance.quantity.amount = 0;
+        row.claimed_at = current_time_point();
+    });
+
+    // logging
+    oracle::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
+    claimlog.send( oracle, to, claimable );
+}
+
+// @eosio.code
+[[eosio::action]]
+void oracle::claimlog( const name protocol, const name receiver, const extended_asset claimed )
+{
+    require_auth( get_self() );
+    require_recipient(NOTIFY_CONTRACT);
+}
+
 void oracle::set_status( const name oracle, const name status )
 {
     oracle::oracles_table _oracles( get_self(), get_self().value );
@@ -226,31 +266,29 @@ void oracle::allocate_oracle_rewards( const name oracle )
 
     auto & itr = _oracles.get(oracle.value, "oracle::add_oracle_rewards: [oracle] does not exists");
     _oracles.modify( itr, same_payer, [&]( auto& row ) {
-        row.balance.quantity += config.reward_per_update;
+        row.balance += config.reward_per_update;
     });
 }
 
 // generate report TVL to Yield+ Rewards
 void oracle::generate_report( const name protocol, const time_point_sec period )
 {
+    oracle::periods_table _periods( get_self(), protocol.value );
+
     // TO-DO make sure report is valid (3x48 TVL buckets)
-    if ( false ) return;
+    int count = 0;
+    yield::TVL tvl = {{ 0, USD }, { 0, EOS }};
+    for ( const auto row : _periods ) {
+        tvl.usd += row.tvl.usd;
+        tvl.eos += row.tvl.eos;
+        count += 1;
+    }
+    if ( count <= 0 ) return; // skip
+    tvl.usd /= count;
+    tvl.eos /= count;
 
-    // // TO-DO calculations
-    // yield::TVL tvl;
-
-    // for ( const auto row : history ) {
-    //     tvl.usd = row.second.tvl.usd;
-    //     tvl.eos = row.second.tvl.eos;
-    // }
-    // print("eos:", tvl.eos, " usd:", tvl.usd, "\n");
-    return;
-    // const yield::TVL tvl = {{ usd, USD }, { eos, EOS }};
-
-    // check(false, tvl.eos.to_string() + " usd: " + tvl.usd.to_string());
-
-    // yield::report_action report( YIELD_CONTRACT, { get_self(), "active"_n });
-    // report.send( protocol, period, tvl );
+    yield::report_action report( YIELD_CONTRACT, { get_self(), "active"_n });
+    report.send( protocol, period, tvl );
 }
 
 int64_t oracle::compute_average_tvl( )
@@ -269,13 +307,14 @@ void oracle::updatelog( const name oracle, const name protocol, const time_point
 
 // @system
 [[eosio::action]]
-void oracle::setreward( const asset reward_per_update )
+void oracle::setreward( const extended_asset reward_per_update )
 {
     require_auth( get_self() );
 
     oracle::config_table _config( get_self(), get_self().value );
     auto config = _config.get_or_default();
-    check( reward_per_update.symbol == TOKEN_SYMBOL, "oracle::setreward: [symbol] is invalid");
+    check( reward_per_update.quantity.symbol == TOKEN_SYMBOL, "oracle::setreward: [quantity.symbol] is invalid");
+    check( reward_per_update.contract == TOKEN_CONTRACT, "oracle::setreward: [contract] is invalid");
     config.reward_per_update = reward_per_update;
     _config.set(config, get_self());
 }
@@ -324,7 +363,7 @@ int64_t oracle::calculate_usd_value( const asset quantity )
 int64_t oracle::convert_usd_to_eos( const int64_t usd )
 {
     const int64_t price = get_oracle_price( EOS.code() );
-    return ( price * usd ) / pow( 10, PRECISION );
+    return usd * pow( 10, PRECISION ) / price;
 }
 
 int64_t oracle::get_oracle_price( const symbol_code symcode )
@@ -382,4 +421,10 @@ oracle::config_row oracle::get_config()
     oracle::config_table _config( get_self(), get_self().value );
     check( _config.exists(), "oracle::get_config: contract is not initialized");
     return _config.get();
+}
+
+void oracle::transfer( const name from, const name to, const extended_asset value, const string& memo )
+{
+    eosio::token::transfer_action transfer( value.contract, { from, "active"_n });
+    transfer.send( from, to, value.quantity, memo );
 }

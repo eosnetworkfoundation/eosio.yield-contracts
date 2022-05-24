@@ -38,20 +38,20 @@ public:
     /**
      * ## TABLE `config`
      *
-     * - `{asset} reward_per_update` - reward per update (ex: "0.0200 EOS")
+     * - `{extended_asset} reward_per_update` - reward per update (ex: "0.0200 EOS")
      * - `{set<name>} metadata_keys` - list of allowed metadata keys
      *
      * ### example
      *
      * ```json
      * {
-     *     "reward_per_update": "0.0200 EOS",
+     *     "reward_per_update": {"contract": "eosio.token", "quantity": "0.0200 EOS"},
      *     "metadata_keys": ["name", "url"]
      * }
      * ```
      */
     struct [[eosio::table("config")]] config_row {
-        asset               reward_per_update = {200, symbol{"EOS", 4}};
+        extended_asset      reward_per_update;
         set<name>           metadata_keys = {"url"_n};
     };
     typedef eosio::singleton< "config"_n, config_row > config_table;
@@ -238,13 +238,60 @@ public:
     [[eosio::action]]
     void deltoken( const symbol_code symcode );
 
+    /**
+     * ## ACTION `claim`
+     *
+     * > Claim Oracle rewards
+     *
+     * - **authority**: `oracle`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle
+     * - `{name} [receiver=""]` - (optional) receiver of rewards (default=oracle)
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield claim '[myoracle, "myreceiver"]' -p myoracle
+     * ```
+     */
+    [[eosio::action]]
+    void claim( const name oracle, const optional<name> receiver );
+
+    /**
+     * ## ACTION `claimlog`
+     *
+     * > Claim logging
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol
+     * - `{name} receiver` - receiver of rewards
+     * - `{extended_asset} claimed` - claimed funds
+     *
+     * ### Example
+     *
+     * ```json
+     * {
+     *     "protocol": "myprotocol",
+     *     "receiver": "myreceiver",
+     *     "claimed": {"contract": "eosio.token", "quantity": "0.5500 EOS"}
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void claimlog( const name protocol, const name receiver, const extended_asset claimed );
+
     // @eosio.code
     [[eosio::action]]
     void updatelog( const name oracle, const name protocol, const time_point_sec period, const vector<asset> balances, const yield::TVL tvl );
 
     // @system
     [[eosio::action]]
-    void setreward( const asset reward_per_update );
+    void setreward( const extended_asset reward_per_update );
 
     // @system
     [[eosio::action]]
@@ -271,6 +318,8 @@ public:
     using updatelog_action = eosio::action_wrapper<"updatelog"_n, &oracle::updatelog>;
     using setreward_action = eosio::action_wrapper<"setreward"_n, &oracle::setreward>;
     using setmetakeys_action = eosio::action_wrapper<"setmetakeys"_n, &oracle::setmetakeys>;
+    using claim_action = eosio::action_wrapper<"claim"_n, &oracle::claim>;
+    using claimlog_action = eosio::action_wrapper<"claimlog"_n, &oracle::claimlog>;
 
 private:
     // utils
@@ -280,6 +329,7 @@ private:
     void check_oracle_active( const name oracle );
     void generate_report( const name protocol, const time_point_sec period );
     void allocate_oracle_rewards( const name oracle );
+    void transfer( const name from, const name to, const extended_asset value, const string& memo );
 
     // getters
     asset get_balance_quantity( const name token_contract_account, const name owner, const symbol sym );

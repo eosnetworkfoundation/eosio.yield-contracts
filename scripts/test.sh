@@ -1,7 +1,7 @@
 # #!/bin/bash
 
 # config
-cleos push action oracle.yield setreward '["0.0200 EOS"]' -p oracle.yield
+cleos push action oracle.yield setreward '[["0.0200 EOS", "eosio.token"]]' -p oracle.yield
 cleos push action oracle.yield setmetakeys '[["name", "url"]]' -p oracle.yield
 
 # add tokens
