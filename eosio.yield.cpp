@@ -75,12 +75,12 @@ void yield::claim( const name protocol, const optional<name> receiver )
 
     // logging
     yield::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
-    claimlog.send( protocol, to, claimable.quantity );
+    claimlog.send( protocol, to, claimable );
 }
 
 // @eosio.code
 [[eosio::action]]
-void yield::claimlog( const name protocol, const name receiver, const asset claimed )
+void yield::claimlog( const name protocol, const name receiver, const extended_asset claimed )
 {
     require_auth( get_self() );
     require_recipient(NOTIFY_CONTRACT);
@@ -119,21 +119,18 @@ void yield::deny( const name protocol )
 
 // @system
 [[eosio::action]]
-void yield::setrate( const int16_t annual_rate, const TVL min_tvl_report, const TVL max_tvl_report )
+void yield::setrate( const int16_t annual_rate, const asset min_tvl_report, const asset max_tvl_report )
 {
     require_auth( get_self() );
 
     yield::config_table _config( get_self(), get_self().value );
     auto config = _config.get_or_default();
     check( annual_rate <= MAX_ANNUAL_RATE, "yield::setrate: [annual_rate] exceeds maximum annual rate");
-    check( min_tvl_report.eos <= max_tvl_report.eos, "yield::setrate: [min_tvl_report] must be less than [max_tvl_report]");
-    check( min_tvl_report.usd <= max_tvl_report.usd, "yield::setrate: [min_tvl_report] must be less than [max_tvl_report]");
+    check( min_tvl_report <= max_tvl_report, "yield::setrate: [min_tvl_report] must be less than [max_tvl_report]");
 
     // validate symbols
-    check( min_tvl_report.usd.symbol == USD, "yield::setrate: [min_tvl_report.usd] invalid USD symbol");
-    check( max_tvl_report.usd.symbol == USD, "yield::setrate: [min_tvl_report.usd] invalid USD symbol");
-    check( min_tvl_report.eos.symbol == EOS, "yield::setrate: [min_tvl_report.eos] invalid EOS symbol");
-    check( max_tvl_report.eos.symbol == EOS, "yield::setrate: [min_tvl_report.eos] invalid EOS symbol");
+    check( min_tvl_report.symbol == EOS, "yield::setrate: [min_tvl_report] invalid EOS symbol");
+    check( max_tvl_report.symbol == EOS, "yield::setrate: [min_tvl_report] invalid EOS symbol");
 
     config.annual_rate = annual_rate;
     config.min_tvl_report = min_tvl_report;
@@ -195,10 +192,10 @@ void yield::report( const name protocol, const time_point_sec period, const TVL 
     // skip if does not meet minimum TVL report threshold
     check( tvl.eos.symbol == EOS, "yield::report: [tvl.eos] does not match EOS symbol");
     check( tvl.usd.symbol == USD, "yield::report: [tvl.usd] does not match USD symbol");
-    check( tvl.eos >= config.min_tvl_report.eos, "yield::report: [eos] does not meet minimum TVL report threshold");
+    check( tvl.eos >= config.min_tvl_report, "yield::report: [eos] does not meet minimum TVL report threshold");
 
     // limit TVL to maximum report threhsold
-    const uint128_t eos = ((tvl.eos > config.max_tvl_report.eos) ? config.max_tvl_report.eos : tvl.eos).amount;
+    const uint128_t eos = ((tvl.eos > config.max_tvl_report) ? config.max_tvl_report : tvl.eos).amount;
     const int64_t rewards_amount = eos * config.annual_rate * PERIOD_INTERVAL / 10000 / YEAR;
     const asset rewards = { rewards_amount, EOS };
 

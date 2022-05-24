@@ -43,7 +43,6 @@ public:
         set<name>       eos;
         set<string>     evm;
     };
-
     struct TVL {
         asset           usd;
         asset           eos;
@@ -53,8 +52,8 @@ public:
      * ## TABLE `config`
      *
      * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
-     * - `{TVL} min_tvl_report` - minimum TVL report
-     * - `{TVL} max_tvl_report` - maximum TVL report
+     * - `{asset} min_tvl_report` - minimum TVL report
+     * - `{asset} max_tvl_report` - maximum TVL report
      * - `{set<name>} metadata_keys` - list of allowed metadata keys
      *
      * ### example
@@ -62,22 +61,16 @@ public:
      * ```json
      * {
      *     "annual_rate": 500,
-     *     "min_tvl_report": {
-     *         "eos": "200000.0000 EOS",
-     *         "usd": "300000.0000 USD"
-     *     },
-     *     "max_tvl_report": {
-     *         "eos": "6000000.0000 EOS",
-     *         "usd": "9000000.0000 USD"
-     *     },
+     *     "min_tvl_report": "200000.0000 EOS",
+     *     "max_tvl_report": "6000000.0000 EOS",
      *     "metadata_keys": ["name", "url", "defillama", "dappradar", "recover"]
      * }
      * ```
      */
     struct [[eosio::table("config")]] config_row {
         uint16_t                annual_rate = 500;
-        TVL                     min_tvl_report;
-        TVL                     max_tvl_report;
+        asset                   min_tvl_report;
+        asset                   max_tvl_report;
         set<name>               metadata_keys = {"url"_n};
     };
     typedef eosio::singleton< "config"_n, config_row > config_table;
@@ -273,17 +266,17 @@ public:
      * ### params
      *
      * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
-     * - `{TVL} min_tvl_report` - minimum TVL report
-     * - `{TVL} max_tvl_report` - maximum TVL report
+     * - `{asset} min_tvl_report` - minimum TVL report
+     * - `{asset} max_tvl_report` - maximum TVL report
      *
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield setrate '[500, ["300000.0000 USD", "200000.0000 EOS"], ["9000000.0000 USD", "6000000.0000 EOS"]]' -p eosio.yield
+     * $ cleos push action eosio.yield setrate '[500, "200000.0000 EOS", "6000000.0000 EOS"]' -p eosio.yield
      * ```
      */
     [[eosio::action]]
-    void setrate( const int16_t annual_rate, const TVL min_tvl_report, const TVL max_tvl_report );
+    void setrate( const int16_t annual_rate, const asset min_tvl_report, const asset max_tvl_report );
 
     /**
      * ## ACTION `setmetakeys`
@@ -338,7 +331,7 @@ public:
      *
      * - `{name} protocol` - protocol
      * - `{name} receiver` - receiver of rewards
-     * - `{asset} claimed` - claimed funds
+     * - `{extended_asset} claimed` - claimed funds
      *
      * ### Example
      *
@@ -346,12 +339,12 @@ public:
      * {
      *     "protocol": "myprotocol",
      *     "receiver": "myreceiver",
-     *     "claimed": "1.5500 EOS"
+     *     "claimed": {"contract": "eosio.token", "quantity": "1.5500 EOS"}
      * }
      * ```
      */
     [[eosio::action]]
-    void claimlog( const name protocol, const name receiver, const asset claimed );
+    void claimlog( const name protocol, const name receiver, const extended_asset claimed );
 
     /**
      * ## ACTION `reportlog`
