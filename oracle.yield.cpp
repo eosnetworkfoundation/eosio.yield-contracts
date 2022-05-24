@@ -248,15 +248,15 @@ void oracle::update( const name oracle, const name protocol )
         row.tvl = tvl;
     });
 
+    // log update
+    oracle::updatelog_action updatelog( get_self(), { get_self(), "active"_n });
+    updatelog.send( oracle, protocol, period, balances, tvl );
+
     // report
     generate_report( protocol, period );
 
     // update rewards
     allocate_oracle_rewards( oracle );
-
-    // log event
-    oracle::updatelog_action updatelog( get_self(), { get_self(), "active"_n });
-    updatelog.send( oracle, protocol, period, balances, tvl );
 }
 
 void oracle::allocate_oracle_rewards( const name oracle )
