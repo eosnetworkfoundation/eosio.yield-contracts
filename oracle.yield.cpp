@@ -200,11 +200,13 @@ void oracle::update( const name oracle, const name protocol )
     yield::protocols_table _protocols( YIELD_CONTRACT, YIELD_CONTRACT.value );
 
     // get protocol details
-    const time_point_sec period = get_current_period();
-    const yield::Contracts contracts = _protocols.get( protocol.value, "oracle::update: [protocol] does not exists" ).contracts;
-    auto itr = _periods.find( period.sec_since_epoch() );
+    const auto protocol_itr = _protocols.get( protocol.value, "oracle::update: [protocol] does not exists" );
+    check( protocol_itr.status == "active"_n, "oracle::update: [protocol] must be active" );
+    const yield::Contracts contracts = protocol_itr.contracts;
 
-    // prevent duplicate updates
+    // get current period
+    const time_point_sec period = get_current_period();
+    auto itr = _periods.find( period.sec_since_epoch() );
     check( itr == _periods.end(), "oracle::update: [period] for [protocol] is already updated" );
 
     // get all balances from protocol EOS contracts
@@ -230,8 +232,6 @@ void oracle::update( const name oracle, const name protocol )
     // calculate USD valuation
     int64_t usd = 0;
     for ( const asset balance : balances ) {
-        print("balance:", balance, "\n");
-        print("usd:", usd, "\n");
         usd += calculate_usd_value( balance );
     }
 
