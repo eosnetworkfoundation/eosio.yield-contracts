@@ -1,6 +1,6 @@
 #!/bin/bash
 
-eosio-cpp oracle.yield.cpp -I include -I ../
+eosio-cpp oracle.yield.cpp -I include -I ../ -D=DEBUG
 
 if [ ! -f "./include/eosio.token/eosio.token.wasm" ]; then
     eosio-cpp ./include/eosio.token/eosio.token.cpp -I include -o include/eosio.token/eosio.token.wasm

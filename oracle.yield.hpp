@@ -13,12 +13,19 @@ class [[eosio::contract("oracle.yield")]] oracle : public eosio::contract {
 public:
     using contract::contract;
 
+    // YIELD CONTRACTS
+    #ifdef DEBUG
+        const name YIELD_CONTRACT = "d.e.yield"_n;
+        const name NOTIFY_CONTRACT = "d.n.yield"_n;
+    # else
+        const name YIELD_CONTRACT = "eosio.yield"_n;
+        const name NOTIFY_CONTRACT = "notify.yield"_n;
+    #endif
+
     // CONTRACTS
-    const name YIELD_CONTRACT = "eosio.yield"_n;
+    const name EVM_CONTRACT = "eosio.evm"_n;
     const name DELPHI_ORACLE_CONTRACT = "delphioracle"_n;
     const name DEFIBOX_ORACLE_CONTRACT = "oracle.defi"_n;
-    const name NOTIFY_CONTRACT = "notify.yield"_n;
-    const name EVM_CONTRACT = "eosio.evm"_n;
 
     // TOKEN
     const symbol EOS = symbol{"EOS", 4};
@@ -28,7 +35,6 @@ public:
     const symbol TOKEN_SYMBOL = EOS;
 
     // CONSTANTS
-    const set<name> SYSTEM_STATUS_TYPES = set<name>{"maintenance"_n, "active"_n};
     const set<name> ORACLE_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
     const uint32_t TEN_MINUTES = 600;
     const uint32_t ONE_DAY = 86400;

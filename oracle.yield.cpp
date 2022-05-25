@@ -278,9 +278,9 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
     oracle::periods_table _periods( get_self(), protocol.value );
 
     // yield config
-    yield::configs_table _configs( YIELD_CONTRACT, YIELD_CONTRACT.value );
+    yield::config_table _config( YIELD_CONTRACT, YIELD_CONTRACT.value );
     check( _config.exists(), "yield::get_config: contract is not initialized");
-    const asset min_tvl_report = _configs.get().min_tvl_report;
+    const asset min_tvl_report = _config.get().min_tvl_report;
 
     // TO-DO make sure report is valid (3x48 TVL buckets)
     int count = 0;
