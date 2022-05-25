@@ -277,6 +277,11 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
 {
     oracle::periods_table _periods( get_self(), protocol.value );
 
+    // yield config
+    yield::configs_table _configs( YIELD_CONTRACT, YIELD_CONTRACT.value );
+    check( _config.exists(), "yield::get_config: contract is not initialized");
+    const asset min_tvl_report = _configs.get().min_tvl_report;
+
     // TO-DO make sure report is valid (3x48 TVL buckets)
     int count = 0;
     yield::TVL tvl = {{ 0, USD }, { 0, EOS }};
@@ -285,10 +290,14 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
         tvl.eos += row.tvl.eos;
         count += 1;
     }
-    if ( count <= 0 ) return; // skip
+    if ( count <= 0 ) return; // skip if no periods
     tvl.usd /= count;
     tvl.eos /= count;
 
+    // skip if min TVL is not reached
+    if ( tvl.eos < min_tvl_report ) return;
+
+    // send oracle report to Yield+ Rewards
     yield::report_action report( YIELD_CONTRACT, { get_self(), "active"_n });
     report.send( protocol, period, tvl );
 }
