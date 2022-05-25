@@ -7,7 +7,7 @@
 [[eosio::action]]
 void yield::regprotocol( const name protocol, const map<name, string> metadata )
 {
-    require_auth( protocol );
+    if ( !has_auth( get_self() ) ) require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
 
@@ -49,7 +49,7 @@ void yield::check_metadata_keys(const map<name, string> metadata )
 [[eosio::action]]
 void yield::claim( const name protocol, const optional<name> receiver )
 {
-    require_auth( protocol );
+    if ( !has_auth( get_self() )) require_auth( protocol );
     require_recipient(NOTIFY_CONTRACT);
 
     yield::protocols_table _protocols( get_self(), get_self().value );
@@ -154,7 +154,7 @@ void yield::setmetakeys( const set<name> metadata_keys )
 [[eosio::action]]
 void yield::unregister( const name protocol )
 {
-    require_auth( protocol );
+    if ( !has_auth( get_self() )) require_auth( protocol );
     require_recipient(NOTIFY_CONTRACT);
 
     yield::protocols_table _protocols( get_self(), get_self().value );

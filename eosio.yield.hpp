@@ -17,9 +17,16 @@ class [[eosio::contract("eosio.yield")]] yield : public eosio::contract {
 public:
     using contract::contract;
 
+    // YIELD CONTRACTS
+    #ifdef DEBUG
+        const name ORACLE_CONTRACT = "d.o.yield"_n;
+        const name NOTIFY_CONTRACT = "d.n.yield"_n;
+    # else
+        const name ORACLE_CONTRACT = "oracle.yield"_n;
+        const name NOTIFY_CONTRACT = "notify.yield"_n;
+    #endif
+
     // CONTRACTS
-    const name ORACLE_CONTRACT = "oracle.yield"_n;
-    const name NOTIFY_CONTRACT = "notify.yield"_n;
     const name EVM_CONTRACT = "eosio.evm"_n;
 
     // TOKEN
