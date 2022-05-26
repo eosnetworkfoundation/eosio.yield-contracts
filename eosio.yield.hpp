@@ -18,13 +18,7 @@ public:
     using contract::contract;
 
     // YIELD CONTRACTS
-    #ifdef DEBUG
-        const name ORACLE_CONTRACT = "d.o.yield"_n;
-        const name NOTIFY_CONTRACT = "d.n.yield"_n;
-    # else
-        const name ORACLE_CONTRACT = "oracle.yield"_n;
-        const name NOTIFY_CONTRACT = "notify.yield"_n;
-    #endif
+    const name ORACLE_CONTRACT = "d.o.yield"_n;
 
     // CONTRACTS
     const name EVM_CONTRACT = "eosio.evm"_n;
