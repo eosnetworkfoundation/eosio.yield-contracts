@@ -19,6 +19,7 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
 
     auto insert = [&]( auto& row ) {
         // status => "pending" by default
+        row.contracts.eos.insert( protocol );
         row.protocol = protocol;
         row.metadata = metadata;
         row.balance.contract = TOKEN_CONTRACT;
@@ -240,12 +241,12 @@ void yield::setcontracts( const name protocol, const set<name> eos, const set<st
         }
     }
 
-
     // modify contracts
     const name ram_payer = has_auth( get_self() ) ? get_self() : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
         row.contracts.eos = eos;
         row.contracts.evm = evm;
+        row.contracts.eos.insert(protocol); // always include EOS protocol account
         row.updated_at = current_time_point();
     });
 }
