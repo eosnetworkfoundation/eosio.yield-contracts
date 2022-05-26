@@ -211,6 +211,7 @@ void oracle::update( const name oracle, const name protocol )
 
     // get all balances from protocol EOS contracts
     vector<asset> balances;
+    vector<asset> prices;
     for ( const name contract : contracts.eos ) {
         // liquid balance
         for ( const auto token : _tokens ) {
@@ -218,11 +219,16 @@ void oracle::update( const name oracle, const name protocol )
             if ( balance.amount <= 0 ) continue;
             balances.push_back( balance );
 
+            // price only used for logging purposes
+            prices.push_back( asset{ get_oracle_price( balance.symbol.code() ), USD } );
         }
         // staked EOS (REX & delegated CPU/NET)
         const asset staked = get_eos_staked( contract );
         if ( staked.amount <= 0 ) continue;
         balances.push_back( staked );
+
+        // EOS price only used for logging purposes
+        prices.push_back( asset{ get_oracle_price( EOS.code() ), USD } );
     }
 
     for ( const string contract : contracts.evm ) {
@@ -250,7 +256,7 @@ void oracle::update( const name oracle, const name protocol )
 
     // log update
     oracle::updatelog_action updatelog( get_self(), { get_self(), "active"_n });
-    updatelog.send( oracle, protocol, period, balances, tvl );
+    updatelog.send( oracle, protocol, contracts, period, balances, prices, tvl );
 
     // report
     generate_report( protocol, period );
@@ -308,7 +314,7 @@ int64_t oracle::compute_average_tvl( )
 
 // @eosio.code
 [[eosio::action]]
-void oracle::updatelog( const name oracle, const name protocol, const time_point_sec period, const vector<asset> balances, const yield::TVL tvl )
+void oracle::updatelog( const name oracle, const name protocol, const yield::Contracts contracts, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const yield::TVL tvl )
 {
     require_auth( get_self() );
 }

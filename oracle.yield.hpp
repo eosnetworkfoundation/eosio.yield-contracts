@@ -287,7 +287,7 @@ public:
 
     // @eosio.code
     [[eosio::action]]
-    void updatelog( const name oracle, const name protocol, const time_point_sec period, const vector<asset> balances, const yield::TVL tvl );
+    void updatelog( const name oracle, const name protocol, const yield::Contracts contracts, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const yield::TVL tvl );
 
     // @system
     [[eosio::action]]
