@@ -297,14 +297,9 @@ public:
     [[eosio::action]]
     void setmetakeys( const set<name> metadata_keys );
 
-    // [[eosio::on_notify("eosio.yield::approve")]]
-    // void on_approve( const name protocol );
-
-    // [[eosio::on_notify("eosio.yield::deny")]]
-    // void on_deny( const name protocol );
-
-    // [[eosio::on_notify("eosio.yield::unregister")]]
-    // void on_unregister( const name protocol );
+    // @debug
+    [[eosio::action]]
+    void cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows );
 
     // action wrappers
     using update_action = eosio::action_wrapper<"update"_n, &oracle::update>;
@@ -320,6 +315,7 @@ public:
     using setmetakeys_action = eosio::action_wrapper<"setmetakeys"_n, &oracle::setmetakeys>;
     using claim_action = eosio::action_wrapper<"claim"_n, &oracle::claim>;
     using claimlog_action = eosio::action_wrapper<"claimlog"_n, &oracle::claimlog>;
+    using cleartable_action = eosio::action_wrapper<"cleartable"_n, &oracle::cleartable>;
 
 private:
     // utils
@@ -343,4 +339,8 @@ private:
     int64_t get_delphi_price( const name delphi_oracle_id );
     int64_t get_defibox_price( const uint64_t defibox_oracle_id );
     int64_t compute_average_tvl( );
+
+    // debug
+    template <typename T>
+    void clear_table( T& table, uint64_t rows_to_clear );
 };
