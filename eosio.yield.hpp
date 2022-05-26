@@ -382,6 +382,10 @@ public:
     [[eosio::action]]
     void reportlog( const name protocol, const time_point_sec period, const TVL tvl, const asset rewards, const asset balance_before, const asset balance_after );
 
+    // @debug
+    [[eosio::action]]
+    void cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows );
+
     [[eosio::on_notify("*::transfer")]]
     void on_transfer( const name from, const name to, const asset quantity, const std::string memo );
 
@@ -397,6 +401,7 @@ public:
     using report_action = eosio::action_wrapper<"report"_n, &yield::report>;
     using claimlog_action = eosio::action_wrapper<"claimlog"_n, &yield::claimlog>;
     using reportlog_action = eosio::action_wrapper<"reportlog"_n, &yield::reportlog>;
+    using cleartable_action = eosio::action_wrapper<"cleartable"_n, &yield::cleartable>;
 
 private :
     // utils
@@ -405,4 +410,8 @@ private :
     void set_status( const name protocol, const name status );
     void transfer( const name from, const name to, const extended_asset value, const string& memo );
     void check_metadata_keys(const map<name, string> metadata );
+
+    // debug
+    template <typename T>
+    void clear_table( T& table, uint64_t rows_to_clear );
 };
