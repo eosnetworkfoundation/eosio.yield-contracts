@@ -75,7 +75,6 @@ void oracle::deny( const name oracle )
 void oracle::claim( const name oracle, const optional<name> receiver )
 {
     require_auth( oracle );
-    require_recipient(NOTIFY_CONTRACT);
 
     oracle::oracles_table _oracles( get_self(), get_self().value );
 
@@ -107,7 +106,6 @@ void oracle::claim( const name oracle, const optional<name> receiver )
 void oracle::claimlog( const name protocol, const name receiver, const extended_asset claimed )
 {
     require_auth( get_self() );
-    require_recipient(NOTIFY_CONTRACT);
 }
 
 void oracle::set_status( const name oracle, const name status )
@@ -313,7 +311,6 @@ int64_t oracle::compute_average_tvl( )
 void oracle::updatelog( const name oracle, const name protocol, const time_point_sec period, const vector<asset> balances, const yield::TVL tvl )
 {
     require_auth( get_self() );
-    require_recipient(NOTIFY_CONTRACT);
 }
 
 // @system

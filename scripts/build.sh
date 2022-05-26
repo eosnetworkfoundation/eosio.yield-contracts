@@ -1,7 +1,9 @@
 #!/bin/bash
 
-eosio-cpp oracle.yield.cpp -I include -I ../ -D=DEBUG
+# compile
+eosio-cpp oracle.yield.cpp -I include -I ../
 
+# external contracts
 if [ ! -f "./include/eosio.token/eosio.token.wasm" ]; then
     eosio-cpp ./include/eosio.token/eosio.token.cpp -I include -o include/eosio.token/eosio.token.wasm
 fi
