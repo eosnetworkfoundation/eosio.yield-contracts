@@ -212,17 +212,17 @@ void oracle::update( const name oracle, const name protocol )
     // get all balances from protocol EOS contracts
     vector<asset> balances;
     for ( const name contract : contracts.eos ) {
+        // liquid balance
         for ( const auto token : _tokens ) {
-            // liquid balance
             const asset balance = get_balance_quantity( token.contract, contract, token.sym );
             if ( balance.amount <= 0 ) continue;
             balances.push_back( balance );
 
-            // staked EOS (REX & delegated CPU/NET)
-            const asset staked = get_eos_staked( contract );
-            if ( staked.amount <= 0 ) continue;
-            balances.push_back( staked );
         }
+        // staked EOS (REX & delegated CPU/NET)
+        const asset staked = get_eos_staked( contract );
+        if ( staked.amount <= 0 ) continue;
+        balances.push_back( staked );
     }
 
     for ( const string contract : contracts.evm ) {
