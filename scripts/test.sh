@@ -12,7 +12,7 @@ cleos push action $CONTRACT addtoken '["EOS", "eosio.token", 1, null]' -p $CONTR
 cleos push action $CONTRACT addtoken '["USDT", "tethertether", null, null]' -p $CONTRACT
 
 # register oracle
-cleos push action $CONTRACT regoracle '[eosnationftw, [{"key": "url", "value":"https://eosnation.io"}]]' -p eosnationftw
+cleos push action $CONTRACT regoracle '[myoracle, [{"key": "url", "value":"https://myoracle"}]]' -p myoracle
 
 # approve
 cleos push action $CONTRACT approve '[myoracle]' -p $CONTRACT
