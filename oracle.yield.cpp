@@ -206,7 +206,7 @@ void oracle::update( const name oracle, const name protocol )
 
     // get current period
     const time_point_sec period = get_current_period();
-    auto itr = _periods.find( period.sec_since_epoch() );
+    auto itr = _periods.find( period.sec_since_epoch() * -1 ); // inverse multi-index
     check( itr == _periods.end(), "oracle::update: [period] for [protocol] is already updated" );
 
     // get all balances from protocol EOS contracts
@@ -285,7 +285,7 @@ void oracle::prune_protocol_periods( const name protocol )
     oracle::periods_table _periods( get_self(), protocol.value );
 
     // erase any periods that exceeds 32 hours
-    const time_point_sec last_period = get_last_period( TEN_MINUTES * MAX_PERIODS_REPORT );
+    const time_point_sec last_period = get_last_period( PERIOD_INTERVAL * MAX_PERIODS_REPORT );
     auto itr = _periods.begin();
     while ( itr != _periods.end() ) {
         if ( itr->period < last_period ) itr = _periods.erase( itr ); // erase
@@ -315,6 +315,7 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
         tvl.usd += row.tvl.usd;
         tvl.eos += row.tvl.eos;
         count += 1;
+        // print(row.protocol, ":", row.period.sec_since_epoch(), "\n");
     }
     if ( count < MIN_PERIODS_REPORT ) return; // skip if does not exceeed minimum periods
     tvl.usd /= count;

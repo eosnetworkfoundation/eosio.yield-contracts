@@ -18,4 +18,4 @@ cleos push action $CONTRACT regoracle '[myoracle, [{"key": "url", "value":"https
 cleos push action $CONTRACT approve '[myoracle]' -p $CONTRACT
 
 # updateall
-cleos push action $CONTRACT updateall '[myoracle, null]' -p myoracle
+cleos -v push action $CONTRACT updateall '[myoracle, null]' -p myoracle

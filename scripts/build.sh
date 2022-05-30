@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# contracts
+CONTRACT="d.o.yield"
+
 # compile
 eosio-cpp oracle.yield.cpp -I include -I ../
 
@@ -14,4 +17,4 @@ fi
 
 # unlock wallet & deploy
 cleos wallet unlock --password $(cat ~/eosio-wallet/.pass)
-cleos set contract oracle.yield . oracle.yield.wasm oracle.yield.abi
+cleos set contract $CONTRACT . oracle.yield.wasm oracle.yield.abi

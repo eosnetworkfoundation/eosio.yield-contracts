@@ -30,11 +30,10 @@ public:
 
     // CONSTANTS
     const set<name> ORACLE_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
-    const uint32_t TEN_MINUTES = 600;
-    const uint32_t ONE_DAY = 86400;
-    const uint32_t BUCKET_PERIODS = 48; // 8 hours
-    const uint32_t MIN_PERIODS_REPORT = 144; // 24 hours
-    const uint32_t MAX_PERIODS_REPORT = 192; // 32 hours (allows a buffer of 8 hours)
+    const uint32_t TEN_MINUTES = 10; // 10 minutes (600 seconds) !!**DEV SETTINGS**!!
+    const uint32_t BUCKET_PERIODS = 48; // 8 hours (48 periods);
+    const uint32_t MIN_PERIODS_REPORT = 144; // 24 hours (144 periods)
+    const uint32_t MAX_PERIODS_REPORT = 192; // 32 hours (192 periods) allows 8 hours buffer
     const uint32_t PERIOD_INTERVAL = TEN_MINUTES;
     const uint8_t PRECISION = 4;
 
@@ -133,7 +132,7 @@ public:
         vector<asset>           prices;
         yield::TVL              tvl;
 
-        uint64_t primary_key() const { return period.sec_since_epoch(); }
+        uint64_t primary_key() const { return period.sec_since_epoch() * -1; } // inverse index (latest to oldest)
     };
     typedef eosio::multi_index< "periods"_n, periods_row> periods_table;
 
