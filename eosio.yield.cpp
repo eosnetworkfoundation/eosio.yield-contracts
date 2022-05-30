@@ -181,8 +181,7 @@ void yield::report( const name protocol, const time_point_sec period, const TVL 
     check( itr.period_at != period, "yield::report: [period] already updated");
     check( period <= now, "yield::report: [period] must be in the past");
     check( period > itr.period_at, "yield::report: [period] must be ahead of last");
-    // TO-DO ADD period does not match
-    // check( period == get_current_period(), "yield::report: [period] current period does not match");
+    check( period == get_current_period(), "yield::report: [period] current period does not match");
 
     // validate
     // skip if does not meet minimum TVL report threshold
@@ -220,30 +219,27 @@ void yield::reportlog( const name protocol, const time_point_sec period, const T
 [[eosio::action]]
 void yield::setcontracts( const name protocol, const set<name> eos, const set<string> evm )
 {
+    require_auth( protocol );
+
     auto config = get_config();
 
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get(protocol.value, "yield::setcontracts: [protocol] does not exists");
 
-    // skip additional checks if system is not authorized
-    if ( !has_auth( get_self() ) ) {
-        require_auth( protocol );
-
-        check(itr.status == "pending"_n, "yield::setcontracts: [status] must be `pending` to modify");
-
-        // require authority of all EOS contracts linked to protocol
-        for ( const name contract : eos ) {
-            require_auth( contract );
-        }
-        // require authority of all EVM contracts linked to protocol
-        for ( const string contract : evm ) {
-            check(false, "NOT IMPLEMENTED");
-        }
+    // require authority of all EOS contracts linked to protocol
+    for ( const name contract : eos ) {
+        check( is_account( contract ), "yield::setcontracts: [eos.contract] account does not exists");
+        require_auth( contract );
+    }
+    // require authority of all EVM contracts linked to protocol
+    for ( const string contract : evm ) {
+        check(false, "NOT IMPLEMENTED");
     }
 
     // modify contracts
     const name ram_payer = has_auth( get_self() ) ? get_self() : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
+        row.status == "pending"; // must be re-approved if contracts changed
         row.contracts.eos = eos;
         row.contracts.evm = evm;
         row.contracts.eos.insert(protocol); // always include EOS protocol account
@@ -254,6 +250,7 @@ void yield::setcontracts( const name protocol, const set<name> eos, const set<st
 [[eosio::on_notify("*::transfer")]]
 void yield::on_transfer( const name from, const name to, const asset quantity, const std::string memo )
 {
+
 }
 
 void yield::transfer( const name from, const name to, const extended_asset value, const string& memo )

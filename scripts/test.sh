@@ -9,7 +9,11 @@ cleos push action $CONTRACT setmetakeys '[["name", "url", "defillama", "dapprada
 
 # register protocol
 cleos push action $CONTRACT regprotocol '[myprotocol, [{"key": "url", "value":"https://myprotocol.com"}]]' -p myprotocol
-cleos push action $CONTRACT setcontracts '[myprotocol, ["myprotocol"], []]' -p myprotocol
+cleos push action $CONTRACT regprotocol '[protocol1, [{"key": "url", "value":"https://protocol1.com"}]]' -p protocol1
+cleos push action $CONTRACT regprotocol '[protocol2, [{"key": "url", "value":"https://protocol2.com"}]]' -p protocol2
+
+# set contracts
+cleos push action $CONTRACT setcontracts '[myprotocol, ["myvault"], []]' -p myprotocol -p myvault
 
 # approve protocol
 cleos push action $CONTRACT approve '[myprotocol]' -p "$CONTRACT"

@@ -183,9 +183,9 @@ public:
      *
      * ### params
      *
-     * - `{name} protocol` - protocol
-     * - `{set<name>} eos` - EOS contracts
-     * - `{set<string>} evm` - EVM contracts
+     * - `{name} protocol` - protocol (will be included in EOS contracts)
+     * - `{set<name>} eos` - additional EOS contracts
+     * - `{set<string>} evm` - additional EVM contracts
      *
      * ### Example
      *
