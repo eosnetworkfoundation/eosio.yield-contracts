@@ -32,6 +32,9 @@ public:
     const set<name> ORACLE_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
     const uint32_t TEN_MINUTES = 600;
     const uint32_t ONE_DAY = 86400;
+    const uint32_t BUCKET_PERIODS = 48; // 8 hours
+    const uint32_t MIN_PERIODS_REPORT = 144; // 24 hours
+    const uint32_t MAX_PERIODS_REPORT = 192; // 32 hours (allows a buffer of 8 hours)
     const uint32_t PERIOD_INTERVAL = TEN_MINUTES;
     const uint8_t PRECISION = 4;
 
@@ -100,6 +103,7 @@ public:
      * - `{set<name>} contracts.eos` - additional supporting EOS contracts
      * - `{set<string>} contracts.evm` - additional supporting EVM contracts
      * - `{vector<asset>} balances` - asset balances
+     * - `{vector<asset>} prices` - currency prices
      * - `{TVL} tvl` - reported TVL averaged value in EOS & USD
      *
      * ### example
@@ -113,6 +117,7 @@ public:
      *       "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
      *     },
      *     "balances": ["1000.0000 EOS", "1500.0000 USDT"],
+     *     "prices": ["1.5000 USD", "1.0000 USD"],
      *     "tvl": {
      *         "usd": "300000.0000 USD",
      *         "eos": "200000.0000 EOS"
@@ -125,6 +130,7 @@ public:
         name                    protocol;
         yield::Contracts        contracts;
         vector<asset>           balances;
+        vector<asset>           prices;
         yield::TVL              tvl;
 
         uint64_t primary_key() const { return period.sec_since_epoch(); }
@@ -320,12 +326,14 @@ public:
 private:
     // utils
     time_point_sec get_current_period();
+    time_point_sec get_last_period( const uint32_t last );
     oracle::config_row get_config();
     void set_status( const name oracle, const name status );
     void check_oracle_active( const name oracle );
     void generate_report( const name protocol, const time_point_sec period );
     void allocate_oracle_rewards( const name oracle );
     void transfer( const name from, const name to, const extended_asset value, const string& memo );
+    void prune_protocol_periods( const name protocol );
 
     // getters
     asset get_balance_quantity( const name token_contract_account, const name owner, const symbol sym );
@@ -338,7 +346,7 @@ private:
     int64_t normalize_price( const int64_t price, const uint8_t precision );
     int64_t get_delphi_price( const name delphi_oracle_id );
     int64_t get_defibox_price( const uint64_t defibox_oracle_id );
-    int64_t compute_average_tvl( );
+    // int64_t compute_average_tvl( );
 
     // debug
     template <typename T>

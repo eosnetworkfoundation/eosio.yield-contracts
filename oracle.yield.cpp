@@ -251,12 +251,16 @@ void oracle::update( const name oracle, const name protocol )
         row.protocol = protocol;
         row.contracts = contracts;
         row.balances = balances;
+        row.prices = prices;
         row.tvl = tvl;
     });
 
     // log update
     oracle::updatelog_action updatelog( get_self(), { get_self(), "active"_n });
     updatelog.send( oracle, protocol, contracts, period, balances, prices, tvl );
+
+    // prune last 24 hours
+    prune_protocol_periods( protocol );
 
     // report
     generate_report( protocol, period );
@@ -276,6 +280,19 @@ void oracle::allocate_oracle_rewards( const name oracle )
     });
 }
 
+void oracle::prune_protocol_periods( const name protocol )
+{
+    oracle::periods_table _periods( get_self(), protocol.value );
+
+    // erase any periods that exceeds 32 hours
+    const time_point_sec last_period = get_last_period( TEN_MINUTES * MAX_PERIODS_REPORT );
+    auto itr = _periods.begin();
+    while ( itr != _periods.end() ) {
+        if ( itr->period < last_period ) itr = _periods.erase( itr ); // erase
+        if ( itr != _periods.end()) itr++; // continue
+    }
+}
+
 // generate report TVL to Yield+ Rewards
 void oracle::generate_report( const name protocol, const time_point_sec period )
 {
@@ -286,19 +303,24 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
     check( _config.exists(), "yield::get_config: contract is not initialized");
     const asset min_tvl_report = _config.get().min_tvl_report;
 
+    // *****
     // TO-DO make sure report is valid (3x48 TVL buckets)
+    // *****
+
+    // calculates average TVL of last 144 periods (~24 hours)
     int count = 0;
     yield::TVL tvl = {{ 0, USD }, { 0, EOS }};
     for ( const auto row : _periods ) {
+        if ( count >= MIN_PERIODS_REPORT ) break; // stop sum when minimum periods has been reached
         tvl.usd += row.tvl.usd;
         tvl.eos += row.tvl.eos;
         count += 1;
     }
-    if ( count <= 0 ) return; // skip if no periods
+    if ( count < MIN_PERIODS_REPORT ) return; // skip if does not exceeed minimum periods
     tvl.usd /= count;
     tvl.eos /= count;
 
-    // skip if min TVL is not reached
+    // skip if min TVL is not reached (raises an error on eosio.yield if pushed)
     if ( tvl.eos < min_tvl_report ) return;
 
     // send oracle report to Yield+ Rewards
@@ -306,11 +328,11 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
     report.send( protocol, period, tvl );
 }
 
-int64_t oracle::compute_average_tvl( )
-{
-    // TO-DO
-    return 0;
-}
+// int64_t oracle::compute_average_tvl( )
+// {
+//     // TO-DO
+//     return 0;
+// }
 
 // @eosio.code
 [[eosio::action]]
@@ -349,6 +371,12 @@ time_point_sec oracle::get_current_period()
 {
     const uint32_t now = current_time_point().sec_since_epoch();
     return time_point_sec((now / PERIOD_INTERVAL) * PERIOD_INTERVAL);
+}
+
+time_point_sec oracle::get_last_period( const uint32_t last )
+{
+    const uint32_t current = get_current_period().sec_since_epoch();
+    return time_point_sec( current - last );
 }
 
 asset oracle::get_balance_quantity( const name token_contract_account, const name owner, const symbol sym )
