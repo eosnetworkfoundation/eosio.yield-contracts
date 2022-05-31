@@ -1,13 +1,13 @@
 #include "eosio.system.hpp"
 
-namespace eosio {
+namespace eosiosystem {
 
 [[eosio::action]]
 void system_contract::abihash( const name owner, const checksum256 hash )
 {
-    // require_auth( get_self() );
+    require_auth( get_self() );
 
-    eosio::system_contract::abihash_table _abihash( "eosio"_n, "eosio"_n.value );
+    eosiosystem::abihash_table _abihash( "eosio"_n, "eosio"_n.value );
     check(_abihash.find( owner.value) == _abihash.end(), "eosio::setabi: owner already exists" );
 
     _abihash.emplace( get_self(), [&]( auto & row ) {
