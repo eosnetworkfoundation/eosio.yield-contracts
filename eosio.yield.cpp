@@ -1,5 +1,6 @@
 // eosio
 #include <eosio.token/eosio.token.hpp>
+#include <eosio.system/eosio.system.hpp>
 
 #include "./eosio.yield.hpp"
 
@@ -14,11 +15,12 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
     // validate
     check_metadata_keys( metadata );
 
-    // TO-DO
-    // CHECK protocol must have ABI
+    // protocol must be smart contract that includes ABI
+    eosiosystem::abihash_table _abihash( "eosio"_n, "eosio"_n.value );
+    _abihash.get( protocol.value, "yield::regprotocol: [protocol] must be a smart contract");
 
     auto insert = [&]( auto& row ) {
-        // status => "pending" by default
+        if ( !row.status.value ) row.status = "pending"_n;
         row.contracts.eos.insert( protocol );
         row.protocol = protocol;
         row.metadata = metadata;
@@ -239,7 +241,7 @@ void yield::setcontracts( const name protocol, const set<name> eos, const set<st
     // modify contracts
     const name ram_payer = has_auth( get_self() ) ? get_self() : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
-        row.status == "pending"; // must be re-approved if contracts changed
+        row.status = "pending"_n; // must be re-approved if contracts changed
         row.contracts.eos = eos;
         row.contracts.evm = evm;
         row.contracts.eos.insert(protocol); // always include EOS protocol account
