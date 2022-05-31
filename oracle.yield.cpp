@@ -139,25 +139,32 @@ void oracle::addtoken( const symbol_code symcode, const name contract, const opt
     delphioracle::datapointstable _datapoints( DELPHI_ORACLE_CONTRACT, delphi_oracle_id->value );
     defi::oracle::prices _prices( DEFIBOX_ORACLE_CONTRACT, DEFIBOX_ORACLE_CONTRACT.value);
 
-    check( _tokens.find( symcode.raw() ) == _tokens.end(), "oracle::addtoken: [symcode] already exists");
-
     // validate
     const asset supply = eosio::token::get_supply( contract, symcode );
     check( supply.amount > 0,  "oracle::addtoken: [supply] is none");
+    if ( symcode != USDT.code() ) check( *defibox_oracle_id || delphi_oracle_id->value, "oracle::addtoken: must provide at least one oracle ID");
 
     // validate oracles
     if ( delphi_oracle_id ) {
         const auto pairs = _pairs.get(delphi_oracle_id->value, "oracle::addtoken: [delphi_oracle_id] does not exists");
-        check( pairs.quote_symbol == symbol{"USD", 2}, "oracle::addtoken: [delphi_oracle_id.quote_symbol] must be 2,USD");
         const auto datapoints = _datapoints.rbegin();
-        check(datapoints->id, "oracle::addtoken: [delphi_oracle_id] is empty");
+        check(!pairs.quote_contract.value, "oracle::addtoken: [delphi_oracle_id.quote_contract] must be empty");
+        check(pairs.quote_symbol == symbol{"USD", 2}, "oracle::addtoken: [delphi_oracle_id.quote_symbol] must be 2,USD");
+        check(pairs.base_symbol == supply.symbol, "oracle::addtoken: [delphi_oracle_id.base_symbol] does not match");
+        check(pairs.base_contract == contract, "oracle::addtoken: [delphi_oracle_id.base_contract] does not match");
+        check(datapoints->median, "oracle::addtoken: [delphi_oracle_id.median] is empty");
     }
     if ( defibox_oracle_id ) {
         const auto prices = _prices.get(*defibox_oracle_id, "oracle::addtoken: [defibox_oracle_id] does not exists");
+        check(prices.contract == contract, "oracle::addtoken: [defibox_oracle_id.contract] does not match");
+        check(prices.coin == symcode, "oracle::addtoken: [defibox_oracle_id.coin] does not match");
+        check(prices.precision == supply.symbol.precision(), "oracle::addtoken: [defibox_oracle_id.precision] does not match");
+        check(prices.avg_price, "oracle::addtoken: [defibox_oracle_id.avg_price] is empty");
     }
 
     // add supported token
     auto insert = [&]( auto& row ) {
+        if ( row.contract ) check(row.contract == contract, "oracle::addtoken: [contract] cannot be modified once token is created");
         row.sym = supply.symbol;
         row.contract = contract;
         row.defibox_oracle_id = *defibox_oracle_id;
