@@ -39,8 +39,8 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
 
     // modify or create
     auto itr = _oracles.find( oracle.value );
-    if ( itr == _oracles.end() ) _oracles.emplace( get_self(), insert );
-    else _oracles.modify( itr, get_self(), insert );
+    if ( itr == _oracles.end() ) _oracles.emplace( oracle, insert );
+    else _oracles.modify( itr, oracle, insert );
 }
 
 // @protocol
@@ -88,7 +88,7 @@ void oracle::claim( const name oracle, const optional<name> receiver )
 
     // transfer funds to receiver
     const name to = receiver ? *receiver : oracle;
-    transfer( get_self(), to, claimable, "oracle+ Oracle reward");
+    transfer( get_self(), to, claimable, "Yield+ Oracle reward");
 
     // modify balances
     _oracles.modify( itr, same_payer, [&]( auto& row ) {
@@ -178,7 +178,13 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
     check( limit, "oracle::updateall: [max_rows] must be above 0");
 
     for ( const auto row : _protocols ) {
-        if ( row.period_at == period ) continue; // period already updated
+        // skip based on oracle
+        oracle::periods_table _periods( get_self(), row.protocol.value );
+        auto period_itr = _periods.find( period.sec_since_epoch() * -1 ); // inverse multi-index
+        if ( period_itr != _periods.end() ) continue; // period already updated
+
+        // skip based on protocol
+        if ( row.period_at == period ) continue; // protocol period already updated
         if ( row.status != "active"_n ) continue; // protocol not active
         update( oracle, row.protocol );
         count += 1;
