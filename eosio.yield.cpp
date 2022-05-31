@@ -33,8 +33,8 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
 
     // modify or create
     auto itr = _protocols.find( protocol.value );
-    if ( itr == _protocols.end() ) _protocols.emplace( get_self(), insert );
-    else _protocols.modify( itr, get_self(), insert );
+    if ( itr == _protocols.end() ) _protocols.emplace( protocol, insert );
+    else _protocols.modify( itr, protocol, insert );
 }
 
 void yield::check_metadata_keys(const map<name, string> metadata )
@@ -43,6 +43,9 @@ void yield::check_metadata_keys(const map<name, string> metadata )
     const set<name> metadata_keys = config.metadata_keys;
     for ( const auto item : metadata ) {
         const name key = item.first;
+        const string value = item.second;
+        const int maxsize = key == "description"_n ? 10240 : 256;
+        check( value.size() <= maxsize, "yield::check_metadata_keys: value exceeds " + std::to_string(maxsize) + " bytes [metadata_key=" + key.to_string() + "]");
         check( metadata_keys.find(key) != metadata_keys.end(), "yield::check_metadata_keys: invalid [metadata_key=" + key.to_string() + "]");
     }
 }
@@ -239,8 +242,7 @@ void yield::setcontracts( const name protocol, const set<name> eos, const set<st
     }
 
     // modify contracts
-    const name ram_payer = has_auth( get_self() ) ? get_self() : protocol;
-    _protocols.modify( itr, ram_payer, [&]( auto& row ) {
+    _protocols.modify( itr, protocol, [&]( auto& row ) {
         row.status = "pending"_n; // must be re-approved if contracts changed
         row.contracts.eos = eos;
         row.contracts.evm = evm;
