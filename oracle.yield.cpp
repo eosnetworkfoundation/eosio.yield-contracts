@@ -135,22 +135,39 @@ void oracle::addtoken( const symbol_code symcode, const name contract, const opt
     require_auth( get_self() );
 
     oracle::tokens_table _tokens( get_self(), get_self().value );
+    delphioracle::pairstable _pairs( DELPHI_ORACLE_CONTRACT, DELPHI_ORACLE_CONTRACT.value );
+    delphioracle::datapointstable _datapoints( DELPHI_ORACLE_CONTRACT, delphi_oracle_id->value );
+    defi::oracle::prices _prices( DEFIBOX_ORACLE_CONTRACT, DEFIBOX_ORACLE_CONTRACT.value);
 
     check( _tokens.find( symcode.raw() ) == _tokens.end(), "oracle::addtoken: [symcode] already exists");
 
     // validate
     const asset supply = eosio::token::get_supply( contract, symcode );
     check( supply.amount > 0,  "oracle::addtoken: [supply] is none");
-    // TO-DO Delphi Oracle checks
-    // TO-DO Defibox Oracle checks
+
+    // validate oracles
+    if ( delphi_oracle_id ) {
+        const auto pairs = _pairs.get(delphi_oracle_id->value, "oracle::addtoken: [delphi_oracle_id] does not exists");
+        check( pairs.quote_symbol == symbol{"USD", 2}, "oracle::addtoken: [delphi_oracle_id.quote_symbol] must be 2,USD");
+        const auto datapoints = _datapoints.rbegin();
+        check(datapoints->id, "oracle::addtoken: [delphi_oracle_id] is empty");
+    }
+    if ( defibox_oracle_id ) {
+        const auto prices = _prices.get(*defibox_oracle_id, "oracle::addtoken: [defibox_oracle_id] does not exists");
+    }
 
     // add supported token
-    _tokens.emplace( get_self(), [&]( auto& row ) {
+    auto insert = [&]( auto& row ) {
         row.sym = supply.symbol;
         row.contract = contract;
         row.defibox_oracle_id = *defibox_oracle_id;
         row.delphi_oracle_id = *delphi_oracle_id;
-    });
+    };
+
+    // modify or create
+    auto itr = _tokens.find( symcode.raw() );
+    if ( itr == _tokens.end() ) _tokens.emplace( get_self(), insert );
+    else _tokens.modify( itr, get_self(), insert );
 }
 
 // @system
