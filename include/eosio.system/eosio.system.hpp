@@ -1,5 +1,6 @@
 #pragma once
 
+#include <eosio/eosio.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/system.hpp>
 
@@ -11,6 +12,7 @@ namespace eosiosystem {
    using eosio::asset;
    using eosio::name;
    using eosio::symbol;
+   using eosio::checksum256;
 
    /**
     * Voter info.
@@ -21,7 +23,7 @@ namespace eosiosystem {
     * - `producers` the producers approved by this voter if no proxy set
     * - `staked` the amount staked
     */
-   struct [[eosio::table, eosio::contract("eosio.system")]] voter_info {
+   struct [[eosio::table]] voter_info {
       name                owner;     /// the voter
       name                proxy;     /// the proxy set by the voter, if any
       std::vector<name>   producers; /// the producers approved by this voter if no proxy set
@@ -53,9 +55,6 @@ namespace eosiosystem {
          net_managed = 2,
          cpu_managed = 4
       };
-
-      // explicit serialization macro is not necessary, used here only to improve compilation time
-      EOSLIB_SERIALIZE( voter_info, (owner)(proxy)(producers)(staked)(last_vote_weight)(proxied_vote_weight)(is_proxy)(flags1)(reserved2)(reserved3) )
    };
 
    /**
@@ -63,36 +62,26 @@ namespace eosiosystem {
     *
     * @details The voters table stores all the `voter_info`s instances, all voters information.
     */
-   typedef eosio::multi_index< "voters"_n, voter_info >  voters_table;
+   typedef eosio::multi_index< "voters"_n, voter_info > voters_table;
 
    /**
-    * The EOSIO system contract.
-    *
-    * @details The EOSIO system contract governs ram market, voters, producers, global state.
+    * abi_hash is the structure underlying the abihash table and consists of:
+    * - `owner`: the account owner of the contract's abi
+    * - `hash`: is the sha256 hash of the abi/binary
     */
-   class [[eosio::contract("eosio.system")]] system_contract {
-      public:
-         /**
-          * Delegate bandwidth and/or cpu action.
-          *
-          * @details Stakes SYS from the balance of `from` for the benefit of `receiver`.
-          *
-          * @param from - the account to delegate bandwidth from, that is, the account holding
-          *    tokens to be staked,
-          * @param receiver - the account to delegate bandwith to, that is, the account to
-          *    whose resources staked tokens are added
-          * @param stake_net_quantity - tokens staked for NET bandwidth,
-          * @param stake_cpu_quantity - tokens staked for CPU bandwidth,
-          * @param transfer - if true, ownership of staked tokens is transfered to `receiver`.
-          *
-          * @post All producers `from` account has voted for will have their votes updated immediately.
-          */
-         [[eosio::action]]
-         void delegatebw( const name& from, const name& receiver,
-                          const asset& stake_net_quantity, const asset& stake_cpu_quantity, bool transfer );
+   struct [[eosio::table("abihash")]] abi_hash {
+      name              owner;
+      checksum256       hash;
+      uint64_t primary_key() const { return owner.value; }
+   };
+   typedef eosio::multi_index< "abihash"_n, abi_hash > abihash_table;
 
+   class [[eosio::contract("eosio.system")]] system_contract : public eosio::contract {
+   public:
+      using contract::contract;
 
-         using delegatebw_action = eosio::action_wrapper<"delegatebw"_n, &system_contract::delegatebw>;
+      [[eosio::action]]
+      void abihash( const name owner, const checksum256 hash );
    };
 
 } /// eosiosystem
