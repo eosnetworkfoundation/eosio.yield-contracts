@@ -435,9 +435,14 @@ int64_t oracle::get_oracle_price( const symbol_code symcode )
 
     // TO-DO add price variations checks
     check( price1 && price2, "oracle::get_oracle_price: invalid prices");
-    check( false, "oracle::get_oracle_price: invalid price deviation");
+    const int64_t average = ( price1 + price2 ) / 2;
 
-    // average price
+    // assert if 5% price deviation from average
+    check( average * 1.05 > price1, "oracle::get_oracle_price: invalid oracle prices, [price1] exceeds deviation");
+    check( average * 1.05 > price2, "oracle::get_oracle_price: invalid oracle prices, [price2] exceeds deviation");
+    check( average * 0.95 < price1, "oracle::get_oracle_price: invalid oracle prices, [price1] below deviation");
+    check( average * 0.95 < price2, "oracle::get_oracle_price: invalid oracle prices, [price2] below deviation");
+
     return ( price1 + price2 ) / 2;
 }
 
@@ -447,8 +452,8 @@ int64_t oracle::get_delphi_price( const name delphi_oracle_id )
     delphioracle::pairstable _pairs( DELPHI_ORACLE_CONTRACT, DELPHI_ORACLE_CONTRACT.value );
     delphioracle::datapointstable _datapoints( DELPHI_ORACLE_CONTRACT, delphi_oracle_id.value );
     const auto pairs = _pairs.get(delphi_oracle_id.value, "oracle::get_delphi_price: [delphi_oracle_id] does not exists");
-    const auto datapoints = _datapoints.begin();
-    check(datapoints != _datapoints.end(), "oracle::get_delphi_price: [delphi_oracle_id] is empty");
+    const auto datapoints = _datapoints.rbegin();
+    check(datapoints->id, "oracle::get_delphi_price: [delphi_oracle_id] is empty");
     return normalize_price(datapoints->median, pairs.quoted_precision);
 }
 

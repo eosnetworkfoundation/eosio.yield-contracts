@@ -16,12 +16,14 @@ cleos create account eosio myoracle EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYq
 cleos create account eosio eosio.token EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 cleos create account eosio tethertether EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 cleos create account eosio oracle.defi EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+cleos create account eosio delphioracle EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 
 # deploy
 cleos set contract $CONTRACT . oracle.yield.wasm oracle.yield.abi
 cleos set contract eosio.token ./include/eosio.token eosio.token.wasm eosio.token.abi
 cleos set contract tethertether ./include/eosio.token eosio.token.wasm eosio.token.abi
 cleos set contract oracle.defi ./include/oracle.defi oracle.defi.wasm oracle.defi.abi
+cleos set contract delphioracle ./include/delphioracle delphioracle.wasm delphioracle.abi
 
 # permissions
 cleos set account permission $CONTRACT active --add-code
@@ -43,3 +45,5 @@ cleos transfer eosio $CONTRACT "10000.0000 EOS"
 
 # setup oracle
 cleos push action oracle.defi setprice '[1, "eosio.token", "4,EOS", 13869]' -p oracle.defi
+cleos push action delphioracle setpair '["eosusd", "4,EOS", "eosio.token", 4]' -p delphioracle
+cleos push action delphioracle setprice '["eosusd", 13869]' -p delphioracle

@@ -8,7 +8,7 @@ cleos push action $CONTRACT setreward '[["0.0200 EOS", "eosio.token"]]' -p $CONT
 cleos push action $CONTRACT setmetakeys '[["name", "url"]]' -p $CONTRACT
 
 # add tokens
-cleos push action $CONTRACT addtoken '["EOS", "eosio.token", 1, null]' -p $CONTRACT
+cleos push action $CONTRACT addtoken '["EOS", "eosio.token", 1, "eosusd"]' -p $CONTRACT
 cleos push action $CONTRACT addtoken '["USDT", "tethertether", null, null]' -p $CONTRACT
 
 # register oracle
