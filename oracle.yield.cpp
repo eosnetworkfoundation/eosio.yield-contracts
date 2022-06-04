@@ -345,7 +345,6 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
         tvl.usd += row.tvl.usd;
         tvl.eos += row.tvl.eos;
         count += 1;
-        // print(row.protocol, ":", row.period.sec_since_epoch(), "\n");
     }
     if ( count < MIN_PERIODS_REPORT ) return; // skip if does not exceeed minimum periods
     tvl.usd /= count;
@@ -461,11 +460,11 @@ int64_t oracle::get_oracle_price( const symbol_code symcode )
     check( price1 && price2, "oracle::get_oracle_price: invalid prices");
     const int64_t average = ( price1 + price2 ) / 2;
 
-    // assert if 5% price deviation from average
-    check( average * 1.05 > price1, "oracle::get_oracle_price: invalid oracle prices, [price1] exceeds deviation");
-    check( average * 1.05 > price2, "oracle::get_oracle_price: invalid oracle prices, [price2] exceeds deviation");
-    check( average * 0.95 < price1, "oracle::get_oracle_price: invalid oracle prices, [price1] below deviation");
-    check( average * 0.95 < price2, "oracle::get_oracle_price: invalid oracle prices, [price2] below deviation");
+    // assert if price deviates from average price
+    check( average * (10000 + MAX_PRICE_DEVIATION) / 10000 > price1, "oracle::get_oracle_price: invalid oracle prices, [price1] exceeds deviation");
+    check( average * (10000 + MAX_PRICE_DEVIATION) / 10000 > price2, "oracle::get_oracle_price: invalid oracle prices, [price2] exceeds deviation");
+    check( average * (10000 - MAX_PRICE_DEVIATION) / 10000 < price1, "oracle::get_oracle_price: invalid oracle prices, [price1] below deviation");
+    check( average * (10000 - MAX_PRICE_DEVIATION) / 10000 < price2, "oracle::get_oracle_price: invalid oracle prices, [price2] below deviation");
 
     return ( price1 + price2 ) / 2;
 }

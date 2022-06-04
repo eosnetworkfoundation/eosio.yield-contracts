@@ -36,6 +36,7 @@ public:
     const uint32_t MAX_PERIODS_REPORT = 192; // 32 hours (192 periods) allows 8 hours buffer
     const uint32_t PERIOD_INTERVAL = TEN_MINUTES;
     const uint8_t PRECISION = 4;
+    const double MAX_PRICE_DEVIATION = 1000; // 10% (below & above average price)
 
     /**
      * ## TABLE `config`
