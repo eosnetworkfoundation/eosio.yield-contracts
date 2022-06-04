@@ -169,7 +169,7 @@ void yield::unregister( const name protocol )
 
 // @oracle.yield
 [[eosio::action]]
-void yield::report( const name protocol, const time_point_sec period, const TVL tvl )
+void yield::report( const name protocol, const time_point_sec period, const uint32_t period_interval, const TVL tvl )
 {
     require_auth(ORACLE_CONTRACT);
 
@@ -186,17 +186,16 @@ void yield::report( const name protocol, const time_point_sec period, const TVL 
     check( itr.period_at != period, "yield::report: [period] already updated");
     check( period <= now, "yield::report: [period] must be in the past");
     check( period > itr.period_at, "yield::report: [period] must be ahead of last");
-    check( period == get_current_period(), "yield::report: [period] current period does not match");
+    check( period == get_current_period( period_interval ), "yield::report: [period] current period does not match");
 
-    // validate
-    // skip if does not meet minimum TVL report threshold
+    // validate TVL
     check( tvl.eos.symbol == EOS, "yield::report: [tvl.eos] does not match EOS symbol");
     check( tvl.usd.symbol == USD, "yield::report: [tvl.usd] does not match USD symbol");
-    check( tvl.eos >= config.min_tvl_report, "yield::report: [eos] does not meet minimum TVL report threshold");
 
-    // limit TVL to maximum report threhsold
-    const uint128_t eos = ((tvl.eos > config.max_tvl_report) ? config.max_tvl_report : tvl.eos).amount;
-    const int64_t rewards_amount = eos * config.annual_rate * PERIOD_INTERVAL / 10000 / YEAR;
+    // must be above minimum TVL & limit TVL to maximum report threhsold
+    uint128_t eos = 0;
+    if ( tvl.eos >= config.min_tvl_report ) eos = ((tvl.eos > config.max_tvl_report) ? config.max_tvl_report : tvl.eos).amount;
+    const int64_t rewards_amount = eos * config.annual_rate * period_interval / 10000 / YEAR;
     const asset rewards = { rewards_amount, EOS };
 
     // before balance used for report logging
@@ -211,11 +210,11 @@ void yield::report( const name protocol, const time_point_sec period, const TVL 
 
     // log report
     yield::reportlog_action reportlog( get_self(), { get_self(), "active"_n });
-    reportlog.send( protocol, period, tvl, rewards, balance_before, itr.balance.quantity );
+    reportlog.send( protocol, period, period_interval, tvl, rewards, balance_before, itr.balance.quantity );
 }
 
 [[eosio::action]]
-void yield::reportlog( const name protocol, const time_point_sec period, const TVL tvl, const asset rewards, const asset balance_before, const asset balance_after )
+void yield::reportlog( const name protocol, const time_point_sec period, const uint32_t period_interval, const TVL tvl, const asset rewards, const asset balance_before, const asset balance_after )
 {
     require_auth( get_self() );
 }
@@ -270,10 +269,10 @@ yield::config_row yield::get_config()
     return _config.get();
 }
 
-time_point_sec yield::get_current_period()
+time_point_sec yield::get_current_period( const uint32_t period_interval )
 {
     const uint32_t now = current_time_point().sec_since_epoch();
-    return time_point_sec((now / PERIOD_INTERVAL) * PERIOD_INTERVAL);
+    return time_point_sec((now / period_interval) * period_interval);
 }
 
 // @debug

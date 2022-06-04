@@ -33,8 +33,6 @@ public:
     const set<name> PROTOCOL_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
     const uint16_t MAX_ANNUAL_RATE = 1000; // maximum rate of 10%
     const uint32_t YEAR = 31536000; // 365 days in seconds
-    const uint32_t TEN_MINUTES = 600; // 10 minutes in seconds
-    const uint32_t PERIOD_INTERVAL = TEN_MINUTES;
 
     // ERROR MESSAGES
     const string ERROR_CONFIG_NOT_EXISTS = "yield::error: contract is under maintenance";
@@ -310,16 +308,17 @@ public:
      *
      * - `{name} protocol` - protocol
      * - `{time_point_sec} period` - period time
+     * - `{uint32_t} period_interval` - period interval (in seconds)
      * - `{TVL} tvl` - TVL averaged value in EOS & USD
      *
      * ### example
      *
      * ```bash
-     * $ cleos push action eosio.yield report '["myprotocol", "2022-05-13T00:00:00", ["300000.0000 USD", "200000.0000 EOS"]]' -p oracle.yield
+     * $ cleos push action eosio.yield report '["myprotocol", "2022-05-13T00:00:00", 600, ["300000.0000 USD", "200000.0000 EOS"]]' -p oracle.yield
      * ```
      */
     [[eosio::action]]
-    void report( const name protocol, const time_point_sec period, const TVL tvl );
+    void report( const name protocol, const time_point_sec period, const uint32_t period_interval, const TVL tvl );
 
     /**
      * ## ACTION `claimlog`
@@ -358,6 +357,7 @@ public:
      *
      * - `{name} protocol` - protocol
      * - `{time_point_sec} period` - period time
+     * - `{uint32_t} period_interval` - period interval (in seconds)
      * - `{TVL} tvl` - TVL averaged value in EOS & USD
      * - `{asset} rewards` - TVL rewards
      * - `{asset} balance_before` - balance before
@@ -369,6 +369,7 @@ public:
      * {
      *     "protocol": "myprotocol",
      *     "period", "2022-05-13T00:00:00",
+     *     "period_interval": 600,
      *     "tvl": {
      *         "usd": "300000.0000 USD",
      *         "eos": "200000.0000 EOS"
@@ -380,7 +381,7 @@ public:
      * ```
      */
     [[eosio::action]]
-    void reportlog( const name protocol, const time_point_sec period, const TVL tvl, const asset rewards, const asset balance_before, const asset balance_after );
+    void reportlog( const name protocol, const time_point_sec period, const uint32_t period_interval, const TVL tvl, const asset rewards, const asset balance_before, const asset balance_after );
 
     // @debug
     [[eosio::action]]
@@ -405,7 +406,7 @@ public:
 
 private :
     // utils
-    time_point_sec get_current_period();
+    time_point_sec get_current_period( const uint32_t period_interval );
     config_row get_config();
     void set_status( const name protocol, const name status );
     void transfer( const name from, const name to, const extended_asset value, const string& memo );
