@@ -16,7 +16,7 @@ public:
     // YIELD CONTRACTS
     const name YIELD_CONTRACT = "d.e.yield"_n;
 
-    // CONTRACTS
+    // EXTERNAL CONTRACTS
     const name EVM_CONTRACT = "eosio.evm"_n;
     const name DELPHI_ORACLE_CONTRACT = "delphioracle"_n;
     const name DEFIBOX_ORACLE_CONTRACT = "oracle.defi"_n;
@@ -30,7 +30,7 @@ public:
 
     // CONSTANTS
     const set<name> ORACLE_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
-    const uint32_t TEN_MINUTES = 10; // 10 minutes (600 seconds) !!**DEV SETTINGS**!!
+    const uint32_t TEN_MINUTES = 600; // 10 minutes (600 seconds)
     const uint32_t BUCKET_PERIODS = 48; // 8 hours (48 periods);
     const uint32_t MIN_PERIODS_REPORT = 144; // 24 hours (144 periods)
     const uint32_t MAX_PERIODS_REPORT = 192; // 32 hours (192 periods) allows 8 hours buffer
