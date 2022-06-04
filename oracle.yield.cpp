@@ -195,7 +195,7 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
     require_auth( oracle );
 
     yield::protocols_table _protocols( YIELD_CONTRACT, YIELD_CONTRACT.value );
-    const time_point_sec period = get_current_period();
+    const time_point_sec period = get_current_period( PERIOD_INTERVAL );
 
     int limit = max_rows ? *max_rows : 20;
     int count = 0;
@@ -235,7 +235,7 @@ void oracle::update( const name oracle, const name protocol )
     const yield::Contracts contracts = protocol_itr.contracts;
 
     // get current period
-    const time_point_sec period = get_current_period();
+    const time_point_sec period = get_current_period( PERIOD_INTERVAL );
     auto itr = _periods.find( period.sec_since_epoch() * -1 ); // inverse multi-index
     check( itr == _periods.end(), "oracle::update: [period] for [protocol] is already updated" );
 
@@ -350,12 +350,9 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
     tvl.usd /= count;
     tvl.eos /= count;
 
-    // skip if min TVL is not reached (raises an error on eosio.yield if pushed)
-    if ( tvl.eos < min_tvl_report ) return;
-
     // send oracle report to Yield+ Rewards
     yield::report_action report( YIELD_CONTRACT, { get_self(), "active"_n });
-    report.send( protocol, period, tvl );
+    report.send( protocol, period, PERIOD_INTERVAL, tvl );
 }
 
 // int64_t oracle::compute_average_tvl( )
@@ -397,15 +394,15 @@ void oracle::setmetakeys( const set<name> metadata_keys )
     _config.set(config, get_self());
 }
 
-time_point_sec oracle::get_current_period()
+time_point_sec oracle::get_current_period( const uint32_t period_interval )
 {
     const uint32_t now = current_time_point().sec_since_epoch();
-    return time_point_sec((now / PERIOD_INTERVAL) * PERIOD_INTERVAL);
+    return time_point_sec((now / period_interval) * period_interval);
 }
 
 time_point_sec oracle::get_last_period( const uint32_t last )
 {
-    const uint32_t current = get_current_period().sec_since_epoch();
+    const uint32_t current = get_current_period( PERIOD_INTERVAL ).sec_since_epoch();
     return time_point_sec( current - last );
 }
 

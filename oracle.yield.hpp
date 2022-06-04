@@ -325,7 +325,7 @@ public:
 
 private:
     // utils
-    time_point_sec get_current_period();
+    time_point_sec get_current_period( const uint32_t period_interval );
     time_point_sec get_last_period( const uint32_t last );
     oracle::config_row get_config();
     void set_status( const name oracle, const name status );
