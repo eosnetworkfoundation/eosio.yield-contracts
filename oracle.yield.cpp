@@ -337,16 +337,16 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
     // TO-DO make sure report is valid (3x48 TVL buckets)
     // *****
 
-    // calculates average TVL of last 144 periods (~24 hours)
+    // calculates average TVL of period bucket 42 periods (~7 hours)
     int count = 0;
     yield::TVL tvl = {{ 0, USD }, { 0, EOS }};
     for ( const auto row : _periods ) {
-        if ( count >= MIN_PERIODS_REPORT ) break; // stop sum when minimum periods has been reached
+        if ( count >= MIN_BUCKET_PERIODS ) break; // stop sum when minimum periods has been reached
         tvl.usd += row.tvl.usd;
         tvl.eos += row.tvl.eos;
         count += 1;
     }
-    if ( count < MIN_PERIODS_REPORT ) return; // skip if does not exceeed minimum periods
+    if ( count < MIN_BUCKET_PERIODS ) return; // skip if does not exceeed minimum periods
     tvl.usd /= count;
     tvl.eos /= count;
 
