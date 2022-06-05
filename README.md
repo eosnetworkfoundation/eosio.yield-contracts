@@ -1,8 +1,11 @@
-# Yield+
+
+# EOS Yield+ [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/facebook/react/blob/main/LICENSE)
 
 ## Bluepaper
 
 https://eosnetwork.com/blog/eos-yield-blue-paper/
+
+![eos-yield-blue-paper](https://user-images.githubusercontent.com/550895/172065039-e1bbb0e7-5c9c-400b-9a40-e3da18d686e0.png)
 
 ## Audits
 
@@ -28,3 +31,7 @@ It will be necessary (and possible via accompanying, recurrent data analysis) fo
 The Yield+ Blue Paper provides in detail Research, Analysis, Recommendations, Proposals, Deliverables, Justification, and Discussions on things the community should consider when evaluating the program; e.g., Funding Frequency and Sources presented in the Treasury Recommendations - especially if the program is considered effective and worth continuing.
 
 The Table of Contents can help readers move quickly to the information they desire most, including summaries, discussions, recommendations, and proposals.
+
+## Team
+
+The Yield+ working group consists of a number of individuals from various companies and teams throughout the EOSIO ecosystem including: [EOS Nation](https://eosnation.io), [Greymass](https://greymass.com), [0rigin](https://0rigin.one), [Defibox](https://eos.defibox.io), Joe Louis, [Pizza DeFi](https://pizza.finance), and [EOS Asia](https://www.eosasia.one/) held advisory roles and contributed significantly to the research, writing, and work that went into this paper.
