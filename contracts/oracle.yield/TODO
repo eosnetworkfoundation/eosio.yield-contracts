@@ -1,4 +1,0 @@
-- [x] Prunning 36 hour TVL periods
-- [x] Generate report using periods only in last 24 hours
-- [x] Include `prices` in `periods` table
-- [ ] Generate report using 3x8 hours medians
