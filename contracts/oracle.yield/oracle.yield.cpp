@@ -6,8 +6,8 @@
 #include <oracle.defi/oracle.defi.hpp>
 #include <delphioracle/delphioracle.hpp>
 
-// local
-#include "./oracle.yield.hpp"
+// self
+#include <oracle.yield/oracle.yield.hpp>
 
 // @oracle
 [[eosio::action]]

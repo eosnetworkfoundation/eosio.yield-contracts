@@ -2,7 +2,8 @@
 #include <eosio.token/eosio.token.hpp>
 #include <eosio.system/eosio.system.hpp>
 
-#include "./eosio.yield.hpp"
+// self
+#include <eosio.yield/eosio.yield.hpp>
 
 // @protocol
 [[eosio::action]]
