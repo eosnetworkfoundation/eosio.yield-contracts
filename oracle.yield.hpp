@@ -3,6 +3,8 @@
 #include <eosio/eosio.hpp>
 #include <eosio/asset.hpp>
 #include <eosio/system.hpp>
+#include <eosio/singleton.hpp>
+#include <eosio.yield/eosio.yield.hpp>
 
 #include <math.h>
 

@@ -6,9 +6,6 @@
 #include <oracle.defi/oracle.defi.hpp>
 #include <delphioracle/delphioracle.hpp>
 
-// sibling
-#include <eosio.yield/eosio.yield.hpp>
-
 // local
 #include "./oracle.yield.hpp"
 
@@ -124,7 +121,7 @@ void oracle::set_status( const name oracle, const name status )
 void oracle::check_oracle_active( const name oracle )
 {
     oracle::oracles_table _oracles( get_self(), get_self().value );
-    auto & itr = _oracles.get(oracle.value, "oracle::set_status: [protocol] does not exists");
+    auto & itr = _oracles.get(oracle.value, "oracle::check_oracle_active: [oracle] does not exists, must first call [regoracle] action");
     check( itr.status == "active"_n, "oracle::check_oracle_active: [status] must be active");
 }
 
