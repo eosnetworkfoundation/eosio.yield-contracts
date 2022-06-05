@@ -1,0 +1,170 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.1",
+    "types": [
+        {
+            "new_type_name": "asset_type",
+            "type": "uint16"
+        }
+    ],
+    "structs": [
+        {
+            "name": "datapoints",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "owner",
+                    "type": "name"
+                },
+                {
+                    "name": "value",
+                    "type": "uint64"
+                },
+                {
+                    "name": "median",
+                    "type": "uint64"
+                },
+                {
+                    "name": "timestamp",
+                    "type": "time_point"
+                }
+            ]
+        },
+        {
+            "name": "pairs",
+            "base": "",
+            "fields": [
+                {
+                    "name": "active",
+                    "type": "bool"
+                },
+                {
+                    "name": "bounty_awarded",
+                    "type": "bool"
+                },
+                {
+                    "name": "bounty_edited_by_custodians",
+                    "type": "bool"
+                },
+                {
+                    "name": "proposer",
+                    "type": "name"
+                },
+                {
+                    "name": "name",
+                    "type": "name"
+                },
+                {
+                    "name": "bounty_amount",
+                    "type": "asset"
+                },
+                {
+                    "name": "approving_custodians",
+                    "type": "name[]"
+                },
+                {
+                    "name": "approving_oracles",
+                    "type": "name[]"
+                },
+                {
+                    "name": "base_symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "base_type",
+                    "type": "asset_type"
+                },
+                {
+                    "name": "base_contract",
+                    "type": "name"
+                },
+                {
+                    "name": "quote_symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "quote_type",
+                    "type": "asset_type"
+                },
+                {
+                    "name": "quote_contract",
+                    "type": "name"
+                },
+                {
+                    "name": "quoted_precision",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "setpair",
+            "base": "",
+            "fields": [
+                {
+                    "name": "pair",
+                    "type": "name"
+                },
+                {
+                    "name": "base_symbol",
+                    "type": "symbol"
+                },
+                {
+                    "name": "base_contract",
+                    "type": "name"
+                },
+                {
+                    "name": "quoted_precision",
+                    "type": "uint64"
+                }
+            ]
+        },
+        {
+            "name": "setprice",
+            "base": "",
+            "fields": [
+                {
+                    "name": "pair",
+                    "type": "name"
+                },
+                {
+                    "name": "value",
+                    "type": "uint64"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "setpair",
+            "type": "setpair",
+            "ricardian_contract": ""
+        },
+        {
+            "name": "setprice",
+            "type": "setprice",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "datapoints",
+            "type": "datapoints",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        },
+        {
+            "name": "pairs",
+            "type": "pairs",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": []
+}

@@ -1,0 +1,85 @@
+{
+    "____comment": "This file was generated with eosio-abigen. DO NOT EDIT ",
+    "version": "eosio::abi/1.1",
+    "types": [],
+    "structs": [
+        {
+            "name": "oracle_row",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "contract",
+                    "type": "name"
+                },
+                {
+                    "name": "coin",
+                    "type": "symbol_code"
+                },
+                {
+                    "name": "precision",
+                    "type": "uint8"
+                },
+                {
+                    "name": "acc_price",
+                    "type": "uint64"
+                },
+                {
+                    "name": "last_price",
+                    "type": "uint64"
+                },
+                {
+                    "name": "avg_price",
+                    "type": "uint64"
+                },
+                {
+                    "name": "last_update",
+                    "type": "time_point_sec"
+                }
+            ]
+        },
+        {
+            "name": "setprice",
+            "base": "",
+            "fields": [
+                {
+                    "name": "id",
+                    "type": "uint64"
+                },
+                {
+                    "name": "contract",
+                    "type": "name"
+                },
+                {
+                    "name": "sym",
+                    "type": "symbol"
+                },
+                {
+                    "name": "avg_price",
+                    "type": "uint64"
+                }
+            ]
+        }
+    ],
+    "actions": [
+        {
+            "name": "setprice",
+            "type": "setprice",
+            "ricardian_contract": ""
+        }
+    ],
+    "tables": [
+        {
+            "name": "prices",
+            "type": "oracle_row",
+            "index_type": "i64",
+            "key_names": [],
+            "key_types": []
+        }
+    ],
+    "ricardian_clauses": [],
+    "variants": []
+}
