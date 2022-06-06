@@ -22,12 +22,12 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
 
     auto insert = [&]( auto& row ) {
         if ( !row.status.value ) row.status = "pending"_n;
-        row.contracts.eos.insert( protocol );
+        row.tvl.symbol = EOS;
+        row.contracts.insert( protocol );
         row.protocol = protocol;
         row.metadata = metadata;
         row.balance.contract = TOKEN_CONTRACT;
         row.balance.quantity.symbol = TOKEN_SYMBOL;
-        row.claimed.symbol = TOKEN_SYMBOL;
         if ( !row.created_at.sec_since_epoch() ) row.created_at = current_time_point();
         row.updated_at = current_time_point();
     };
@@ -77,7 +77,6 @@ void yield::claim( const name protocol, const optional<name> receiver )
 
     // modify balances
     _protocols.modify( itr, same_payer, [&]( auto& row ) {
-        row.claimed += claimable.quantity;
         row.balance.quantity.amount = 0;
         row.claimed_at = current_time_point();
     });
@@ -170,7 +169,7 @@ void yield::unregister( const name protocol )
 
 // @oracle.yield
 [[eosio::action]]
-void yield::report( const name protocol, const time_point_sec period, const uint32_t period_interval, const TVL tvl )
+void yield::report( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl )
 {
     require_auth(ORACLE_CONTRACT);
 
@@ -190,12 +189,15 @@ void yield::report( const name protocol, const time_point_sec period, const uint
     check( period == get_current_period( period_interval ), "yield::report: [period] current period does not match");
 
     // validate TVL
-    check( tvl.eos.symbol == EOS, "yield::report: [tvl.eos] does not match EOS symbol");
-    check( tvl.usd.symbol == USD, "yield::report: [tvl.usd] does not match USD symbol");
+    check( tvl.symbol == EOS, "yield::report: [tvl] does not match EOS symbol");
 
-    // must be above minimum TVL & limit TVL to maximum report threhsold
-    uint128_t eos = 0;
-    if ( tvl.eos >= config.min_tvl_report ) eos = ((tvl.eos > config.max_tvl_report) ? config.max_tvl_report : tvl.eos).amount;
+    // set TVL value
+    uint128_t eos = tvl.amount;
+    if ( tvl > config.max_tvl_report ) eos = config.max_tvl_report.amount; // set to maximum value if exceeds max TVL value
+    if ( tvl <= config.min_tvl_report ) eos = 0; // set to zero if below min TVL value
+
+    // calculate rewards based on 5% APY
+    // TVL * 5% / 365 days / 10 minute interval
     const int64_t rewards_amount = eos * config.annual_rate * period_interval / 10000 / YEAR;
     const asset rewards = { rewards_amount, EOS };
 
@@ -215,14 +217,14 @@ void yield::report( const name protocol, const time_point_sec period, const uint
 }
 
 [[eosio::action]]
-void yield::reportlog( const name protocol, const time_point_sec period, const uint32_t period_interval, const TVL tvl, const asset rewards, const asset balance_before, const asset balance_after )
+void yield::reportlog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset rewards, const asset balance_before, const asset balance_after )
 {
     require_auth( get_self() );
 }
 
 // @protocol
 [[eosio::action]]
-void yield::setcontracts( const name protocol, const set<name> eos, const set<string> evm )
+void yield::setcontracts( const name protocol, const set<name> contracts, const set<string> evm )
 {
     require_auth( protocol );
 
@@ -232,7 +234,7 @@ void yield::setcontracts( const name protocol, const set<name> eos, const set<st
     auto & itr = _protocols.get(protocol.value, "yield::setcontracts: [protocol] does not exists");
 
     // require authority of all EOS contracts linked to protocol
-    for ( const name contract : eos ) {
+    for ( const name contract : contracts ) {
         check( is_account( contract ), "yield::setcontracts: [eos.contract] account does not exists");
         require_auth( contract );
     }
@@ -244,9 +246,9 @@ void yield::setcontracts( const name protocol, const set<name> eos, const set<st
     // modify contracts
     _protocols.modify( itr, protocol, [&]( auto& row ) {
         row.status = "pending"_n; // must be re-approved if contracts changed
-        row.contracts.eos = eos;
-        row.contracts.evm = evm;
-        row.contracts.eos.insert(protocol); // always include EOS protocol account
+        row.contracts = contracts;
+        row.evm = evm;
+        row.contracts.insert(protocol); // always include EOS protocol account
         row.updated_at = current_time_point();
     });
 }

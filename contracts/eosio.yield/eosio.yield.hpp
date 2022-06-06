@@ -83,7 +83,7 @@ public:
      * - `{name} status="pending"` - status (`pending/active/denied`)
      * - `{set<name>} contracts.eos` - additional supporting EOS contracts
      * - `{set<string>} contracts.evm` - additional supporting EVM contracts
-     * - `{TVL} tvl` - reported TVL averaged value in EOS & USD
+     * - `{asset} tvl` - reported TVL averaged value in EOS
      * - `{extended_asset} balance` - balance available to be claimed
      * - `{time_point_sec} created_at` - created at time
      * - `{time_point_sec} updated_at` - updated at time
@@ -97,14 +97,9 @@ public:
      * {
      *     "protocol": "myprotocol",
      *     "status": "active",
-     *     "contracts": {
-     *       "eos": ["myprotocol", "mytreasury"],
-     *       "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
-     *     },
-     *     "tvl": {
-     *        "usd": "300000.0000 USD",
-     *        "eos": "200000.0000 EOS"
-     *     },
+     *     "contracts": ["myprotocol", "mytreasury"],
+     *     "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"],
+     *     "tvl": "200000.0000 EOS",
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
@@ -117,10 +112,10 @@ public:
     struct [[eosio::table("protocols")]] protocols_row {
         name                    protocol;
         name                    status = "pending"_n;
-        Contracts               contracts;
-        TVL                     tvl;
+        set<name>               contracts;
+        set<string>             evm;
+        asset                   tvl;
         extended_asset          balance;
-        asset                   claimed;
         time_point_sec          created_at;
         time_point_sec          updated_at;
         time_point_sec          claimed_at;
@@ -309,16 +304,16 @@ public:
      * - `{name} protocol` - protocol
      * - `{time_point_sec} period` - period time
      * - `{uint32_t} period_interval` - period interval (in seconds)
-     * - `{TVL} tvl` - TVL averaged value in EOS & USD
+     * - `{asset} tvl` - TVL averaged value in EOS
      *
      * ### example
      *
      * ```bash
-     * $ cleos push action eosio.yield report '["myprotocol", "2022-05-13T00:00:00", 600, ["300000.0000 USD", "200000.0000 EOS"]]' -p oracle.yield
+     * $ cleos push action eosio.yield report '["myprotocol", "2022-05-13T00:00:00", 600, "200000.0000 EOS"]' -p oracle.yield
      * ```
      */
     [[eosio::action]]
-    void report( const name protocol, const time_point_sec period, const uint32_t period_interval, const TVL tvl );
+    void report( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl );
 
     /**
      * ## ACTION `claimlog`
@@ -370,10 +365,7 @@ public:
      *     "protocol": "myprotocol",
      *     "period", "2022-05-13T00:00:00",
      *     "period_interval": 600,
-     *     "tvl": {
-     *         "usd": "300000.0000 USD",
-     *         "eos": "200000.0000 EOS"
-     *     },
+     *     "tvl": "200000.0000 EOS",
      *     "rewards": "2.5500 EOS"
      *     "balance_before": "1.0000 EOS",
      *     "balance_after": "1.5500 EOS"
@@ -381,7 +373,7 @@ public:
      * ```
      */
     [[eosio::action]]
-    void reportlog( const name protocol, const time_point_sec period, const uint32_t period_interval, const TVL tvl, const asset rewards, const asset balance_before, const asset balance_after );
+    void reportlog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset rewards, const asset balance_before, const asset balance_after );
 
     // @debug
     [[eosio::action]]
