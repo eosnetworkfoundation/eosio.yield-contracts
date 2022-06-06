@@ -1,0 +1,23 @@
+{
+  "private": true,
+  "name": "eosio.yield-contracts",
+  "version": "1.0.0",
+  "description": "EOS Yield+",
+  "license": "MIT",
+  "main": "index.js",
+  "repository": "git@github.com:EOS-Nation/eosio.yield-contracts.git",
+  "contributors": [
+    "Denis Carriere - EOS Nation <denis@eosnation.io>",
+    "Guillaume 'Gnome' Babin-Tremblay - EOS Titan  <guillaume@eostitan.com>"
+  ],
+  "scripts": {
+    "test": "jest __tests__/*.spec.ts"
+  },
+  "devDependencies": {
+    "@proton/vert": "^0.2.12",
+    "@types/jest": "^28.1.1",
+    "jest": "^28.1.0",
+    "ts-jest": "^28.0.4",
+    "typescript": "^4.7.3"
+  }
+}
