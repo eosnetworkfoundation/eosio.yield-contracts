@@ -228,7 +228,7 @@ void yield::reportlog( const name protocol, const time_point_sec period, const u
 
 // @protocol
 [[eosio::action]]
-void yield::setcontracts( const name protocol, const set<name> contracts, const set<string> evm )
+void yield::setcontracts( const name protocol, const set<name> contracts )
 {
     require_auth( protocol );
 
@@ -242,6 +242,27 @@ void yield::setcontracts( const name protocol, const set<name> contracts, const 
         check( is_account( contract ), "yield::setcontracts: [eos.contract] account does not exists");
         require_auth( contract );
     }
+
+    // modify contracts
+    _protocols.modify( itr, protocol, [&]( auto& row ) {
+        row.status = "pending"_n; // must be re-approved if contracts changed
+        row.contracts = contracts;
+        row.contracts.insert(protocol); // always include EOS protocol account
+        row.updated_at = current_time_point();
+    });
+}
+
+// @protocol
+[[eosio::action]]
+void yield::setevm( const name protocol, const set<string> evm )
+{
+    require_auth( protocol );
+
+    auto config = get_config();
+
+    yield::protocols_table _protocols( get_self(), get_self().value );
+    auto & itr = _protocols.get(protocol.value, "yield::setevm: [protocol] does not exists");
+
     // require authority of all EVM contracts linked to protocol
     for ( const string contract : evm ) {
         check(false, "NOT IMPLEMENTED");
@@ -250,7 +271,6 @@ void yield::setcontracts( const name protocol, const set<name> contracts, const 
     // modify contracts
     _protocols.modify( itr, protocol, [&]( auto& row ) {
         row.status = "pending"_n; // must be re-approved if contracts changed
-        row.contracts = contracts;
         row.evm = evm;
         row.contracts.insert(protocol); // always include EOS protocol account
         row.updated_at = current_time_point();
@@ -260,7 +280,7 @@ void yield::setcontracts( const name protocol, const set<name> contracts, const 
 [[eosio::on_notify("*::transfer")]]
 void yield::on_transfer( const name from, const name to, const asset quantity, const std::string memo )
 {
-
+    require_recipient("notify.yield"_n);
 }
 
 void yield::transfer( const name from, const name to, const extended_asset value, const string& memo )

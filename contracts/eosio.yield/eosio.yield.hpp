@@ -165,22 +165,42 @@ public:
      *
      * > Set contracts
      *
-     * - **authority**: `protocol`
+     * - **authority**: `protocol` AND `contracts`
      *
      * ### params
      *
      * - `{name} protocol` - protocol (will be included in EOS contracts)
-     * - `{set<name>} eos` - additional EOS contracts
+     * - `{set<name>} contracts` - additional EOS contracts
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield setcontracts '[myprotocol, ["myvault"]]' -p myprotocol
+     * ```
+     */
+    [[eosio::action]]
+    void setcontracts( const name protocol, const set<name> contracts );
+
+    /**
+     * ## ACTION `setcontracts`
+     *
+     * > Set contracts
+     *
+     * - **authority**: `protocol` AND `evm`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol (will be included in EOS contracts)
      * - `{set<string>} evm` - additional EVM contracts
      *
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield setcontracts '[myprotocol, ["myprotocol"], ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
+     * $ cleos push action eosio.yield setcontracts '[myprotocol, ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
      * ```
      */
     [[eosio::action]]
-    void setcontracts( const name protocol, const set<name> eos, const set<string> evm );
+    void setevm( const name protocol, const set<string> evm );
 
     /**
      * ## ACTION `claim`
