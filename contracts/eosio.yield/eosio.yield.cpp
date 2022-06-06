@@ -23,6 +23,7 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
     auto insert = [&]( auto& row ) {
         if ( !row.status.value ) row.status = "pending"_n;
         row.tvl.symbol = EOS;
+        row.usd.symbol = USD;
         row.contracts.insert( protocol );
         row.protocol = protocol;
         row.metadata = metadata;
@@ -169,7 +170,7 @@ void yield::unregister( const name protocol )
 
 // @oracle.yield
 [[eosio::action]]
-void yield::report( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl )
+void yield::report( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd )
 {
     require_auth(ORACLE_CONTRACT);
 
@@ -190,6 +191,7 @@ void yield::report( const name protocol, const time_point_sec period, const uint
 
     // validate TVL
     check( tvl.symbol == EOS, "yield::report: [tvl] does not match EOS symbol");
+    check( usd.symbol == USD, "yield::report: [usd] does not match USD symbol");
 
     // set TVL value
     uint128_t eos = tvl.amount;
@@ -207,17 +209,19 @@ void yield::report( const name protocol, const time_point_sec period, const uint
     // modify contracts
     _protocols.modify( itr, same_payer, [&]( auto& row ) {
         row.tvl = tvl;
+        row.usd = usd;
         row.balance.quantity += rewards;
         row.period_at = period;
+        row.updated_at = current_time_point();
     });
 
     // log report
     yield::reportlog_action reportlog( get_self(), { get_self(), "active"_n });
-    reportlog.send( protocol, period, period_interval, tvl, rewards, balance_before, itr.balance.quantity );
+    reportlog.send( protocol, period, period_interval, tvl, usd, rewards, balance_before, itr.balance.quantity );
 }
 
 [[eosio::action]]
-void yield::reportlog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset rewards, const asset balance_before, const asset balance_after )
+void yield::reportlog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance_before, const asset balance_after )
 {
     require_auth( get_self() );
 }

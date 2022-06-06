@@ -114,26 +114,24 @@ public:
      * {
      *     "period": "2022-05-13T00:00:00",
      *     "protocol": "myprotocol",
-     *     "contracts": {
-     *       "eos": ["myprotocol", "mytreasury"],
-     *       "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
-     *     },
+     *     "contracts": ["myprotocol", "mytreasury"],
+     *     "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"],
      *     "balances": ["1000.0000 EOS", "1500.0000 USDT"],
      *     "prices": ["1.5000 USD", "1.0000 USD"],
-     *     "tvl": {
-     *         "usd": "300000.0000 USD",
-     *         "eos": "200000.0000 EOS"
-     *      }
+     *     "tvl": "200000.0000 EOS",
+     *     "usd": "300000.0000 USD"
      * }
      * ```
      */
     struct [[eosio::table("periods")]] periods_row {
         time_point_sec          period;
         name                    protocol;
-        yield::Contracts        contracts;
+        set<name>               contracts;
+        set<string>             evm;
         vector<asset>           balances;
         vector<asset>           prices;
-        yield::TVL              tvl;
+        asset                   tvl;
+        asset                   usd;
 
         uint64_t primary_key() const { return period.sec_since_epoch() * -1; } // inverse index (latest to oldest)
     };
@@ -295,7 +293,7 @@ public:
 
     // @eosio.code
     [[eosio::action]]
-    void updatelog( const name oracle, const name protocol, const yield::Contracts contracts, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const yield::TVL tvl );
+    void updatelog( const name oracle, const name protocol, const set<name> contracts, const set<string> evm, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const asset tvl, const asset usd );
 
     // @system
     [[eosio::action]]

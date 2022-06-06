@@ -229,17 +229,20 @@ void oracle::update( const name oracle, const name protocol )
     // get protocol details
     const auto protocol_itr = _protocols.get( protocol.value, "oracle::update: [protocol] does not exists" );
     check( protocol_itr.status == "active"_n, "oracle::update: [protocol] must be active" );
-    const yield::Contracts contracts = protocol_itr.contracts;
 
     // get current period
     const time_point_sec period = get_current_period( PERIOD_INTERVAL );
     auto itr = _periods.find( period.sec_since_epoch() * -1 ); // inverse multi-index
     check( itr == _periods.end(), "oracle::update: [period] for [protocol] is already updated" );
 
+    // contracts
+    const set<name> contracts = protocol_itr.contracts;
+    const set<string> evm = protocol_itr.evm;
+
     // get all balances from protocol EOS contracts
     vector<asset> balances;
     vector<asset> prices;
-    for ( const name contract : contracts.eos ) {
+    for ( const name contract : contracts ) {
         // liquid balance
         for ( const auto token : _tokens ) {
             const asset balance = get_balance_quantity( token.contract, contract, token.sym );
@@ -258,33 +261,36 @@ void oracle::update( const name oracle, const name protocol )
         prices.push_back( asset{ get_oracle_price( EOS.code() ), USD } );
     }
 
-    for ( const string contract : contracts.evm ) {
+    for ( const string contract : evm ) {
         check(false, "NOT IMPLEMENTED");
     }
 
     // calculate USD valuation
-    int64_t usd = 0;
+    int64_t usd_amount = 0;
     for ( const asset balance : balances ) {
-        usd += calculate_usd_value( balance );
+        usd_amount += calculate_usd_value( balance );
     }
 
     // calculate EOS valuation
-    const int64_t eos = convert_usd_to_eos( usd );
-    const yield::TVL tvl = {{ usd, USD }, { eos, EOS }};
+    const int64_t eos = convert_usd_to_eos( usd_amount );
+    const asset tvl = { eos, EOS };
+    const asset usd = { usd_amount, USD };
 
     // add TVL to history
     _periods.emplace( get_self(), [&]( auto& row ) {
         row.period = period;
         row.protocol = protocol;
         row.contracts = contracts;
+        row.evm = evm;
         row.balances = balances;
         row.prices = prices;
         row.tvl = tvl;
+        row.usd = usd;
     });
 
     // log update
     oracle::updatelog_action updatelog( get_self(), { get_self(), "active"_n });
-    updatelog.send( oracle, protocol, contracts, period, balances, prices, tvl );
+    updatelog.send( oracle, protocol, contracts, evm, period, balances, prices, tvl, usd );
 
     // prune last 24 hours
     prune_protocol_periods( protocol );
@@ -336,20 +342,21 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
 
     // calculates average TVL of period bucket 42 periods (~7 hours)
     int count = 0;
-    yield::TVL tvl = {{ 0, USD }, { 0, EOS }};
+    asset tvl = { 0, EOS };
+    asset usd = { 0, USD };
     for ( const auto row : _periods ) {
         if ( count >= MIN_BUCKET_PERIODS ) break; // stop sum when minimum periods has been reached
-        tvl.usd += row.tvl.usd;
-        tvl.eos += row.tvl.eos;
+        tvl += row.tvl;
+        usd += row.usd;
         count += 1;
     }
     if ( count < MIN_BUCKET_PERIODS ) return; // skip if does not exceeed minimum periods
-    tvl.usd /= count;
-    tvl.eos /= count;
+    tvl /= count;
+    usd /= count;
 
     // send oracle report to Yield+ Rewards
     yield::report_action report( YIELD_CONTRACT, { get_self(), "active"_n });
-    report.send( protocol, period, PERIOD_INTERVAL, tvl );
+    report.send( protocol, period, PERIOD_INTERVAL, tvl, usd );
 }
 
 // int64_t oracle::compute_average_tvl( )
@@ -360,7 +367,7 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
 
 // @eosio.code
 [[eosio::action]]
-void oracle::updatelog( const name oracle, const name protocol, const yield::Contracts contracts, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const yield::TVL tvl )
+void oracle::updatelog( const name oracle, const name protocol, const set<name> contracts, const set<string> evm, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const asset tvl, const asset usd )
 {
     require_auth( get_self() );
 }
