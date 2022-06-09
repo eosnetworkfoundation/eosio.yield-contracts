@@ -153,7 +153,7 @@ void yield::init( const extended_symbol rewards, const name oracle_contract, con
 
     // validate token
     const asset supply = eosio::token::get_supply( rewards.get_contract(), rewards.get_symbol().code() );
-    check( supply.amount > 0,  "yield::init: [supply] is none");
+    check( supply.symbol == rewards.get_symbol(),  "yield::init: [supply.symbol] does not match [rewards]");
 
     // cannot modify existing values
     if ( config.rewards.get_contract() ) check( config.rewards == rewards, "yield::init: [rewards] cannot be modified once initialized");
@@ -294,7 +294,8 @@ void yield::setevm( const name protocol, const set<string> evm )
 [[eosio::on_notify("*::transfer")]]
 void yield::on_transfer( const name from, const name to, const asset quantity, const std::string memo )
 {
-    require_recipient("notify.yield"_n);
+    auto config = get_config();
+    require_recipient(config.admin_contract);
 }
 
 void yield::transfer( const name from, const name to, const extended_asset value, const string& memo )
