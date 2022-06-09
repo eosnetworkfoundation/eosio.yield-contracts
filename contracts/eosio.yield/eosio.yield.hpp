@@ -360,9 +360,9 @@ public:
     void claimlog( const name protocol, const name receiver, const extended_asset claimed );
 
     /**
-     * ## ACTION `reportlog`
+     * ## ACTION `rewardslog`
      *
-     * > Balance logging
+     * > Rewards logging
      *
      * - **authority**: `get_self()`
      *
@@ -393,7 +393,7 @@ public:
      * ```
      */
     [[eosio::action]]
-    void reportlog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance_before, const asset balance_after );
+    void rewardslog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance_before, const asset balance_after );
 
     [[eosio::action]]
     void init( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance_before, const asset balance_after );
@@ -415,7 +415,7 @@ public:
     using setrate_action = eosio::action_wrapper<"setrate"_n, &yield::setrate>;
     using report_action = eosio::action_wrapper<"report"_n, &yield::report>;
     using claimlog_action = eosio::action_wrapper<"claimlog"_n, &yield::claimlog>;
-    using reportlog_action = eosio::action_wrapper<"reportlog"_n, &yield::reportlog>;
+    using rewardslog_action = eosio::action_wrapper<"rewardslog"_n, &yield::rewardslog>;
     using cleartable_action = eosio::action_wrapper<"cleartable"_n, &yield::cleartable>;
 
 private :

@@ -190,8 +190,6 @@ void yield::report( const name protocol, const time_point_sec period, const uint
     // config
     const time_point_sec now = current_time_point();
     auto & itr = _protocols.get(protocol.value, "yield::report: [protocol] does not exists");
-    check( itr.status == "active"_n, "yield::report: [status] is not active");
-    // TO-DO handle receiving reports when not active
 
     // prevents double report
     check( itr.period_at != period, "yield::report: [period] already updated");
@@ -203,35 +201,41 @@ void yield::report( const name protocol, const time_point_sec period, const uint
     check( tvl.symbol == EOS, "yield::report: [tvl] does not match EOS symbol");
     check( usd.symbol == USD, "yield::report: [usd] does not match USD symbol");
 
-    // set TVL value
-    uint128_t eos = tvl.amount;
-    if ( tvl > config.max_tvl_report ) eos = config.max_tvl_report.amount; // set to maximum value if exceeds max TVL value
-    if ( tvl <= config.min_tvl_report ) eos = 0; // set to zero if below min TVL value
-
-    // calculate rewards based on 5% APY
-    // TVL * 5% / 365 days / 10 minute interval
-    const int64_t rewards_amount = eos * config.annual_rate * period_interval / 10000 / YEAR;
-    const asset rewards = { rewards_amount, EOS };
-
-    // before balance used for report logging
-    const asset balance_before = itr.balance.quantity;
-
-    // modify contracts
+    // update protocol's TVL
     _protocols.modify( itr, same_payer, [&]( auto& row ) {
         row.tvl = tvl;
         row.usd = usd;
-        row.balance.quantity += rewards;
         row.period_at = period;
         row.updated_at = current_time_point();
     });
 
+    // determine if project is eligible for rewards
+    if ( tvl <= config.min_tvl_report ) return; // skip if below min TVL value
+    if ( itr.status != "active"_n ) return; // skip if not active (denied or pending)
+
+    // set to maximum value if exceeds max TVL value
+    const int64_t tvl_amount = (tvl > config.max_tvl_report) ? config.max_tvl_report.amount : tvl.amount;
+
+    // calculate rewards based on 5% APY
+    // TVL * 5% / 365 days / 10 minute interval
+    const int64_t rewards_amount = uint128_t(tvl_amount) * config.annual_rate * period_interval / 10000 / YEAR;
+    const asset rewards = { rewards_amount, config.rewards.get_symbol() };
+
+    // before balance used for report logging
+    const asset balance_before = itr.balance.quantity;
+
+    // update rewards to protocol's balance
+    _protocols.modify( itr, same_payer, [&]( auto& row ) {
+        row.balance.quantity += rewards;
+    });
+
     // log report
-    yield::reportlog_action reportlog( get_self(), { get_self(), "active"_n });
-    reportlog.send( protocol, period, period_interval, tvl, usd, rewards, balance_before, itr.balance.quantity );
+    yield::rewardslog_action rewardslog( get_self(), { get_self(), "active"_n });
+    rewardslog.send( protocol, period, period_interval, tvl, usd, rewards, balance_before, itr.balance.quantity );
 }
 
 [[eosio::action]]
-void yield::reportlog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance_before, const asset balance_after )
+void yield::rewardslog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance_before, const asset balance_after )
 {
     require_auth( get_self() );
 }
