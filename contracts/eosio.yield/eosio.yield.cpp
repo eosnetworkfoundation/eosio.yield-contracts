@@ -9,12 +9,9 @@
 [[eosio::action]]
 void yield::regprotocol( const name protocol, const map<name, string> metadata )
 {
-    if ( !has_auth( get_self() ) ) require_auth( protocol );
+    if ( !has_auth( ADMIN_CONTRACT ) ) require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
-
-    // validate
-    check_metadata_keys( metadata );
 
     // protocol must be smart contract that includes ABI
     eosiosystem::abihash_table _abihash( "eosio"_n, "eosio"_n.value );
@@ -37,19 +34,9 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
     auto itr = _protocols.find( protocol.value );
     if ( itr == _protocols.end() ) _protocols.emplace( protocol, insert );
     else _protocols.modify( itr, protocol, insert );
-}
 
-void yield::check_metadata_keys(const map<name, string> metadata )
-{
-    const auto config = get_config();
-    const set<name> metadata_keys = config.metadata_keys;
-    for ( const auto item : metadata ) {
-        const name key = item.first;
-        const string value = item.second;
-        const int maxsize = key == "description"_n ? 10240 : 256;
-        check( value.size() <= maxsize, "yield::check_metadata_keys: value exceeds " + std::to_string(maxsize) + " bytes [metadata_key=" + key.to_string() + "]");
-        check( metadata_keys.find(key) != metadata_keys.end(), "yield::check_metadata_keys: invalid [metadata_key=" + key.to_string() + "]");
-    }
+    // validate via admin contract
+    require_recipient( ADMIN_CONTRACT );
 }
 
 // @protocol
@@ -111,7 +98,7 @@ void yield::set_status( const name protocol, const name status )
 [[eosio::action]]
 void yield::approve( const name protocol )
 {
-    require_auth( get_self() );
+    require_auth( ADMIN_CONTRACT );
     set_status( protocol, "active"_n);
     auto config = get_config();
 }
@@ -120,7 +107,7 @@ void yield::approve( const name protocol )
 [[eosio::action]]
 void yield::deny( const name protocol )
 {
-    require_auth( get_self() );
+    require_auth( ADMIN_CONTRACT );
     set_status( protocol, "denied"_n);
 }
 
@@ -142,18 +129,6 @@ void yield::setrate( const int16_t annual_rate, const asset min_tvl_report, cons
     config.annual_rate = annual_rate;
     config.min_tvl_report = min_tvl_report;
     config.max_tvl_report = max_tvl_report;
-    _config.set(config, get_self());
-}
-
-// @system
-[[eosio::action]]
-void yield::setmetakeys( const set<name> metadata_keys )
-{
-    require_auth( get_self() );
-
-    yield::config_table _config( get_self(), get_self().value );
-    auto config = _config.get_or_default();
-    config.metadata_keys = metadata_keys;
     _config.set(config, get_self());
 }
 

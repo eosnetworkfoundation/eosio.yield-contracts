@@ -19,6 +19,7 @@ public:
 
     // YIELD CONTRACTS
     const name ORACLE_CONTRACT = "d.o.yield"_n;
+    const name ADMIN_CONTRACT = "d.a.yield"_n;
 
     // CONTRACTS
     const name EVM_CONTRACT = "eosio.evm"_n;
@@ -43,7 +44,6 @@ public:
      * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
      * - `{asset} min_tvl_report` - minimum TVL report
      * - `{asset} max_tvl_report` - maximum TVL report
-     * - `{set<name>} metadata_keys` - list of allowed metadata keys
      *
      * ### example
      *
@@ -52,7 +52,6 @@ public:
      *     "annual_rate": 500,
      *     "min_tvl_report": "200000.0000 EOS",
      *     "max_tvl_report": "6000000.0000 EOS",
-     *     "metadata_keys": ["name", "url", "defillama", "dappradar", "recover"]
      * }
      * ```
      */
@@ -60,7 +59,6 @@ public:
         uint16_t                annual_rate = 500;
         asset                   min_tvl_report;
         asset                   max_tvl_report;
-        set<name>               metadata_keys = {"url"_n};
     };
     typedef eosio::singleton< "config"_n, config_row > config_table;
 
@@ -97,7 +95,7 @@ public:
      *     "updated_at": "2022-05-13T00:00:00",
      *     "claimed_at": "1970-01-01T00:00:00",
      *     "period_at": "1970-01-01T00:00:00",
-     *     "metadata": [{"key": "url", "value": "https://myprotocol.com"}]
+     *     "metadata": [{"key": "type", "value": "swap"}, {"key": "url", "value": "https://myprotocol.com"}]
      * }
      * ```
      */
@@ -124,7 +122,7 @@ public:
      *
      * > Registry protocol
      *
-     * - **authority**: `protocol`
+     * - **authority**: `protocol` OR `admin.yield`
      *
      * ### params
      *
@@ -228,7 +226,7 @@ public:
      *
      * > Approve protocol
      *
-     * - **authority**: `get_self()`
+     * - **authority**: `admin.yield`
      *
      * ### params
      *
@@ -237,7 +235,7 @@ public:
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield approve '["myprotocol"]' -p eosio.yield@admin
+     * $ cleos push action eosio.yield approve '["myprotocol"]' -p admin.yield
      * ```
      */
     [[eosio::action]]
@@ -248,7 +246,7 @@ public:
      *
      * > Deny protocol
      *
-     * - **authority**: `get_self()`
+     * - **authority**: `admin.yield`
      *
      * ### params
      *
@@ -257,7 +255,7 @@ public:
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield deny '["myprotocol"]' -p eosio.yield@admin
+     * $ cleos push action eosio.yield deny '["myprotocol"]' -p admin.yield
      * ```
      */
     [[eosio::action]]
@@ -284,26 +282,6 @@ public:
      */
     [[eosio::action]]
     void setrate( const int16_t annual_rate, const asset min_tvl_report, const asset max_tvl_report );
-
-    /**
-     * ## ACTION `setmetakeys`
-     *
-     * > Set allowed metakeys
-     *
-     * - **authority**: `get_self()`
-     *
-     * ### params
-     *
-     * - `{set<name>} metadata_keys` - list of allowed metadata keys
-     *
-     * ### Example
-     *
-     * ```bash
-     * $ cleos push action eosio.yield setmetakeys '[["name", "url", "defillama", "dappradar", "recover"]]' -p eosio.yield@admin
-     * ```
-     */
-    [[eosio::action]]
-    void setmetakeys( const set<name> metadata_keys );
 
     /**
      * ## ACTION `report`
@@ -406,7 +384,6 @@ public:
     using approve_action = eosio::action_wrapper<"approve"_n, &yield::approve>;
     using deny_action = eosio::action_wrapper<"deny"_n, &yield::deny>;
     using setrate_action = eosio::action_wrapper<"setrate"_n, &yield::setrate>;
-    using setmetakeys_action = eosio::action_wrapper<"setmetakeys"_n, &yield::setmetakeys>;
     using report_action = eosio::action_wrapper<"report"_n, &yield::report>;
     using claimlog_action = eosio::action_wrapper<"claimlog"_n, &yield::claimlog>;
     using reportlog_action = eosio::action_wrapper<"reportlog"_n, &yield::reportlog>;
@@ -418,7 +395,6 @@ private :
     config_row get_config();
     void set_status( const name protocol, const name status );
     void transfer( const name from, const name to, const extended_asset value, const string& memo );
-    void check_metadata_keys(const map<name, string> metadata );
 
     // debug
     template <typename T>
