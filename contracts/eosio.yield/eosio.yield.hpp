@@ -17,18 +17,9 @@ class [[eosio::contract("eosio.yield")]] yield : public eosio::contract {
 public:
     using contract::contract;
 
-    // YIELD CONTRACTS
-    const name ORACLE_CONTRACT = "d.o.yield"_n;
-    const name ADMIN_CONTRACT = "d.a.yield"_n;
-
-    // CONTRACTS
-    const name EVM_CONTRACT = "eosio.evm"_n;
-
-    // TOKEN
+    // BASE SYMBOLS
     const symbol EOS = symbol{"EOS", 4};
     const symbol USD = symbol{"USD", 4};
-    const name TOKEN_CONTRACT = "eosio.token"_n;
-    const symbol TOKEN_SYMBOL = EOS;
 
     // CONSTANTS
     const set<name> PROTOCOL_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
@@ -44,6 +35,10 @@ public:
      * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
      * - `{asset} min_tvl_report` - minimum TVL report
      * - `{asset} max_tvl_report` - maximum TVL report
+     * - `{name} oracle_contract` - Yield+ Oracle contract
+     * - `{name} admin_contract` - Yield+ admin contract
+     * - `{name} evm_contract` - Trust EVM contract
+     * - `{extended_symbol} rewards` - Yield+ Rewards reward token
      *
      * ### example
      *
@@ -52,6 +47,10 @@ public:
      *     "annual_rate": 500,
      *     "min_tvl_report": "200000.0000 EOS",
      *     "max_tvl_report": "6000000.0000 EOS",
+     *     "rewards": {"symbol": "4,EOS", "contract": "eosio.token"}
+     *     "oracle_contract": "oracle.yield",
+     *     "admin_contract": "admin.yield",
+     *     "evm_contract": "eosio.evm",
      * }
      * ```
      */
@@ -59,6 +58,10 @@ public:
         uint16_t                annual_rate = 500;
         asset                   min_tvl_report;
         asset                   max_tvl_report;
+        extended_symbol         rewards;
+        name                    oracle_contract;
+        name                    admin_contract;
+        name                    evm_contract;
     };
     typedef eosio::singleton< "config"_n, config_row > config_table;
 
@@ -262,6 +265,29 @@ public:
     void deny( const name protocol );
 
     /**
+     * ## ACTION `init`
+     *
+     * > Initialize Yield+ rewards contract
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{extended_symbol} rewards` - Yield+ Rewards rewards token
+     * - `{name} oracle_contract` - Yield+ Oracle contract
+     * - `{name} admin_contract` - Yield+ admin contract
+     * - `{name} [evm_contract=""]` - Trust EVM contract
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield init '[["4,EOS", "eosio.token"], oracle.yield, admin.yield, eosio.evm]' -p eosio.yield
+     * ```
+     */
+    [[eosio::action]]
+    void init( const extended_symbol rewards, const name oracle_contract, const name admin_contract, const optional<name> evm_contract );
+
+    /**
      * ## ACTION `setrate`
      *
      * > Set rewards rate
@@ -368,6 +394,9 @@ public:
      */
     [[eosio::action]]
     void reportlog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance_before, const asset balance_after );
+
+    [[eosio::action]]
+    void init( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance_before, const asset balance_after );
 
     // @debug
     [[eosio::action]]

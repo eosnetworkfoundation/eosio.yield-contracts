@@ -9,7 +9,8 @@
 [[eosio::action]]
 void yield::regprotocol( const name protocol, const map<name, string> metadata )
 {
-    if ( !has_auth( ADMIN_CONTRACT ) ) require_auth( protocol );
+    const auto config = get_config();
+    if ( !has_auth( config.admin_contract ) ) require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
 
@@ -24,8 +25,8 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
         row.contracts.insert( protocol );
         row.protocol = protocol;
         row.metadata = metadata;
-        row.balance.contract = TOKEN_CONTRACT;
-        row.balance.quantity.symbol = TOKEN_SYMBOL;
+        row.balance.contract = config.rewards.get_contract();
+        row.balance.quantity.symbol = config.rewards.get_symbol();
         if ( !row.created_at.sec_since_epoch() ) row.created_at = current_time_point();
         row.updated_at = current_time_point();
     };
@@ -36,16 +37,17 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
     else _protocols.modify( itr, protocol, insert );
 
     // validate via admin contract
-    require_recipient( ADMIN_CONTRACT );
+    require_recipient( config.admin_contract );
 }
 
 // @protocol
 [[eosio::action]]
 void yield::claim( const name protocol, const optional<name> receiver )
 {
-    if ( !has_auth( get_self() )) require_auth( protocol );
+    require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
+    const auto config = get_config();
 
     if ( receiver ) check( is_account( *receiver ), "yield::claim: [receiver] does not exists");
 
@@ -56,7 +58,7 @@ void yield::claim( const name protocol, const optional<name> receiver )
     check( claimable.quantity.amount > 0, "yield::claim: nothing to claim");
 
     // check eosio.yield balance
-    const asset balance = eosio::token::get_balance( TOKEN_CONTRACT, get_self(), claimable.quantity.symbol.code() );
+    const asset balance = eosio::token::get_balance( claimable.contract, get_self(), claimable.quantity.symbol.code() );
     check( balance >= claimable.quantity, "yield::claim: contract has insuficient balance, please contact administrator");
 
     // transfer funds to receiver
@@ -98,16 +100,17 @@ void yield::set_status( const name protocol, const name status )
 [[eosio::action]]
 void yield::approve( const name protocol )
 {
-    require_auth( ADMIN_CONTRACT );
+    const auto config = get_config();
+    require_auth( config.admin_contract );
     set_status( protocol, "active"_n);
-    auto config = get_config();
 }
 
 // @system
 [[eosio::action]]
 void yield::deny( const name protocol )
 {
-    require_auth( ADMIN_CONTRACT );
+    const auto config = get_config();
+    require_auth( config.admin_contract );
     set_status( protocol, "denied"_n);
 }
 
@@ -118,7 +121,9 @@ void yield::setrate( const int16_t annual_rate, const asset min_tvl_report, cons
     require_auth( get_self() );
 
     yield::config_table _config( get_self(), get_self().value );
-    auto config = _config.get_or_default();
+    check( _config.exists(), "yield::setrate: contract must first call [init] action");
+    auto config = _config.get();
+
     check( annual_rate <= MAX_ANNUAL_RATE, "yield::setrate: [annual_rate] exceeds maximum annual rate");
     check( min_tvl_report <= max_tvl_report, "yield::setrate: [min_tvl_report] must be less than [max_tvl_report]");
 
@@ -129,6 +134,35 @@ void yield::setrate( const int16_t annual_rate, const asset min_tvl_report, cons
     config.annual_rate = annual_rate;
     config.min_tvl_report = min_tvl_report;
     config.max_tvl_report = max_tvl_report;
+    _config.set(config, get_self());
+}
+
+[[eosio::action]]
+void yield::init( const extended_symbol rewards, const name oracle_contract, const name admin_contract, const optional<name> evm_contract )
+{
+    require_auth( get_self() );
+
+    yield::config_table _config( get_self(), get_self().value );
+    auto config = _config.get_or_default();
+
+    // check if accounts exists
+    check( is_account( rewards.get_contract() ), "yield::init: [rewards.contract] account does not exists");
+    check( is_account( oracle_contract ), "yield::init: [oracle_contract] account does not exists");
+    check( is_account( admin_contract ), "yield::init: [admin_contract] account does not exists");
+    if ( evm_contract ) check( is_account( *evm_contract ), "yield::init: [evm_contract] account does not exists");
+
+    // validate token
+    const asset supply = eosio::token::get_supply( rewards.get_contract(), rewards.get_symbol().code() );
+    check( supply.amount > 0,  "yield::init: [supply] is none");
+
+    // cannot modify existing values
+    if ( config.rewards.get_contract() ) check( config.rewards == rewards, "yield::init: [rewards] cannot be modified once initialized");
+
+    // set values
+    config.rewards = rewards;
+    config.oracle_contract = oracle_contract;
+    config.admin_contract = admin_contract;
+    if ( evm_contract ) config.evm_contract = *evm_contract;
     _config.set(config, get_self());
 }
 
@@ -147,20 +181,21 @@ void yield::unregister( const name protocol )
 [[eosio::action]]
 void yield::report( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd )
 {
-    require_auth(ORACLE_CONTRACT);
+    const auto config = get_config();
+    require_auth(config.oracle_contract);
 
     // tables
     yield::protocols_table _protocols( get_self(), get_self().value );
 
     // config
-    const auto config = get_config();
     const time_point_sec now = current_time_point();
     auto & itr = _protocols.get(protocol.value, "yield::report: [protocol] does not exists");
     check( itr.status == "active"_n, "yield::report: [status] is not active");
+    // TO-DO handle receiving reports when not active
 
     // prevents double report
     check( itr.period_at != period, "yield::report: [period] already updated");
-    check( period <= now, "yield::report: [period] must be in the past");
+    check( period <= now, "yield::report: [period] cannot be in the future");
     check( period > itr.period_at, "yield::report: [period] must be ahead of last");
     check( period == get_current_period( period_interval ), "yield::report: [period] current period does not match");
 
