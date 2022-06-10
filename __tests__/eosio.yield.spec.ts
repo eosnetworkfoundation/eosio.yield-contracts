@@ -9,7 +9,8 @@ import { Config, Protocol } from "./interfaces"
 const blockchain = new Blockchain()
 const eosioYield = blockchain.createContract('eosio.yield', 'contracts/eosio.yield/eosio.yield');
 const eosioSystem = blockchain.createContract('eosio', 'external/eosio.system/eosio.system');
-const [ myprotocol, myvault, protocol1, protocol2, myaccount ] = blockchain.createAccounts('myprotocol', 'myvault', "protocol1", "protocol2", "myaccount");
+const eosioToken = blockchain.createContract('eosio.token', 'external/eosio.token/eosio.token');
+blockchain.createAccounts('myprotocol', 'myvault', "protocol1", "protocol2", "myaccount", "oracle.yield", "admin.yield");
 
 /**
  * Helpers
@@ -32,11 +33,15 @@ beforeAll(async () => {
   await eosioSystem.actions.abihash(["myprotocol", hash]).send();
   await eosioSystem.actions.abihash(["protocol1", hash]).send();
   await eosioSystem.actions.abihash(["protocol2", hash]).send();
+
+  // create token
+  await eosioToken.actions.create(["eosio", "1000000000.0000 EOS"]).send();
+  await eosioToken.actions.issue(["eosio", "1000000000.0000 EOS", "init"]).send("eosio@active");
 });
 
 describe('eosio.yield', () => {
-  // Config
-  it("config::setrate", async () => {
+  it("config::init", async () => {
+    await eosioYield.actions.init([{sym: "4,EOS", contract: "eosio.token"}, "oracle.yield", "admin.yield"]).send();
     await eosioYield.actions.setrate([500, "200000.0000 EOS", "6000000.0000 EOS"]).send();
     const config = getConfig();
     expect(config.annual_rate).toBe(500);
@@ -44,12 +49,12 @@ describe('eosio.yield', () => {
     expect(config.max_tvl_report).toBe("6000000.0000 EOS");
   });
 
-  it("config::setmetakeys", async () => {
-    const metakeys = ["description", "name", "url"];
-    await eosioYield.actions.setmetakeys([metakeys]).send();
-    const config = getConfig();
-    expect(config.metadata_keys).toEqual(metakeys);
-  });
+  // // it("config::setmetakeys", async () => {
+  // //   const metakeys = ["description", "name", "url"];
+  // //   await eosioYield.actions.setmetakeys([metakeys]).send();
+  // //   const config = getConfig();
+  // //   expect(config.metadata_keys).toEqual(metakeys);
+  // // });
 
   // Register Protocol
   const metadata = [{"key": "url", "value": "https://myprotocol.com"}];
@@ -82,7 +87,7 @@ describe('eosio.yield', () => {
     const before = getProtocol("myprotocol");
     expect(before.status).toEqual("pending");
 
-    await eosioYield.actions.approve([ "myprotocol" ]).send();
+    await eosioYield.actions.approve([ "myprotocol" ]).send("admin.yield@active");
     const after = getProtocol("myprotocol");
     expect(after.status).toEqual("active");
   });

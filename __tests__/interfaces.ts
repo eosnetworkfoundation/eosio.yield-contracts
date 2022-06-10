@@ -8,6 +8,11 @@ export interface ExtendedAsset {
     contract: string;
 }
 
+export interface ExtendedSymbol {
+    sym: string;
+    contract: string;
+}
+
 export interface Protocol {
     protocol: string; //  "myprotocol"
     status: string; //  "active"
@@ -27,5 +32,7 @@ export interface Config {
     annual_rate: number; // 500
     min_tvl_report: string; // "200000.0000 EOS"
     max_tvl_report: string; // "6000000.0000 EOS"
-    metadata_keys: string[]; // ["name", "url", "defillama", "dappradar", "recover"]
+    rewards: ExtendedSymbol; // { "sym": "4,EOS", "contract": "eosio.token" }
+    oracle_contract: string; // "oracle.yield"
+    admin_contract: string; // "admin.yield"
 }
