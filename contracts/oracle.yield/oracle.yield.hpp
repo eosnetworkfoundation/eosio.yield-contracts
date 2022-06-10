@@ -170,10 +170,10 @@ public:
         name                    oracle;
         name                    status = "pending"_n;
         extended_asset          balance;
+        map<name, string>       metadata;
         time_point_sec          created_at;
         time_point_sec          updated_at;
         time_point_sec          claimed_at;
-        map<name, string>       metadata;
 
         uint64_t primary_key() const { return oracle.value; }
     };
