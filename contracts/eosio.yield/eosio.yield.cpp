@@ -162,6 +162,8 @@ void yield::init( const extended_symbol rewards, const name oracle_contract, con
     config.rewards = rewards;
     config.oracle_contract = oracle_contract;
     config.admin_contract = admin_contract;
+    config.min_tvl_report.symbol = EOS;
+    config.max_tvl_report.symbol = EOS;
     if ( evm_contract ) config.evm_contract = *evm_contract;
     _config.set(config, get_self());
 }
@@ -190,6 +192,8 @@ void yield::report( const name protocol, const time_point_sec period, const uint
     // config
     const time_point_sec now = current_time_point();
     auto & itr = _protocols.get(protocol.value, "yield::report: [protocol] does not exists");
+    check( config.min_tvl_report.amount, "yield::report: [min_tvl_report] not configured");
+    check( config.max_tvl_report.amount, "yield::report: [max_tvl_report] not configured");
 
     // prevents double report
     check( itr.period_at != period, "yield::report: [period] already updated");
