@@ -137,7 +137,9 @@ void oracle::addtoken( const symbol_code symcode, const name contract, const opt
     const asset supply = eosio::token::get_supply( contract, symcode );
     check( supply.amount > 0,  "oracle::addtoken: [supply] has no supply");
     const bool is_usdt = symcode == USDT.code() && contract == USDT_CONTRACT;
-    if ( !is_usdt ) check( *defibox_oracle_id || delphi_oracle_id->value, "oracle::addtoken: must provide at least one oracle ID");
+    if ( is_usdt ) check( !*defibox_oracle_id && !delphi_oracle_id->value, "oracle::addtoken: USDT Tether does not require any oracle ID");
+    else check( *defibox_oracle_id || delphi_oracle_id->value, "oracle::addtoken: must provide at least one oracle ID");
+
 
     // validate oracles
     if ( delphi_oracle_id ) {
@@ -162,8 +164,8 @@ void oracle::addtoken( const symbol_code symcode, const name contract, const opt
         if ( row.contract ) check(row.contract == contract, "oracle::addtoken: [contract] cannot be modified once token is created");
         row.sym = supply.symbol;
         row.contract = contract;
-        row.defibox_oracle_id = *defibox_oracle_id;
-        row.delphi_oracle_id = *delphi_oracle_id;
+        if ( defibox_oracle_id ) row.defibox_oracle_id = *defibox_oracle_id;
+        if ( delphi_oracle_id ) row.delphi_oracle_id = *delphi_oracle_id;
     };
 
     // modify or create
@@ -464,10 +466,10 @@ int64_t oracle::get_oracle_price( const symbol_code symcode )
     if ( symcode == USDT.code() ) return 10000;
 
     // Defibox Oracle
-    const int64_t price1 = get_defibox_price( token.defibox_oracle_id );
+    const int64_t price1 = get_defibox_price( *token.defibox_oracle_id );
 
     // Delphi Oracle
-    const int64_t price2 = get_delphi_price( token.delphi_oracle_id );
+    const int64_t price2 = get_delphi_price( *token.delphi_oracle_id );
 
     // in case oracles do not exists
     if ( !price2 && price1 ) return price1;

@@ -67,8 +67,8 @@ public:
      *
      * - `{symbol} sym` - (primary key) token symbol
      * - `{name} contract` - token contract
-     * - `{uint64_t} defibox_oracle_id` - Defibox oracle ID
-     * - `{name} delphi_oracle_id` - Delphi oracle ID
+     * - `{uint64_t} [defibox_oracle_id=null]` - (optional) Defibox oracle ID
+     * - `{name} [delphi_oracle_id=null]` - (optional) Delphi oracle ID
      * - `{uint64_t} [extra_oracle_id=null]` - (optional) extra oracle ID
      *
      * ### example
@@ -86,8 +86,8 @@ public:
     struct [[eosio::table("tokens")]] tokens_row {
         symbol                  sym;
         name                    contract;
-        uint64_t                defibox_oracle_id;
-        name                    delphi_oracle_id;
+        optional<uint64_t>      defibox_oracle_id;
+        optional<name>          delphi_oracle_id;
         optional<uint64_t>      extra_oracle_id;
 
         uint64_t primary_key() const { return sym.code().raw(); }

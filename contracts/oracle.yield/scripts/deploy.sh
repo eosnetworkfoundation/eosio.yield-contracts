@@ -5,6 +5,8 @@ cleos wallet unlock --password $(cat ~/eosio-wallet/.pass)
 
 # create accounts
 cleos create account eosio oracle.yield EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+cleos create account eosio eosio.yield EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+cleos create account eosio admin.yield EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 cleos create account eosio myprotocol EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 cleos create account eosio myvault EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 cleos create account eosio protocol1 EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
@@ -17,10 +19,10 @@ cleos create account eosio delphioracle EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtH
 
 # deploy
 cleos set contract oracle.yield . oracle.yield.wasm oracle.yield.abi
-cleos set contract eosio.token ./include/eosio.token eosio.token.wasm eosio.token.abi
-cleos set contract tethertether ./include/eosio.token eosio.token.wasm eosio.token.abi
-cleos set contract oracle.defi ./include/oracle.defi oracle.defi.wasm oracle.defi.abi
-cleos set contract delphioracle ./include/delphioracle delphioracle.wasm delphioracle.abi
+cleos set contract eosio.token ../../external/eosio.token eosio.token.wasm eosio.token.abi
+cleos set contract tethertether ../../external/eosio.token eosio.token.wasm eosio.token.abi
+cleos set contract oracle.defi ../../external/oracle.defi oracle.defi.wasm oracle.defi.abi
+cleos set contract delphioracle ../../external/delphioracle delphioracle.wasm delphioracle.abi
 
 # permissions
 cleos set account permission oracle.yield active --add-code
