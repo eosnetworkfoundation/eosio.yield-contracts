@@ -166,7 +166,7 @@ public:
      *
      * > Set contracts
      *
-     * - **authority**: `protocol` AND `contracts`
+     * - **authority**: `protocol` AND `contracts` OR `admin.yield`
      *
      * ### params
      *

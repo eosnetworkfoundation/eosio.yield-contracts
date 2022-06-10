@@ -12,9 +12,6 @@ blanc++ eosio.yield.cpp -I ../ -I ../../external
 #     eosio-cpp ./include/eosio.system/eosio.system.cpp -I include -o include/eosio.system/eosio.system.wasm
 # fi
 
-# contracts
-CONTRACT="d.e.yield"
-
 # unlock wallet & deploy
 cleos wallet unlock --password $(cat ~/eosio-wallet/.pass)
-cleos set contract $CONTRACT . eosio.yield.wasm eosio.yield.abi
+cleos set contract eosio.yield . eosio.yield.wasm eosio.yield.abi

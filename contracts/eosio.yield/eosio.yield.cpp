@@ -10,7 +10,8 @@
 void yield::regprotocol( const name protocol, const map<name, string> metadata )
 {
     const auto config = get_config();
-    if ( !has_auth( config.admin_contract ) ) require_auth( protocol );
+    const bool is_admin = has_auth( config.admin_contract );
+    if ( !is_admin ) require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
 
@@ -32,7 +33,7 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
     };
 
     // modify or create
-    const name ram_payer = has_auth( config.admin_contract ) ? config.admin_contract : protocol;
+    const name ram_payer = is_admin ? config.admin_contract : protocol;
     auto itr = _protocols.find( protocol.value );
     if ( itr == _protocols.end() ) _protocols.emplace( ram_payer, insert );
     else _protocols.modify( itr, ram_payer, insert );
@@ -248,9 +249,9 @@ void yield::rewardslog( const name protocol, const time_point_sec period, const 
 [[eosio::action]]
 void yield::setcontracts( const name protocol, const set<name> contracts )
 {
-    require_auth( protocol );
-
-    auto config = get_config();
+    const auto config = get_config();
+    const bool is_admin = has_auth( config.admin_contract );
+    if ( !is_admin ) require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get(protocol.value, "yield::setcontracts: [protocol] does not exists");
@@ -258,11 +259,12 @@ void yield::setcontracts( const name protocol, const set<name> contracts )
     // require authority of all EOS contracts linked to protocol
     for ( const name contract : contracts ) {
         check( is_account( contract ), "yield::setcontracts: [eos.contract] account does not exists");
-        require_auth( contract );
+        if ( !is_admin ) require_auth( contract );
     }
 
     // modify contracts
-    _protocols.modify( itr, protocol, [&]( auto& row ) {
+    const name ram_payer = is_admin ? config.admin_contract : protocol;
+    _protocols.modify( itr, ram_payer, [&]( auto& row ) {
         row.status = "pending"_n; // must be re-approved if contracts changed
         row.contracts = contracts;
         row.contracts.insert(protocol); // always include EOS protocol account
