@@ -138,8 +138,9 @@ void yield::setrate( const int16_t annual_rate, const asset min_tvl_report, cons
     _config.set(config, get_self());
 }
 
+// @system
 [[eosio::action]]
-void yield::init( const extended_symbol rewards, const name oracle_contract, const name admin_contract, const optional<name> evm_contract )
+void yield::init( const extended_symbol rewards, const name oracle_contract, const name admin_contract )
 {
     require_auth( get_self() );
 
@@ -150,7 +151,6 @@ void yield::init( const extended_symbol rewards, const name oracle_contract, con
     check( is_account( rewards.get_contract() ), "yield::init: [rewards.contract] account does not exists");
     check( is_account( oracle_contract ), "yield::init: [oracle_contract] account does not exists");
     check( is_account( admin_contract ), "yield::init: [admin_contract] account does not exists");
-    if ( evm_contract ) check( is_account( *evm_contract ), "yield::init: [evm_contract] account does not exists");
 
     // validate token
     const asset supply = eosio::token::get_supply( rewards.get_contract(), rewards.get_symbol().code() );
@@ -165,7 +165,6 @@ void yield::init( const extended_symbol rewards, const name oracle_contract, con
     config.admin_contract = admin_contract;
     config.min_tvl_report.symbol = EOS;
     config.max_tvl_report.symbol = EOS;
-    if ( evm_contract ) config.evm_contract = *evm_contract;
     _config.set(config, get_self());
 }
 
