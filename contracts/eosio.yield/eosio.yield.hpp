@@ -77,11 +77,11 @@ public:
      * - `{asset} tvl` - reported TVL averaged value in EOS
      * - `{asset} usd` - reported TVL averaged value in USD
      * - `{extended_asset} balance` - balance available to be claimed
+     * - `{map<string, string} metadata` - metadata
      * - `{time_point_sec} created_at` - created at time
      * - `{time_point_sec} updated_at` - updated at time
      * - `{time_point_sec} claimed_at` - claimed at time
      * - `{time_point_sec} period_at` - period at time
-     * - `{map<string, string} metadata` - metadata
      *
      * ### example
      *
@@ -94,11 +94,11 @@ public:
      *     "tvl": "200000.0000 EOS",
      *     "usd": "300000.0000 USD",
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
+     *     "metadata": [{"key": "type", "value": "swap"}, {"key": "url", "value": "https://myprotocol.com"}]
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
      *     "claimed_at": "1970-01-01T00:00:00",
      *     "period_at": "1970-01-01T00:00:00",
-     *     "metadata": [{"key": "type", "value": "swap"}, {"key": "url", "value": "https://myprotocol.com"}]
      * }
      * ```
      */
@@ -110,11 +110,11 @@ public:
         asset                   tvl;
         asset                   usd;
         extended_asset          balance;
+        map<name, string>       metadata;
         time_point_sec          created_at;
         time_point_sec          updated_at;
         time_point_sec          claimed_at;
         time_point_sec          period_at;
-        map<name, string>       metadata;
 
         uint64_t primary_key() const { return protocol.value; }
     };

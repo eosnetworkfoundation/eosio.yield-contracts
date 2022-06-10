@@ -32,9 +32,10 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
     };
 
     // modify or create
+    const name ram_payer = has_auth( config.admin_contract ) ? config.admin_contract : protocol;
     auto itr = _protocols.find( protocol.value );
-    if ( itr == _protocols.end() ) _protocols.emplace( protocol, insert );
-    else _protocols.modify( itr, protocol, insert );
+    if ( itr == _protocols.end() ) _protocols.emplace( ram_payer, insert );
+    else _protocols.modify( itr, ram_payer, insert );
 
     // validate via admin contract
     require_recipient( config.admin_contract );
