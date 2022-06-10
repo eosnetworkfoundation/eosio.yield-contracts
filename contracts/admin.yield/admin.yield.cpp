@@ -19,6 +19,12 @@ void admin::on_regprotocol( const name protocol, const map<name, string> metadat
     check_metadata_keys( metadata );
 }
 
+[[eosio::on_notify("*::regoracle")]]
+void admin::on_regoracle( const name oracle, const map<name, string> metadata )
+{
+    check_metadata_keys( metadata );
+}
+
 void admin::check_metadata_keys(const map<name, string> metadata )
 {
     const auto config = get_config();

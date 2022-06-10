@@ -17,19 +17,13 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
 
     oracle::oracles_table _oracles( get_self(), get_self().value );
     const auto config = get_config();
-    const set<name> metadata_keys = config.metadata_keys;
-
-    // validate input
-    for ( const auto item : metadata ) {
-        check( metadata_keys.find(item.first) != metadata_keys.end(), "yield::regoracle: invalid [metadata_keys]");
-    }
 
     auto insert = [&]( auto& row ) {
         // status => "pending" by default
         row.oracle = oracle;
         row.metadata = metadata;
-        row.balance.contract = TOKEN_CONTRACT;
-        row.balance.quantity.symbol = TOKEN_SYMBOL;
+        row.balance.contract = config.reward_per_update.contract;
+        row.balance.quantity.symbol = config.reward_per_update.quantity.symbol;
         if ( !row.created_at.sec_since_epoch() ) row.created_at = current_time_point();
         row.updated_at = current_time_point();
     };
@@ -38,6 +32,9 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
     auto itr = _oracles.find( oracle.value );
     if ( itr == _oracles.end() ) _oracles.emplace( oracle, insert );
     else _oracles.modify( itr, oracle, insert );
+
+    // validate via admin contract
+    require_recipient( config.admin_contract );
 }
 
 // @protocol
@@ -138,8 +135,9 @@ void oracle::addtoken( const symbol_code symcode, const name contract, const opt
 
     // validate
     const asset supply = eosio::token::get_supply( contract, symcode );
-    check( supply.amount > 0,  "oracle::addtoken: [supply] is none");
-    if ( symcode != USDT.code() ) check( *defibox_oracle_id || delphi_oracle_id->value, "oracle::addtoken: must provide at least one oracle ID");
+    check( supply.amount > 0,  "oracle::addtoken: [supply] has no supply");
+    const bool is_usdt = symcode == USDT.code() && contract == USDT_CONTRACT;
+    if ( !is_usdt ) check( *defibox_oracle_id || delphi_oracle_id->value, "oracle::addtoken: must provide at least one oracle ID");
 
     // validate oracles
     if ( delphi_oracle_id ) {
@@ -176,6 +174,35 @@ void oracle::addtoken( const symbol_code symcode, const name contract, const opt
 
 // @system
 [[eosio::action]]
+void oracle::init( const extended_symbol rewards, const name yield_contract, const name admin_contract )
+{
+    require_auth( get_self() );
+
+    oracle::config_table _config( get_self(), get_self().value );
+    auto config = _config.get_or_default();
+
+    // check if accounts exists
+    check( is_account( rewards.get_contract() ), "oracle::init: [rewards.contract] account does not exists");
+    check( is_account( yield_contract ), "oracle::init: [yield_contract] account does not exists");
+    check( is_account( admin_contract ), "oracle::init: [admin_contract] account does not exists");
+
+    // validate rewards token
+    const asset supply = eosio::token::get_supply( rewards.get_contract(), rewards.get_symbol().code() );
+    check( supply.symbol == rewards.get_symbol(),  "oracle::init: [supply.symbol] does not match [rewards]");
+
+    // cannot modify existing values
+    if ( config.reward_per_update.contract ) check( config.reward_per_update.get_extended_symbol() == rewards, "oracle::init: [rewards] cannot be modified once initialized");
+
+    // set values
+    config.reward_per_update.contract = rewards.get_contract();
+    config.reward_per_update.quantity.symbol = rewards.get_symbol();
+    config.yield_contract = yield_contract;
+    config.admin_contract = admin_contract;
+    _config.set(config, get_self());
+}
+
+// @system
+[[eosio::action]]
 void oracle::deltoken( const symbol_code symcode )
 {
     require_auth( get_self() );
@@ -191,7 +218,8 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
 {
     require_auth( oracle );
 
-    yield::protocols_table _protocols( YIELD_CONTRACT, YIELD_CONTRACT.value );
+    auto config = get_config();
+    yield::protocols_table _protocols( config.yield_contract, config.yield_contract.value );
     const time_point_sec period = get_current_period( PERIOD_INTERVAL );
 
     int limit = max_rows ? *max_rows : 20;
@@ -222,9 +250,10 @@ void oracle::update( const name oracle, const name protocol )
     check_oracle_active( oracle );
 
     // tables
+    auto config = get_config();
     oracle::tokens_table _tokens( get_self(), get_self().value );
     oracle::periods_table _periods( get_self(), protocol.value );
-    yield::protocols_table _protocols( YIELD_CONTRACT, YIELD_CONTRACT.value );
+    yield::protocols_table _protocols( config.yield_contract, config.yield_contract.value );
 
     // get protocol details
     const auto protocol_itr = _protocols.get( protocol.value, "oracle::update: [protocol] does not exists" );
@@ -332,9 +361,9 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
     oracle::periods_table _periods( get_self(), protocol.value );
 
     // yield config
-    yield::config_table _config( YIELD_CONTRACT, YIELD_CONTRACT.value );
-    check( _config.exists(), "yield::get_config: contract is not initialized");
-    const asset min_tvl_report = _config.get().min_tvl_report;
+    auto config = get_config();
+    // yield::config_table _config( config.yield_contract, config.yield_contract.value );
+    // const asset min_tvl_report = config.min_tvl_report;
 
     // *****
     // TO-DO make sure report is valid (3x48 TVL buckets)
@@ -355,7 +384,7 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
     usd /= count;
 
     // send oracle report to Yield+ Rewards
-    yield::report_action report( YIELD_CONTRACT, { get_self(), "active"_n });
+    yield::report_action report( config.yield_contract, { get_self(), "active"_n });
     report.send( protocol, period, PERIOD_INTERVAL, tvl, usd );
 }
 
@@ -374,27 +403,14 @@ void oracle::updatelog( const name oracle, const name protocol, const set<name> 
 
 // @system
 [[eosio::action]]
-void oracle::setreward( const extended_asset reward_per_update )
+void oracle::setreward( const asset reward_per_update )
 {
     require_auth( get_self() );
 
     oracle::config_table _config( get_self(), get_self().value );
-    auto config = _config.get_or_default();
-    check( reward_per_update.quantity.symbol == TOKEN_SYMBOL, "oracle::setreward: [quantity.symbol] is invalid");
-    check( reward_per_update.contract == TOKEN_CONTRACT, "oracle::setreward: [contract] is invalid");
-    config.reward_per_update = reward_per_update;
-    _config.set(config, get_self());
-}
-
-// @system
-[[eosio::action]]
-void oracle::setmetakeys( const set<name> metadata_keys )
-{
-    require_auth( get_self() );
-
-    oracle::config_table _config( get_self(), get_self().value );
-    auto config = _config.get_or_default();
-    config.metadata_keys = metadata_keys;
+    auto config = get_config();
+    check( config.reward_per_update.quantity.symbol == reward_per_update.symbol, "oracle::setreward: [reward_per_update] symbol does not match");
+    config.reward_per_update.quantity = reward_per_update;
     _config.set(config, get_self());
 }
 

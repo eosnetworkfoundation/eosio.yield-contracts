@@ -273,8 +273,8 @@ public:
      *
      * ### params
      *
-     * - `{extended_symbol} rewards` - Yield+ Rewards rewards token
-     * - `{name} oracle_contract` - Yield+ Oracle contract
+     * - `{extended_symbol} rewards` - Yield+ rewards token
+     * - `{name} oracle_contract` - Yield+ oracle contract
      * - `{name} admin_contract` - Yield+ admin contract
      *
      * ### Example

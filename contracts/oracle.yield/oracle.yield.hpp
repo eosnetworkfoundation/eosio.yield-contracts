@@ -15,20 +15,16 @@ class [[eosio::contract("oracle.yield")]] oracle : public eosio::contract {
 public:
     using contract::contract;
 
-    // YIELD CONTRACTS
-    const name YIELD_CONTRACT = "d.e.yield"_n;
-
     // EXTERNAL CONTRACTS
     const name EVM_CONTRACT = "eosio.evm"_n;
     const name DELPHI_ORACLE_CONTRACT = "delphioracle"_n;
     const name DEFIBOX_ORACLE_CONTRACT = "oracle.defi"_n;
 
     // TOKEN
-    const symbol EOS = symbol{"EOS", 4};
-    const symbol USD = symbol{"USD", 4};
-    const symbol USDT = symbol{"USDT", 4};
-    const name TOKEN_CONTRACT = "eosio.token"_n;
-    const symbol TOKEN_SYMBOL = EOS;
+    const symbol EOS = {"EOS", 4};
+    const symbol USD = {"USD", 4};
+    const symbol USDT = {"USDT", 4};
+    const name USDT_CONTRACT = "tethertether"_n;
 
     // CONSTANTS
     const set<name> ORACLE_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
@@ -44,20 +40,23 @@ public:
      * ## TABLE `config`
      *
      * - `{extended_asset} reward_per_update` - reward per update (ex: "0.0200 EOS")
-     * - `{set<name>} metadata_keys` - list of allowed metadata keys
+     * - `{name} yield_contract` - Yield+ core contract
+     * - `{name} admin_contract` - Yield+ admin contract
      *
      * ### example
      *
      * ```json
      * {
      *     "reward_per_update": {"contract": "eosio.token", "quantity": "0.0200 EOS"},
-     *     "metadata_keys": ["name", "url"]
+     *     "yield_contract": "eosio.yield",
+     *     "admin_contract": "admin.yield"
      * }
      * ```
      */
     struct [[eosio::table("config")]] config_row {
-        extended_asset      reward_per_update;
-        set<name>           metadata_keys = {"url"_n};
+        extended_asset          reward_per_update;
+        name                    yield_contract;
+        name                    admin_contract;
     };
     typedef eosio::singleton< "config"_n, config_row > config_table;
 
@@ -70,6 +69,7 @@ public:
      * - `{name} contract` - token contract
      * - `{uint64_t} defibox_oracle_id` - Defibox oracle ID
      * - `{name} delphi_oracle_id` - Delphi oracle ID
+     * - `{uint64_t} [extra_oracle_id=null]` - (optional) extra oracle ID
      *
      * ### example
      *
@@ -78,15 +78,17 @@ public:
      *     "sym": "4,EOS",
      *     "contract": "eosio.token"
      *     "defibox_oracle_id": 1,
-     *     "delphi_oracle_id": "eosusd"
+     *     "delphi_oracle_id": "eosusd",
+     *     "extra_oracle_id": null
      * }
      * ```
      */
     struct [[eosio::table("tokens")]] tokens_row {
-        symbol          sym;
-        name            contract;
-        uint64_t        defibox_oracle_id;
-        name            delphi_oracle_id;
+        symbol                  sym;
+        name                    contract;
+        uint64_t                defibox_oracle_id;
+        name                    delphi_oracle_id;
+        optional<uint64_t>      extra_oracle_id;
 
         uint64_t primary_key() const { return sym.code().raw(); }
     };
@@ -145,10 +147,10 @@ public:
      * - `{name} oracle` - primary oracle contract
      * - `{name} status="pending"` - status (`pending/active/denied`)
      * - `{extended_asset} balance` - balance available to be claimed
+     * - `{map<string, string} metadata` - metadata
      * - `{time_point_sec} created_at` - created at time
      * - `{time_point_sec} updated_at` - updated at time
      * - `{time_point_sec} claimed_at` - claimed at time
-     * - `{map<string, string} metadata` - metadata
      *
      * ### example
      *
@@ -157,10 +159,10 @@ public:
      *     "oracle": "myoracle",
      *     "status": "active",
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
+     *     "metadata": [{"key": "url", "value": "https://myoracle.com"}],
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
-     *     "claimed_at": "1970-01-01T00:00:00",
-     *     "metadata": [{"key": "url", "value": "https://myoracle.com"}]
+     *     "claimed_at": "1970-01-01T00:00:00"
      * }
      * ```
      */
@@ -176,6 +178,28 @@ public:
         uint64_t primary_key() const { return oracle.value; }
     };
     typedef eosio::multi_index< "oracles"_n, oracles_row> oracles_table;
+
+    /**
+     * ## ACTION `init`
+     *
+     * > Initialize Yield+ oracle contract
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{extended_symbol} rewards` - Yield+ oracle rewards token
+     * - `{name} yield_contract` - Yield+ core contract
+     * - `{name} admin_contract` - Yield+ admin contract
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield init '[["4,EOS", "eosio.token"], rewards.yield, admin.yield]' -p oracle.yield
+     * ```
+     */
+    [[eosio::action]]
+    void init( const extended_symbol rewards, const name yield_contract, const name admin_contract );
 
     // @oracle
     [[eosio::action]]
@@ -297,11 +321,7 @@ public:
 
     // @system
     [[eosio::action]]
-    void setreward( const extended_asset reward_per_update );
-
-    // @system
-    [[eosio::action]]
-    void setmetakeys( const set<name> metadata_keys );
+    void setreward( const asset reward_per_update );
 
     // @debug
     [[eosio::action]]
@@ -318,7 +338,6 @@ public:
     using deltoken_action = eosio::action_wrapper<"deltoken"_n, &oracle::deltoken>;
     using updatelog_action = eosio::action_wrapper<"updatelog"_n, &oracle::updatelog>;
     using setreward_action = eosio::action_wrapper<"setreward"_n, &oracle::setreward>;
-    using setmetakeys_action = eosio::action_wrapper<"setmetakeys"_n, &oracle::setmetakeys>;
     using claim_action = eosio::action_wrapper<"claim"_n, &oracle::claim>;
     using claimlog_action = eosio::action_wrapper<"claimlog"_n, &oracle::claimlog>;
     using cleartable_action = eosio::action_wrapper<"cleartable"_n, &oracle::cleartable>;

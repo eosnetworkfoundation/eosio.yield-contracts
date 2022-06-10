@@ -1,7 +1,7 @@
 # #!/bin/bash
 
 # config
-cleos push action eosio.yield init '[["4,EOS", "eosio.token"], oracle.yield, admin.yield, eosio.evm]' -p eosio.yield
+cleos push action eosio.yield init '[["4,EOS", "eosio.token"], oracle.yield, admin.yield]' -p eosio.yield
 cleos push action eosio.yield setrate '[500, "200000.0000 EOS", "6000000.0000 EOS"]' -p eosio.yield
 cleos push action eosio.yield setmetakeys '[["name", "url", "defillama", "dappradar", "recover"]]' -p eosio.yield
 
