@@ -40,6 +40,10 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
 
     // validate via admin contract
     require_recipient( config.admin_contract );
+
+    // update state if not present
+    if ( itr->status == "active"_n ) add_active_protocol( protocol );
+    else remove_active_protocol( protocol );
 }
 
 // @protocol
