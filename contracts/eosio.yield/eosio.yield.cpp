@@ -105,6 +105,7 @@ void yield::approve( const name protocol )
     const auto config = get_config();
     require_auth( config.admin_contract );
     set_status( protocol, "active"_n);
+    add_active_protocol( protocol );
 }
 
 // @system
@@ -114,6 +115,7 @@ void yield::deny( const name protocol )
     const auto config = get_config();
     require_auth( config.admin_contract );
     set_status( protocol, "denied"_n);
+    remove_active_protocol( protocol );
 }
 
 // @system
@@ -124,7 +126,7 @@ void yield::setrate( const int16_t annual_rate, const asset min_tvl_report, cons
 
     yield::config_table _config( get_self(), get_self().value );
     check( _config.exists(), "yield::setrate: contract must first call [init] action");
-    auto config = _config.get();
+    auto config = get_config();
 
     check( annual_rate <= MAX_ANNUAL_RATE, "yield::setrate: [annual_rate] exceeds maximum annual rate");
     check( min_tvl_report <= max_tvl_report, "yield::setrate: [min_tvl_report] must be less than [max_tvl_report]");
@@ -173,11 +175,14 @@ void yield::init( const extended_symbol rewards, const name oracle_contract, con
 [[eosio::action]]
 void yield::unregister( const name protocol )
 {
-    if ( !has_auth( get_self() )) require_auth( protocol );
+    const auto config = get_config();
+    if ( !has_auth( config.admin_contract )) require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get(protocol.value, "yield::unregister: [protocol] does not exists");
+    if ( itr.balance.quantity.amount > 0 ) claim( protocol, ""_n ); // claim if any balance remaining
     _protocols.erase( itr );
+    remove_active_protocol( protocol );
 }
 
 // @oracle.yield
@@ -263,13 +268,16 @@ void yield::setcontracts( const name protocol, const set<name> contracts )
     }
 
     // modify contracts
+    const set<name> before_contracts = itr.contracts;
     const name ram_payer = is_admin ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
         row.status = "pending"_n; // must be re-approved if contracts changed
         row.contracts = contracts;
         row.contracts.insert(protocol); // always include EOS protocol account
         row.updated_at = current_time_point();
+        check( row.contracts != before_contracts, "yield::setcontracts: [contract] was not modified");
     });
+    remove_active_protocol( protocol );
 }
 
 // @protocol
@@ -289,11 +297,13 @@ void yield::setevm( const name protocol, const set<string> evm )
     }
 
     // modify contracts
+    const set<string> before_evm = itr.evm;
     _protocols.modify( itr, protocol, [&]( auto& row ) {
         row.status = "pending"_n; // must be re-approved if contracts changed
         row.evm = evm;
         row.contracts.insert(protocol); // always include EOS protocol account
         row.updated_at = current_time_point();
+        check( row.evm != before_evm, "yield::setevm: [evm] was not modified");
     });
 }
 
@@ -308,6 +318,22 @@ void yield::transfer( const name from, const name to, const extended_asset value
 {
     eosio::token::transfer_action transfer( value.contract, { from, "active"_n });
     transfer.send( from, to, value.quantity, memo );
+}
+
+void yield::add_active_protocol( const name protocol )
+{
+    yield::state_table _state( get_self(), get_self().value );
+    auto state = _state.get_or_default();
+    state.active_protocols.insert( protocol );
+    _state.set(state, get_self());
+}
+
+void yield::remove_active_protocol( const name protocol )
+{
+    yield::state_table _state( get_self(), get_self().value );
+    auto state = _state.get_or_default();
+    state.active_protocols.erase( protocol );
+    _state.set(state, get_self());
 }
 
 yield::config_row yield::get_config()
@@ -344,8 +370,10 @@ void yield::cleartable( const name table_name, const optional<name> scope, const
     // tables
     yield::config_table _config( get_self(), value );
     yield::protocols_table _protocols( get_self(), value );
+    yield::state_table _state( get_self(), value );
 
     if (table_name == "protocols"_n) clear_table( _protocols, rows_to_clear );
     else if (table_name == "config"_n) _config.remove();
+    else if (table_name == "state"_n) _state.remove();
     else check(false, "yield::cleartable: [table_name] unknown table to clear" );
 }

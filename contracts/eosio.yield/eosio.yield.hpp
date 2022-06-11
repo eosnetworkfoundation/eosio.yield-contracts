@@ -66,6 +66,24 @@ public:
     typedef eosio::singleton< "config"_n, config_row > config_table;
 
     /**
+     * ## TABLE `state`
+     *
+     * - `{set<name>} active_protocols` - array of active protocols
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "active_protocols": ["myprotocol"]
+     * }
+     * ```
+     */
+    struct [[eosio::table("state")]] state_row {
+        set<name>           active_protocols;
+    };
+    typedef eosio::singleton< "state"_n, state_row > state_table;
+
+    /**
      * ## TABLE `protocols`
      *
      * ### params
@@ -420,6 +438,8 @@ private :
     config_row get_config();
     void set_status( const name protocol, const name status );
     void transfer( const name from, const name to, const extended_asset value, const string& memo );
+    void remove_active_protocol( const name protocol );
+    void add_active_protocol( const name protocol );
 
     // debug
     template <typename T>
