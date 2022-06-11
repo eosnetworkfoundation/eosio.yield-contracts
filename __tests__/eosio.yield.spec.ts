@@ -1,7 +1,7 @@
 import { Name } from "@greymass/eosio";
 import { Blockchain } from "@proton/vert"
 import { expectToThrow } from "./helpers";
-import { Config, Protocol } from "./interfaces"
+import { KV, ExtendedAsset, ExtendedSymbol } from "./interfaces"
 
 /**
  * Initialize
@@ -11,6 +11,30 @@ const eosioYield = blockchain.createContract('eosio.yield', 'contracts/eosio.yie
 const eosioSystem = blockchain.createContract('eosio', 'external/eosio.system/eosio.system');
 const eosioToken = blockchain.createContract('eosio.token', 'external/eosio.token/eosio.token');
 blockchain.createAccounts('myprotocol', 'myvault', "protocol1", "protocol2", "myaccount", "oracle.yield", "admin.yield");
+
+export interface Protocol {
+  protocol: string; //  "myprotocol"
+  status: string; //  "active"
+  contracts: string[]; //  ["myprotocol", "mytreasury"]
+  evm: string[]; //  ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
+  tvl: string; //  "200000.0000 EOS"
+  usd: string; //  "300000.0000 USD"
+  balance: ExtendedAsset; //  {"quantity": "2.5000 EOS", "contract": "eosio.token"}
+  metadata: KV[]; //  [{"key": "url", "value": "https://myprotocol.com"}]
+  created_at: string; //  "2022-05-13T00:00:00"
+  updated_at: string; //  "2022-05-13T00:00:00"
+  claimed_at: string; //  "1970-01-01T00:00:00"
+  period_at: string; //  "1970-01-01T00:00:00"
+}
+
+export interface Config {
+  annual_rate: number; // 500
+  min_tvl_report: string; // "200000.0000 EOS"
+  max_tvl_report: string; // "6000000.0000 EOS"
+  rewards: ExtendedSymbol; // { "sym": "4,EOS", "contract": "eosio.token" }
+  oracle_contract: string; // "oracle.yield"
+  admin_contract: string; // "admin.yield"
+}
 
 /**
  * Helpers
@@ -48,13 +72,6 @@ describe('eosio.yield', () => {
     expect(config.min_tvl_report).toBe("200000.0000 EOS");
     expect(config.max_tvl_report).toBe("6000000.0000 EOS");
   });
-
-  // // it("config::setmetakeys", async () => {
-  // //   const metakeys = ["description", "name", "url"];
-  // //   await eosioYield.actions.setmetakeys([metakeys]).send();
-  // //   const config = getConfig();
-  // //   expect(config.metadata_keys).toEqual(metakeys);
-  // // });
 
   // Register Protocol
   const metadata = [{"key": "url", "value": "https://myprotocol.com"}];

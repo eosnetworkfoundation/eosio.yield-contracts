@@ -1,7 +1,7 @@
 import { Name } from "@greymass/eosio";
 import { Blockchain } from "@proton/vert"
 import { expectToThrow } from "./helpers";
-import { Config, Protocol } from "./interfaces"
+// import { Config, Protocol } from "./interfaces"
 
 /**
  * Initialize
