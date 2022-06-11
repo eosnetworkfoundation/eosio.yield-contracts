@@ -222,22 +222,26 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
 
     auto config = get_config();
     yield::protocols_table _protocols( config.yield_contract, config.yield_contract.value );
+    yield::state_table _state( config.yield_contract, config.yield_contract.value );
     const time_point_sec period = get_current_period( PERIOD_INTERVAL );
+    check( _state.exists(), "oracle::updateall: [yield_contract.state] does not exists");
+    auto state = _state.get();
 
     int limit = max_rows ? *max_rows : 20;
     int count = 0;
     check( limit, "oracle::updateall: [max_rows] must be above 0");
 
-    for ( const auto row : _protocols ) {
+    for ( const name protocol : state.active_protocols ) {
         // skip based on oracle
-        oracle::periods_table _periods( get_self(), row.protocol.value );
+        auto itr = _protocols.get( protocol.value, "oracle::updateall: [yield_contract.protocols] does not exists");
+        oracle::periods_table _periods( get_self(), protocol.value );
         auto period_itr = _periods.find( period.sec_since_epoch() * -1 ); // inverse multi-index
         if ( period_itr != _periods.end() ) continue; // period already updated
 
         // skip based on protocol
-        if ( row.period_at == period ) continue; // protocol period already updated
-        if ( row.status != "active"_n ) continue; // protocol not active
-        update( oracle, row.protocol );
+        if ( itr.period_at == period ) continue; // protocol period already updated
+        if ( itr.status != "active"_n ) continue; // protocol not active
+        update( oracle, protocol );
         count += 1;
         if ( count >= limit ) break;
     }
