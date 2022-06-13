@@ -194,7 +194,7 @@ public:
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield setcontracts '[myprotocol, ["myvault"]]' -p myprotocol
+     * $ cleos push action eosio.yield setcontracts '[myprotocol, [myvault]]' -p myprotocol
      * ```
      */
     [[eosio::action]]
@@ -236,7 +236,11 @@ public:
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield claim '[myprotocol, "myreceiver"]' -p myprotocol
+     * $ cleos push action eosio.yield claim '[myprotocol, null]' -p myprotocol
+     * //=> rewards sent to myprotocol
+     *
+     * $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
+     * //=> rewards sent to myreceiver
      * ```
      */
     [[eosio::action]]
@@ -256,7 +260,7 @@ public:
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield approve '["myprotocol"]' -p admin.yield
+     * $ cleos push action eosio.yield approve '[myprotocol]' -p admin.yield
      * ```
      */
     [[eosio::action]]
@@ -276,7 +280,7 @@ public:
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield deny '["myprotocol"]' -p admin.yield
+     * $ cleos push action eosio.yield deny '[myprotocol]' -p admin.yield
      * ```
      */
     [[eosio::action]]
@@ -344,7 +348,7 @@ public:
      * ### example
      *
      * ```bash
-     * $ cleos push action eosio.yield report '["myprotocol", "2022-05-13T00:00:00", 600, "200000.0000 EOS", "300000.0000 USD"]' -p oracle.yield
+     * $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600, "200000.0000 EOS", "300000.0000 USD"]' -p oracle.yield
      * ```
      */
     [[eosio::action]]
@@ -361,7 +365,7 @@ public:
      *
      * - `{name} protocol` - protocol
      * - `{name} receiver` - receiver of rewards
-     * - `{extended_asset} claimed` - claimed funds
+     * - `{extended_asset} claimed` - claimed rewards
      *
      * ### Example
      *
@@ -391,8 +395,7 @@ public:
      * - `{asset} tvl` - TVL averaged value in EOS
      * - `{asset} usd` - TVL averaged value in USD
      * - `{asset} rewards` - TVL rewards
-     * - `{asset} balance_before` - balance before
-     * - `{asset} balance_after` - balance after
+     * - `{asset} balance` - current claimable balance
      *
      * ### Example
      *
@@ -403,14 +406,13 @@ public:
      *     "period_interval": 600,
      *     "tvl": "200000.0000 EOS",
      *     "usd": "300000.0000 USD",
-     *     "rewards": "2.5500 EOS"
-     *     "balance_before": "1.0000 EOS",
-     *     "balance_after": "1.5500 EOS"
+     *     "rewards": "2.5500 EOS",
+     *     "balance": "10.5500 EOS"
      * }
      * ```
      */
     [[eosio::action]]
-    void rewardslog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance_before, const asset balance_after );
+    void rewardslog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance );
 
     // @debug
     [[eosio::action]]

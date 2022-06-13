@@ -20,7 +20,6 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
     _abihash.get( protocol.value, "yield::regprotocol: [protocol] must be a smart contract");
 
     auto insert = [&]( auto& row ) {
-        if ( !row.status.value ) row.status = "pending"_n;
         row.tvl.symbol = EOS;
         row.usd.symbol = USD;
         row.contracts.insert( protocol );
@@ -235,9 +234,6 @@ void yield::report( const name protocol, const time_point_sec period, const uint
     const int64_t rewards_amount = uint128_t(tvl_amount) * config.annual_rate * period_interval / 10000 / YEAR;
     const asset rewards = { rewards_amount, config.rewards.get_symbol() };
 
-    // before balance used for report logging
-    const asset balance_before = itr.balance.quantity;
-
     // update rewards to protocol's balance
     _protocols.modify( itr, same_payer, [&]( auto& row ) {
         row.balance.quantity += rewards;
@@ -245,11 +241,11 @@ void yield::report( const name protocol, const time_point_sec period, const uint
 
     // log report
     yield::rewardslog_action rewardslog( get_self(), { get_self(), "active"_n });
-    rewardslog.send( protocol, period, period_interval, tvl, usd, rewards, balance_before, itr.balance.quantity );
+    rewardslog.send( protocol, period, period_interval, tvl, usd, rewards, itr.balance.quantity );
 }
 
 [[eosio::action]]
-void yield::rewardslog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance_before, const asset balance_after )
+void yield::rewardslog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance )
 {
     require_auth( get_self() );
 }
@@ -267,7 +263,7 @@ void yield::setcontracts( const name protocol, const set<name> contracts )
 
     // require authority of all EOS contracts linked to protocol
     for ( const name contract : contracts ) {
-        check( is_account( contract ), "yield::setcontracts: [eos.contract] account does not exists");
+        check( is_account( contract ), "yield::setcontracts: [contract=" + contract.to_string() + "] account does not exists");
         if ( !is_admin ) require_auth( contract );
     }
 
@@ -275,11 +271,11 @@ void yield::setcontracts( const name protocol, const set<name> contracts )
     const set<name> before_contracts = itr.contracts;
     const name ram_payer = is_admin ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
-        row.status = "pending"_n; // must be re-approved if contracts changed
         row.contracts = contracts;
         row.contracts.insert(protocol); // always include EOS protocol account
+        if ( contracts.size() > 1 ) row.status = "pending"_n; // must be re-approved if contracts changed
         row.updated_at = current_time_point();
-        check( row.contracts != before_contracts, "yield::setcontracts: [contract] was not modified");
+        check( row.contracts != before_contracts, "yield::setcontracts: [contracts] was not modified");
     });
     remove_active_protocol( protocol );
 }

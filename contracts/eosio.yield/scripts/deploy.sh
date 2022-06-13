@@ -6,6 +6,7 @@ cleos wallet unlock --password $(cat ~/eosio-wallet/.pass)
 # create accounts
 cleos create account eosio eosio.yield EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 cleos create account eosio oracle.yield EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
+cleos create account eosio eosio.token EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 cleos create account eosio admin.yield EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 cleos create account eosio myprotocol EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
 cleos create account eosio myvault EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGYqET5GDW5CV
@@ -14,9 +15,14 @@ cleos create account eosio protocol2 EOS6MRyAjQq8ud7hVNYcfnVPJqcVpscN5So8BhtHuGY
 
 # deploy
 cleos set contract eosio.yield . eosio.yield.wasm eosio.yield.abi
+cleos set contract eosio.token ../../external/eosio.token eosio.token.wasm eosio.token.abi
 
 # permissions
 cleos set account permission eosio.yield active --add-code
+
+# create tokens
+cleos push action eosio.token create '["eosio", "1000000000.0000 EOS"]' -p eosio.token
+cleos push action eosio.token issue '["eosio", "1000000000.0000 EOS", "init"]' -p eosio
 
 # setup ABI
 cleos set contract eosio ../../external/eosio.system eosio.system.wasm eosio.system.abi

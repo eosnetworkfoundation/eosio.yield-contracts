@@ -11,7 +11,7 @@
     "Guillaume 'Gnome' Babin-Tremblay - EOS Titan  <guillaume@eostitan.com>"
   ],
   "scripts": {
-    "test": "jest __tests__/*.spec.ts"
+    "test": "jest __tests__/*.spec.ts --verbose"
   },
   "devDependencies": {
     "@proton/vert": "^0.2.14",
