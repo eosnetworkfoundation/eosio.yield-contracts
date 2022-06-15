@@ -1,3 +1,10 @@
 node_modules
 coverage
 .vscode
+*.wasm
+*.abi
+.vscode
+stderr
+nodeos
+!external/**/*.wasm
+!external/**/*.abi

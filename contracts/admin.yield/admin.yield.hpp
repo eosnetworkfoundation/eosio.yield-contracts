@@ -18,55 +18,98 @@ public:
     using contract::contract;
 
     /**
-     * ## TABLE `config`
+     * ## TABLE `metakeys`
      *
-     * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
-     * - `{asset} min_tvl_report` - minimum TVL report
-     * - `{asset} max_tvl_report` - maximum TVL report
-     * - `{set<name>} metadata_keys` - list of allowed metadata keys
+     * - `{name} key` - metadata key
+     * - `{bool} required` - is required (true/false)
+     * - `{string} description` - metadata description
      *
      * ### example
      *
      * ```json
      * {
-     *     "metadata_keys": ["name", "url", "defillama", "dappradar", "recover"]
+     *     "key": "name",
+     *     "required": true,
+     *     "description": "Name of protocol"
      * }
      * ```
      */
-    struct [[eosio::table("config")]] config_row {
-        set<name>               metadata_keys = {"url"_n};
+    struct [[eosio::table("metakeys")]] metakeys_row {
+        name            key;
+        bool            required;
+        string          description;
+
+        uint64_t primary_key() const { return key.value; }
     };
-    typedef eosio::singleton< "config"_n, config_row > config_table;
+    typedef eosio::multi_index< "metakeys"_n, metakeys_row > metakeys_table;
+
+    /**
+     * ## TABLE `categories`
+     *
+     * - `{name} category` - category [metadata.type] value
+     * - `{string} description` - category description
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "category": "dexes",
+     *     "description": "Protocols where you can swap/trade cryptocurrency"
+     * }
+     * ```
+     */
+    struct [[eosio::table("categories")]] categories_row {
+        name            category;
+        string          description;
+
+        uint64_t primary_key() const { return category.value; }
+    };
+    typedef eosio::multi_index< "categories"_n, categories_row > categories_table;
 
     /**
      * ## ACTION `setmetakeys`
      *
-     * > Set allowed metakeys
+     * > Set metakey
      *
      * - **authority**: `get_self()`
      *
      * ### params
      *
-     * - `{set<name>} metadata_keys` - list of allowed metadata keys
+     * - `{name} key` - metadata key
+     * - `{bool} required` - is required (true/false)
+     * - `{string} description` - metadata description
      *
      * ### Example
      *
      * ```bash
-     * $ cleos push action admin.yield setmetakeys '[["name", "url", "defillama", "dappradar", "recover"]]' -p admin.yield
+     * $ cleos push action admin.yield setmetakey '[url, true, "Protocol URL"]' -p admin.yield
      * ```
      */
     [[eosio::action]]
-    void setmetakeys( const set<name> metadata_keys );
+    void setmetakey( const name key, const bool required, const string description );
+
+    [[eosio::action]]
+    void setcategory( const name category, const string description );
+
+    // @debug
+    [[eosio::action]]
+    void cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows );
 
     [[eosio::on_notify("*::regprotocol")]]
     void on_regprotocol( const name protocol, const map<name, string> metadata );
 
+    [[eosio::on_notify("*::regoracle")]]
+    void on_regoracle( const name oracle, const map<name, string> metadata );
+
     // action wrappers
-    using setmetakeys_action = eosio::action_wrapper<"setmetakeys"_n, &admin::setmetakeys>;
+    using setmetakey_action = eosio::action_wrapper<"setmetakey"_n, &admin::setmetakey>;
+    using setcategory_action = eosio::action_wrapper<"setcategory"_n, &admin::setcategory>;
 
 private :
     // admin
-    check_metadata_keys(const map<name, string> metadata );
+    void check_metadata_keys(const map<name, string> metadata );
+    bool is_category( const string category );
+    metakeys_row get_metakey( const name key );
 
     // debug
     template <typename T>
