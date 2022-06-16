@@ -1,4 +1,4 @@
-# EOSIO Yield+ - Oracle
+# Yield+ Oracle
 
 # Overview
 

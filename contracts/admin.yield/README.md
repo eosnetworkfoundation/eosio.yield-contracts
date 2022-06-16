@@ -1,4 +1,4 @@
-# EOSIO Yield+ - Admin
+# Yield+ Admin
 
 # Overview
 

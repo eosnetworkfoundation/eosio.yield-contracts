@@ -1,4 +1,4 @@
-# EOSIO Yield+ - Rewards
+# Yield+ Rewards
 
 # Overview
 
@@ -25,7 +25,11 @@ $ cleos push action eosio.yield setcontracts '[protocol, [a.protocol, b.protocol
 # claim rewards
 # > after 24 hours of being approved
 # > claimable every 10 minutes interval
-$ cleos push action eosio.yield claim '[protocol, receiver]' -p protocol
+$ cleos push action eosio.yield claim '[myprotocol, null]' -p myprotocol
+# //=> rewards sent to myprotocol
+
+$ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
+# //=> rewards sent to myreceiver
 ```
 
 ### `ADMIN` (Operators)
@@ -33,14 +37,16 @@ $ cleos push action eosio.yield claim '[protocol, receiver]' -p protocol
 ```bash
 # approve protocol
 $ cleos push action eosio.yield approve '[protocol]' -p eosio.yield@admin
-# notifies => oracle.yield
+
+# deny protocol
+$ cleos push action eosio.yield deny '[protocol]' -p eosio.yield@admin
 ```
 
 ### `ORACLE` (TVL Oracle)
 
 ```bash
 # report protocol TVL to Yield+
-$ cleos push action oracle.yield report '[protocol, "2021-04-12T12:20:00", <TVL USD>, <TVL EOS>]' -p oracle.yield
+$ cleos push action eosio.yield report '[protocol, "2021-04-12T12:20:00", <TVL USD>, <TVL EOS>]' -p oracle.yield
 ```
 
 ## Table of Content
