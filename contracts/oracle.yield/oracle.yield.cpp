@@ -376,6 +376,9 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
     // *****
 
     // calculates average TVL of period bucket 42 periods (~7 hours)
+    
+    /* 
+
     int count = 0;
     asset tvl = { 0, EOS };
     asset usd = { 0, USD };
@@ -388,6 +391,64 @@ void oracle::generate_report( const name protocol, const time_point_sec period )
     if ( count < MIN_BUCKET_PERIODS ) return; // skip if does not exceeed minimum periods
     tvl /= count;
     usd /= count;
+    
+    */
+
+    asset tvl = { 0, EOS };
+    asset usd = { 0, USD };
+
+    uint64_t c_ts = time_point_sec(current_time_point()).sec_since_epoch();
+
+    //slice values into 3 buckets of 8 hours each
+    uint64_t period_1 = c_ts - EIGHT_HOURS * 3;
+    uint64_t period_2 = period_1 + EIGHT_HOURS;
+    uint64_t period_3 = period_2 + EIGHT_HOURS;
+
+    //find limit pointers
+    auto p1_itr = _periods.upper_bound(period_1);
+    auto p2_itr = _periods.upper_bound(period_2);
+    auto p3_itr = _periods.upper_bound(period_3);
+
+    //calculate how many datapoints we have in each window of 8 hours
+    int d1 = std::distance(p1_itr, p2_itr);
+    int d2 = std::distance(p2_itr, p3_itr);
+    int d3 = std::distance(p3_itr, _periods.end());
+        
+     //verify if the number of datapoints for each 8 hours window is within acceptable range, return if any is outside of the range
+    if (d1<40 || d1>48) return ;
+    if (d2<40 || d2>48) return ;
+    if (d3<40 || d3>48) return ;
+
+    //add datapoints to vectors for sorting (first value is amount as uint64_t, second is datapoint time_point)
+    std::vector<std::pair<uint64_t, time_point>> v1;
+    std::vector<std::pair<uint64_t, time_point>> v2;
+    std::vector<std::pair<uint64_t, time_point>> v3;
+
+    for(int i=0;i<d1;i++) {v1.push_back({p1_itr->tvl.amount, p1_itr->period}); p1_itr++;}
+    for(int i=0;i<d2;i++) {v2.push_back({p2_itr->tvl.amount, p2_itr->period}); p2_itr++;}
+    for(int i=0;i<d3;i++) {v3.push_back({p3_itr->tvl.amount, p3_itr->period}); p3_itr++;}
+
+    int n1 = d1 / 2;
+    int n2 = d2 / 2;
+    int n3 = d3 / 2;
+
+    //run a partial sort to find the median datapoint for each 8 hours window
+    nth_element(v1.begin(), v1.begin()+n1, v1.end());
+    nth_element(v2.begin(), v2.begin()+n2, v2.end());
+    nth_element(v3.begin(), v3.begin()+n3, v3.end());
+
+    auto m_ptr_1 = v1[n1];
+    auto m_ptr_2 = v2[n2];
+    auto m_ptr_3 = v3[n3];
+
+    //retrieve datapoint from timepoint
+    auto median_ptr_1 = _periods.find(m_ptr_1.second.sec_since_epoch());
+    auto median_ptr_2 = _periods.find(m_ptr_2.second.sec_since_epoch());
+    auto median_ptr_3 = _periods.find(m_ptr_3.second.sec_since_epoch());
+
+    //compute the average of the 3 windows median
+    tvl+=(median_ptr_1->tvl + median_ptr_2->tvl + median_ptr_3->tvl) / 3;
+    usd+=(median_ptr_1->usd + median_ptr_2->usd +median_ptr_3->usd ) / 3;;
 
     // send oracle report to Yield+ Rewards
     yield::report_action report( config.yield_contract, { get_self(), "active"_n });

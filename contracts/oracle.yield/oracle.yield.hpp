@@ -29,6 +29,7 @@ public:
     // CONSTANTS
     const set<name> ORACLE_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
     const uint32_t TEN_MINUTES = 600; // 10 minutes (600 seconds)
+    const uint64_t EIGHT_HOURS = 28800; // 8 hours (28800 seconds)
     const uint32_t BUCKET_PERIODS = 48; // 8 hours (48 periods);
     const uint32_t MIN_BUCKET_PERIODS = 42; // 7 hours (42 periods);
     const uint32_t MAX_PERIODS_REPORT = 144; // 24 hours (144 periods)
