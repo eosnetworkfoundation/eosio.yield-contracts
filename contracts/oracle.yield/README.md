@@ -57,7 +57,9 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 - [ACTION `deny`](#action-deny)
 - [ACTION `update`](#action-update)
 - [ACTION `updateall`](#action-updateall)
+- [ACTION `updatelog`](#action-updatelog)
 - [ACTION `claim`](#action-claim)
+- [ACTION `claimlog`](#action-claimlog)
 
 ## TABLE `config`
 
@@ -322,6 +324,40 @@ $ cleos push action oracle.yield update '[myoracle, myprotocol]' -p myoracle
 $ cleos push action oracle.yield updateall '[myoracle, 20]' -p myoracle
 ```
 
+## ACTION `updatelog`
+
+> Update logging
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} oracle` - oracle initiated update
+- `{name} protocol` - protocol updated
+- `{set<name>} contracts` - EOS contracts
+- `{set<string>} evm` - EVM contracts
+- `{time_point_sec} period` - time period
+- `{vector<asset>} balances` - balances in all contracts
+- `{vector<asset>} prices` - prices of assets
+- `{asset} tvl` - overall TVL
+- `{asset} usd` - overall TVL in USD
+
+### Example
+
+```json
+{
+    "oracle": "myoracle",
+    "protocol": "myprotocol",
+    "contracts": ["myprotocol"],
+    "evm": [],
+    "period": "2022-06-16T01:40:00",
+    "balances": ["200000.0000 EOS"],
+    "prices": ["1.5000 USD"],
+    "tvl": "200000.0000 EOS",
+    "usd": "300000.0000 USD"
+}
+```
+
 ## ACTION `claim`
 
 > Claim Oracle rewards
@@ -337,4 +373,26 @@ $ cleos push action oracle.yield updateall '[myoracle, 20]' -p myoracle
 
 ```bash
 $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
+```
+
+## ACTION `claimlog`
+
+> Claim logging
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} protocol` - protocol
+- `{name} receiver` - receiver of rewards
+- `{extended_asset} claimed` - claimed funds
+
+### Example
+
+```json
+{
+    "protocol": "myprotocol",
+    "receiver": "myreceiver",
+    "claimed": {"contract": "eosio.token", "quantity": "0.5500 EOS"}
+}
 ```

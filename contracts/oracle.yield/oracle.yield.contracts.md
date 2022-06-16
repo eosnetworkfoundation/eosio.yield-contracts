@@ -109,6 +109,17 @@ icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9L
 
 updateall
 
+<h1 class="contract">updatelog</h1>
+
+---
+spec_version: "0.2.0"
+title: updatelog
+summary: 'updatelog'
+icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
+---
+
+updatelog
+
 <h1 class="contract">claim</h1>
 
 ---
@@ -119,3 +130,14 @@ icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9L
 ---
 
 claim
+
+<h1 class="contract">claimlog</h1>
+
+---
+spec_version: "0.2.0"
+title: claimlog
+summary: 'claimlog'
+icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
+---
+
+claimlog
