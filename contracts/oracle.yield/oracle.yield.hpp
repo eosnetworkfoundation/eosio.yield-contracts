@@ -135,7 +135,7 @@ public:
         asset                   tvl;
         asset                   usd;
 
-        uint64_t primary_key() const { return period.sec_since_epoch() * -1; } // inverse index (latest to oldest)
+        uint64_t primary_key() const { return period.sec_since_epoch(); } // inverse index (latest to oldest)
     };
     typedef eosio::multi_index< "periods"_n, periods_row> periods_table;
 

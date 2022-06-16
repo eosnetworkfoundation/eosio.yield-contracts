@@ -235,7 +235,7 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
         // skip based on oracle
         auto itr = _protocols.get( protocol.value, "oracle::updateall: [yield_contract.protocols] does not exists");
         oracle::periods_table _periods( get_self(), protocol.value );
-        auto period_itr = _periods.find( period.sec_since_epoch() * -1 ); // inverse multi-index
+        auto period_itr = _periods.find( period.sec_since_epoch()  ); // inverse multi-index
         if ( period_itr != _periods.end() ) continue; // period already updated
 
         // skip based on protocol
@@ -267,7 +267,7 @@ void oracle::update( const name oracle, const name protocol )
 
     // get current period
     const time_point_sec period = get_current_period( PERIOD_INTERVAL );
-    auto itr = _periods.find( period.sec_since_epoch() * -1 ); // inverse multi-index
+    auto itr = _periods.find( period.sec_since_epoch() ); // inverse multi-index
     check( itr == _periods.end(), "oracle::update: [period] for [protocol] is already updated" );
 
     // contracts
