@@ -93,7 +93,7 @@ void admin::check_metadata_keys( const map<name, string> metadata )
     // check for missing required keys
     for ( const auto row : _metakeys ) {
         if ( !row.required ) continue;
-        check( metadata.at(row.key).size(), "admin.yield::check_metadata_keys: [key=" + row.key.to_string() + "] is required and missing");
+        check( metadata.find(row.key) != metadata.end(), "admin.yield::check_metadata_keys: [key=" + row.key.to_string() + "] is required and missing");
     }
 }
 
