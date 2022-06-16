@@ -1,29 +1,59 @@
 import { Name } from "@greymass/eosio";
 import { Blockchain } from "@proton/vert"
 import { expectToThrow } from "./helpers";
-// import { Config, Protocol } from "./interfaces"
+
+export interface Metakey {
+  key: string; //  "category"
+  required: boolean; // true
+  description: string; // "Protocol category"
+}
+
+export interface Category {
+  category: string; //  "dexes"
+  description: string; // "Protocols where you can swap/trade cryptocurrency"
+}
 
 /**
  * Initialize
  */
 const blockchain = new Blockchain()
-// const adminYield = blockchain.createContract('admin.yield', 'contracts/admin.yield/admin.yield');
+const adminYield = blockchain.createContract('admin.yield', 'contracts/admin.yield/admin.yield');
 
-// /**
-//  * Helpers
-//  */
-//  const getConfig = (): Config => {
-//   const scope = Name.from('admin.yield').value.value;
-//   return adminYield.tables.config(scope).getTableRows()[0];
-// }
+/**
+ * Helpers
+ */
+const getMetakeys = (key: string): Metakey => {
+  const scope =Name.from('admin.yield').value.value;
+  return adminYield.tables.metakeys(scope).getTableRow( Name.from(key).value.value );
+}
+
+const getCategory = (category: string): Category => {
+  const scope = Name.from('admin.yield').value.value;
+  return adminYield.tables.categories(scope).getTableRow( Name.from(category).value.value );
+}
 
 describe('admin.yield', () => {
 
-  it("config::setmetakeys", async () => {
-    // const metakeys = ["description", "name", "url"];
-    // await adminYield.actions.setmetakeys([metakeys]).send();
-    // const config = getConfig();
-    // expect(config.metadata_keys).toEqual(metakeys);
-    expect(true).toBeTruthy
+  it("config::setmetakey", async () => {
+    const metakeys = [
+      {required: true, key: "url", description: "Protocol URL"},
+      {required: true, key: "category", description: "Protocol category"},
+      {required: true, key: "name", description: "Protocol name"},
+      {required: false, key: "dappradar", description: "DappRadar identifier"},
+    ]
+    for ( const metakey of metakeys ) {
+      await adminYield.actions.setmetakey(metakey).send();
+      expect(getMetakeys(metakey.key)).toEqual(metakey);
+    }
+  });
+
+  it("config::setcategory", async () => {
+    const categories = [
+      {category: "dexes", description: "Protocols where you can swap/trade cryptocurrency"},
+    ]
+    for ( const metakey of categories ) {
+      await adminYield.actions.setcategory(metakey).send();
+      expect(getCategory(metakey.category)).toEqual(metakey);
+    }
   });
 });
