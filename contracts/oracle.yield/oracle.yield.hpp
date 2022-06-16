@@ -76,7 +76,7 @@ public:
      * ```json
      * {
      *     "sym": "4,EOS",
-     *     "contract": "eosio.token"
+     *     "contract": "eosio.token",
      *     "defibox_oracle_id": 1,
      *     "delphi_oracle_id": "eosusd",
      *     "extra_oracle_id": null
@@ -144,7 +144,7 @@ public:
      *
      * ### params
      *
-     * - `{name} oracle` - primary oracle contract
+     * - `{name} oracle` - oracle account
      * - `{name} status="pending"` - status (`pending/active/denied`)
      * - `{extended_asset} balance` - balance available to be claimed
      * - `{map<string, string} metadata` - metadata
@@ -201,29 +201,6 @@ public:
     [[eosio::action]]
     void init( const extended_symbol rewards, const name yield_contract, const name admin_contract );
 
-    // @oracle
-    [[eosio::action]]
-    void update( const name oracle, const name protocol );
-
-    // @oracle
-    [[eosio::action]]
-    void updateall( const name oracle, const optional<uint16_t> max_rows );
-
-    // @oracle
-    [[eosio::action]]
-    void regoracle( const name oracle, const map<name, string> metadata );
-
-    // @oracle
-    [[eosio::action]]
-    void unregister( const name oracle );
-
-    // @admin
-    [[eosio::action]]
-    void approve( const name oracle );
-
-    // @admin
-    [[eosio::action]]
-    void deny( const name oracle );
 
     /**
      * ## ACTION `addtoken`
@@ -269,6 +246,188 @@ public:
     void deltoken( const symbol_code symcode );
 
     /**
+     * ## ACTION `setreward`
+     *
+     * > Set oracle rewards
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{asset} reward_per_update` - reward per update
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield setreward '["0.0200 EOS"]' -p oracle.yield
+     * ```
+     */
+    [[eosio::action]]
+    void setreward( const asset reward_per_update );
+
+    /**
+     * ## ACTION `regoracle`
+     *
+     * > Register oracle
+     *
+     * - **authority**: `oracle`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle account
+     * - `{map<string, string} metadata` - metadata
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield regoracle '[myoracle, [{"key": "url", "value": "https://myoracle.com"}]]' -p myoracle
+     * ```
+     */
+    [[eosio::action]]
+    void regoracle( const name oracle, const map<name, string> metadata );
+
+    /**
+     * ## ACTION `unregister`
+     *
+     * > Un-register oracle
+     *
+     * - **authority**: `oracle`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle account
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield unregister '[myoracle]' -p myoracle
+     * ```
+     */
+    [[eosio::action]]
+    void unregister( const name oracle );
+
+    /**
+     * ## ACTION `approve`
+     *
+     * > Approve oracle
+     *
+     * - **authority**: `admin.yield`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle account to approve
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield approve '[myoracle]' -p admin.yield
+     * ```
+     */
+    [[eosio::action]]
+    void approve( const name oracle );
+
+    /**
+     * ## ACTION `deny`
+     *
+     * > Deny oracle
+     *
+     * - **authority**: `admin.yield`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle account to deny
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield deny '[myoracle]' -p admin.yield
+     * ```
+     */
+    [[eosio::action]]
+    void deny( const name oracle );
+
+    /**
+     * ## ACTION `update`
+     *
+     * > Update TVL for single protocol
+     *
+     * - **authority**: `oracle`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle account (must be approved)
+     * - `{name} protocol` - protocol account to update
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield update '[myoracle, myprotocol]' -p myoracle
+     * ```
+     */
+    [[eosio::action]]
+    void update( const name oracle, const name protocol );
+
+    /**
+     * ## ACTION `updateall`
+     *
+     * > Update TVL for all protocol(s)
+     *
+     * - **authority**: `oracle`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle account (must be approved)
+     * - `{uint16_t} [max_rows=20]` - (optional) maximum rows to process
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield updateall '[myoracle, 20]' -p myoracle
+     * ```
+     */
+    [[eosio::action]]
+    void updateall( const name oracle, const optional<uint16_t> max_rows );
+
+
+    /**
+     * ## ACTION `updatelog`
+     *
+     * > Update logging
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle initiated update
+     * - `{name} protocol` - protocol updated
+     * - `{set<name>} contracts` - EOS contracts
+     * - `{set<string>} evm` - EVM contracts
+     * - `{time_point_sec} period` - time period
+     * - `{vector<asset>} balances` - balances in all contracts
+     * - `{vector<asset>} prices` - prices of assets
+     * - `{asset} tvl` - overall TVL
+     * - `{asset} usd` - overall TVL in USD
+     *
+     * ### Example
+     *
+     * ```json
+     * {
+     *     "oracle": "myoracle",
+     *     "protocol": "myprotocol",
+     *     "contracts": ["myprotocol"],
+     *     "evm": [],
+     *     "period": "2022-06-16T01:40:00",
+     *     "balances": ["200000.0000 EOS"],
+     *     "prices": ["1.5000 USD"],
+     *     "tvl": "200000.0000 EOS",
+     *     "usd": "300000.0000 USD"
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void updatelog( const name oracle, const name protocol, const set<name> contracts, const set<string> evm, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const asset tvl, const asset usd );
+
+    /**
      * ## ACTION `claim`
      *
      * > Claim Oracle rewards
@@ -283,7 +442,7 @@ public:
      * ### Example
      *
      * ```bash
-     * $ cleos push action oracle.yield claim '[myoracle, "myreceiver"]' -p myoracle
+     * $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
      * ```
      */
     [[eosio::action]]
@@ -314,14 +473,6 @@ public:
      */
     [[eosio::action]]
     void claimlog( const name protocol, const name receiver, const extended_asset claimed );
-
-    // @eosio.code
-    [[eosio::action]]
-    void updatelog( const name oracle, const name protocol, const set<name> contracts, const set<string> evm, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const asset tvl, const asset usd );
-
-    // @system
-    [[eosio::action]]
-    void setreward( const asset reward_per_update );
 
     // @debug
     [[eosio::action]]
