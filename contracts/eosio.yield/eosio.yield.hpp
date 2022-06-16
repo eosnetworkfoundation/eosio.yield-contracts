@@ -112,7 +112,7 @@ public:
      *     "tvl": "200000.0000 EOS",
      *     "usd": "300000.0000 USD",
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
-     *     "metadata": [{"key": "type", "value": "swap"}, {"key": "url", "value": "https://myprotocol.com"}]
+     *     "metadata": [{"key": "type", "value": "swap"}, {"key": "url", "value": "https://myprotocol.com"}],
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
      *     "claimed_at": "1970-01-01T00:00:00",
@@ -137,154 +137,6 @@ public:
         uint64_t primary_key() const { return protocol.value; }
     };
     typedef eosio::multi_index< "protocols"_n, protocols_row> protocols_table;
-
-    /**
-     * ## ACTION `regprotocol`
-     *
-     * > Registry protocol
-     *
-     * - **authority**: `protocol` OR `admin.yield`
-     *
-     * ### params
-     *
-     * - `{name} protocol` - protocol main contract
-     * - `{map<name, string>} metadata` - (optional) key/value
-     *
-     * ### Example
-     *
-     * ```bash
-     * $ cleos push action eosio.yield regprotocol '[myprotocol, [{"key": "url", "value":"https://myprotocol.com"}]]' -p myprotocol
-     * ```
-     */
-    [[eosio::action]]
-    void regprotocol( const name protocol, const map<name, string> metadata );
-
-    /**
-     * ## ACTION `unregister`
-     *
-     * > Un-registry protocol
-     *
-     * - **authority**: `protocol`
-     *
-     * ### params
-     *
-     * - `{name} protocol` - protocol
-     *
-     * ### Example
-     *
-     * ```bash
-     * $ cleos push action eosio.yield unregister '[myprotocol]' -p myprotocol
-     * ```
-     */
-    [[eosio::action]]
-    void unregister( const name protocol );
-
-    /**
-     * ## ACTION `setcontracts`
-     *
-     * > Set contracts
-     *
-     * - **authority**: `protocol` AND `contracts` OR `admin.yield`
-     *
-     * ### params
-     *
-     * - `{name} protocol` - protocol (will be included in EOS contracts)
-     * - `{set<name>} contracts` - additional EOS contracts
-     *
-     * ### Example
-     *
-     * ```bash
-     * $ cleos push action eosio.yield setcontracts '[myprotocol, [myvault]]' -p myprotocol
-     * ```
-     */
-    [[eosio::action]]
-    void setcontracts( const name protocol, const set<name> contracts );
-
-    /**
-     * ## ACTION `setcontracts`
-     *
-     * > Set contracts
-     *
-     * - **authority**: `protocol` AND `evm`
-     *
-     * ### params
-     *
-     * - `{name} protocol` - protocol (will be included in EOS contracts)
-     * - `{set<string>} evm` - additional EVM contracts
-     *
-     * ### Example
-     *
-     * ```bash
-     * $ cleos push action eosio.yield setcontracts '[myprotocol, ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
-     * ```
-     */
-    [[eosio::action]]
-    void setevm( const name protocol, const set<string> evm );
-
-    /**
-     * ## ACTION `claim`
-     *
-     * > Claim TVL rewards
-     *
-     * - **authority**: `protocol`
-     *
-     * ### params
-     *
-     * - `{name} protocol` - protocol
-     * - `{name} [receiver=""]` - (optional) receiver of rewards (default=protocol)
-     *
-     * ### Example
-     *
-     * ```bash
-     * $ cleos push action eosio.yield claim '[myprotocol, null]' -p myprotocol
-     * //=> rewards sent to myprotocol
-     *
-     * $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
-     * //=> rewards sent to myreceiver
-     * ```
-     */
-    [[eosio::action]]
-    void claim( const name protocol, const optional<name> receiver );
-
-    /**
-     * ## ACTION `approve`
-     *
-     * > Approve protocol
-     *
-     * - **authority**: `admin.yield`
-     *
-     * ### params
-     *
-     * - `{name} protocol` - protocol to approve
-     *
-     * ### Example
-     *
-     * ```bash
-     * $ cleos push action eosio.yield approve '[myprotocol]' -p admin.yield
-     * ```
-     */
-    [[eosio::action]]
-    void approve( const name protocol );
-
-    /**
-     * ## ACTION `deny`
-     *
-     * > Deny protocol
-     *
-     * - **authority**: `admin.yield`
-     *
-     * ### params
-     *
-     * - `{name} protocol` - protocol to deny
-     *
-     * ### Example
-     *
-     * ```bash
-     * $ cleos push action eosio.yield deny '[myprotocol]' -p admin.yield
-     * ```
-     */
-    [[eosio::action]]
-    void deny( const name protocol );
 
     /**
      * ## ACTION `init`
@@ -331,28 +183,152 @@ public:
     void setrate( const int16_t annual_rate, const asset min_tvl_report, const asset max_tvl_report );
 
     /**
-     * ## ACTION `report`
+     * ## ACTION `regprotocol`
      *
-     * - **authority**: `oracle.yield`
+     * > Registry protocol
      *
-     * Report TVL from oracle
+     * - **authority**: `protocol` OR `admin.yield`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol main contract
+     * - `{map<name, string>} metadata` - (optional) key/value
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield regprotocol '[myprotocol, [{"key": "url", "value":"https://myprotocol.com"}]]' -p myprotocol
+     * ```
+     */
+    [[eosio::action]]
+    void regprotocol( const name protocol, const map<name, string> metadata );
+
+    /**
+     * ## ACTION `unregister`
+     *
+     * > Un-registry protocol
+     *
+     * - **authority**: `protocol`
      *
      * ### params
      *
      * - `{name} protocol` - protocol
-     * - `{time_point_sec} period` - period time
-     * - `{uint32_t} period_interval` - period interval (in seconds)
-     * - `{asset} tvl` - TVL averaged value in EOS
-     * - `{asset} usd` - TVL averaged value in USD
      *
-     * ### example
+     * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600, "200000.0000 EOS", "300000.0000 USD"]' -p oracle.yield
+     * $ cleos push action eosio.yield unregister '[myprotocol]' -p myprotocol
      * ```
      */
     [[eosio::action]]
-    void report( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd );
+    void unregister( const name protocol );
+
+    /**
+     * ## ACTION `setcontracts`
+     *
+     * > Set EOS contracts
+     *
+     * - **authority**: (`protocol` AND `contracts`) OR `admin.yield`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol (will be included in EOS contracts)
+     * - `{set<name>} contracts` - additional EOS contracts
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield setcontracts '[myprotocol, [myvault]]' -p myprotocol -p myvault
+     * ```
+     */
+    [[eosio::action]]
+    void setcontracts( const name protocol, const set<name> contracts );
+
+    /**
+     * ## ACTION `setevm`
+     *
+     * > Set EVM contracts
+     *
+     * - **authority**: `protocol` AND `evm`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol (will be included in EOS contracts)
+     * - `{set<string>} evm` - additional EVM contracts
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield setevm '[myprotocol, ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
+     * ```
+     */
+    [[eosio::action]]
+    void setevm( const name protocol, const set<string> evm );
+
+    /**
+     * ## ACTION `approve`
+     *
+     * > Approve protocol
+     *
+     * - **authority**: `admin.yield`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol to approve
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield approve '[myprotocol]' -p admin.yield
+     * ```
+     */
+    [[eosio::action]]
+    void approve( const name protocol );
+
+    /**
+     * ## ACTION `deny`
+     *
+     * > Deny protocol
+     *
+     * - **authority**: `admin.yield`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol to deny
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield deny '[myprotocol]' -p admin.yield
+     * ```
+     */
+    [[eosio::action]]
+    void deny( const name protocol );
+
+    /**
+     * ## ACTION `claim`
+     *
+     * > Claim TVL rewards
+     *
+     * - **authority**: `protocol`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol
+     * - `{name} [receiver=""]` - (optional) receiver of rewards (default=protocol)
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield claim '[myprotocol, null]' -p myprotocol
+     * //=> rewards sent to myprotocol
+     *
+     * $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
+     * //=> rewards sent to myreceiver
+     * ```
+     */
+    [[eosio::action]]
+    void claim( const name protocol, const optional<name> receiver );
 
     /**
      * ## ACTION `claimlog`
@@ -381,6 +357,30 @@ public:
     void claimlog( const name protocol, const name receiver, const extended_asset claimed );
 
     /**
+     * ## ACTION `report`
+     *
+     * - **authority**: `oracle.yield@eosio.code`
+     *
+     * Report TVL from oracle
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol
+     * - `{time_point_sec} period` - period time
+     * - `{uint32_t} period_interval` - period interval (in seconds)
+     * - `{asset} tvl` - TVL averaged value in EOS
+     * - `{asset} usd` - TVL averaged value in USD
+     *
+     * ### example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600, "200000.0000 EOS", "300000.0000 USD"]' -p oracle.yield
+     * ```
+     */
+    [[eosio::action]]
+    void report( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd );
+
+    /**
      * ## ACTION `rewardslog`
      *
      * > Rewards logging
@@ -402,7 +402,7 @@ public:
      * ```json
      * {
      *     "protocol": "myprotocol",
-     *     "period", "2022-05-13T00:00:00",
+     *     "period": "2022-05-13T00:00:00",
      *     "period_interval": 600,
      *     "tvl": "200000.0000 EOS",
      *     "usd": "300000.0000 USD",
