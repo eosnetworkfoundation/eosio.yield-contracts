@@ -88,8 +88,66 @@ public:
     [[eosio::action]]
     void setmetakey( const name key, const bool required, const string description );
 
+    /**
+     * ## ACTION `setcategory`
+     *
+     * > Set category
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} category` - category
+     * - `{string} description` - category description
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action admin.yield setcategory '[dexes, "Protocols where you can swap/trade cryptocurrency"]' -p admin.yield
+     * ```
+     */
     [[eosio::action]]
     void setcategory( const name category, const string description );
+
+    /**
+     * ## ACTION `delcategory`
+     *
+     * > Delete category
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} category` - category
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action admin.yield delcategory '[dexes]' -p admin.yield
+     * ```
+     */
+    [[eosio::action]]
+    void delcategory( const name category );
+
+    /**
+     * ## ACTION `delmetakeys`
+     *
+     * > Delete metakey
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} key` - metadata key
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action admin.yield delmetakey '[url]' -p admin.yield
+     * ```
+     */
+    [[eosio::action]]
+    void delmetakey( const name key );
 
     // @debug
     [[eosio::action]]
@@ -104,12 +162,15 @@ public:
     // action wrappers
     using setmetakey_action = eosio::action_wrapper<"setmetakey"_n, &admin::setmetakey>;
     using setcategory_action = eosio::action_wrapper<"setcategory"_n, &admin::setcategory>;
+    using delcategory_action = eosio::action_wrapper<"delcategory"_n, &admin::delcategory>;
+    using delmetakey_action = eosio::action_wrapper<"delmetakey"_n, &admin::delmetakey>;
 
 private :
     // admin
     void check_metadata_keys(const map<name, string> metadata );
-    bool is_category( const string category );
-    metakeys_row get_metakey( const name key );
+    void check_category( const string category );
+    void check_metakey( const name key );
+    name parse_name( const string& str );
 
     // debug
     template <typename T>

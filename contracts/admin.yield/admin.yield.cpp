@@ -6,16 +6,58 @@ void admin::setmetakey( const name key, const bool required, const string descri
 {
     require_auth( get_self() );
 
-    // admin::config_table _config( get_self(), get_self().value );
-    // auto config = _config.get_or_default();
-    // config.metadata_keys = metadata_keys;
-    // _config.set(config, get_self());
+    admin::metakeys_table _metakeys( get_self(), get_self().value );
+
+    auto insert = [&]( auto& row ) {
+        row.key = key;
+        row.required = required;
+        row.description = description;
+    };
+
+    // modify or create
+    auto itr = _metakeys.find( key.value );
+    if ( itr == _metakeys.end() ) _metakeys.emplace( get_self(), insert );
+    else _metakeys.modify( itr, get_self(), insert );
 }
 
 [[eosio::action]]
 void admin::setcategory( const name category, const string description )
 {
     require_auth( get_self() );
+
+    admin::categories_table _categories( get_self(), get_self().value );
+
+    auto insert = [&]( auto& row ) {
+        row.category = category;
+        row.description = description;
+    };
+
+    // modify or create
+    auto itr = _categories.find( category.value );
+    if ( itr == _categories.end() ) _categories.emplace( get_self(), insert );
+    else _categories.modify( itr, get_self(), insert );
+}
+
+// @system
+[[eosio::action]]
+void admin::delmetakey( const name key )
+{
+    require_auth( get_self() );
+
+    admin::metakeys_table _metakeys( get_self(), get_self().value );
+    auto & itr  = _metakeys.get( key.value, "admin.yield::delmetakey: [key] does not exists");
+    _metakeys.erase( itr );
+}
+
+// @system
+[[eosio::action]]
+void admin::delcategory( const name category )
+{
+    require_auth( get_self() );
+
+    admin::categories_table _categories( get_self(), get_self().value );
+    auto & itr  = _categories.get( category.value, "admin.yield::delcateogry: [category] does not exists");
+    _categories.erase( itr );
 }
 
 [[eosio::on_notify("*::regprotocol")]]
@@ -33,8 +75,6 @@ void admin::on_regoracle( const name oracle, const map<name, string> metadata )
 void admin::check_metadata_keys( const map<name, string> metadata )
 {
     admin::metakeys_table _metakeys( get_self(), get_self().value );
-    // const auto config = get_config();
-    // const set<name> metadata_keys = config.metadata_keys;
 
     // validate all keys in metadata
     for ( const auto item : metadata ) {
@@ -43,36 +83,35 @@ void admin::check_metadata_keys( const map<name, string> metadata )
 
         // validate length of value
         const int maxsize = key == "description"_n ? 10240 : 256;
-        check( value.size() <= maxsize, get_self().to_string() + "::check_metadata_keys: value exceeds " + std::to_string(maxsize) + " bytes [metadata_key=" + key.to_string() + "]");
+        check( value.size() <= maxsize, "admin.yield::check_metadata_keys: value exceeds " + std::to_string(maxsize) + " bytes [metadata_key=" + key.to_string() + "]");
 
-        // validate key value
-        get_metakey( key );
-        if ( key == "category"_n ) check( is_category(value), get_self().to_string() + "::check_metadata_keys: [value=" + value + "] is not valid `category`");
+        // validate key/value
+        check_metakey( key );
+        if ( key == "category"_n ) check_category(value);
     }
 
     // check for missing required keys
     for ( const auto row : _metakeys ) {
         if ( !row.required ) continue;
-        check( metadata.at(row.key).size(), get_self().to_string() + "::check_metadata_keys: [key=" + row.key.to_string() + "] is required and missing");
+        check( metadata.at(row.key).size(), "admin.yield::check_metadata_keys: [key=" + row.key.to_string() + "] is required and missing");
     }
 }
 
-admin::metakeys_row admin::get_metakey( const name key )
+void admin::check_metakey( const name key )
 {
     admin::metakeys_table _metakeys( get_self(), get_self().value );
     auto itr = _metakeys.find( key.value );
-    check( itr != _metakeys.end(), get_self().to_string() + "::get_metakey: [key=" + key.to_string() + "] is not valid");
-    return *itr;
+    check( itr != _metakeys.end(), "admin.yield::get_metakey: [key=" + key.to_string() + "] is not valid");
 }
 
-bool admin::is_category( const string category )
+void admin::check_category( const string category )
 {
-    // admin::categories_table _categories( get_self(), get_self().value );
-    // check( name{category}.is_valid(), get_self().to_string() + "::is_category: [key=" + key.to_string() + "] is not valid `name` type");
+    const name key = parse_name(category);
+    admin::categories_table _categories( get_self(), get_self().value );
+    check( key.value, "admin.yield::is_category: [key=" + key.to_string() + "] must be `name` type (ex: `category=dexes`)");
 
-    // auto itr = _categories.find( name{category}.value );
-    // check( itr != _categories.end(), get_self().to_string() + "::is_category: [key=" + key.to_string() + "] is not valid");
-    return true;
+    auto itr = _categories.find( key.value );
+    check( itr != _categories.end(), "admin.yield::is_category: [key=" + key.to_string() + "] is not valid (ex: `category=dexes`)");
 }
 
 // @debug
@@ -99,5 +138,20 @@ void admin::cleartable( const name table_name, const optional<name> scope, const
 
     if (table_name == "metakeys"_n) clear_table( _metakeys, rows_to_clear );
     else if (table_name == "categories"_n) clear_table( _categories, rows_to_clear );
-    else check(false, get_self().to_string() + "::cleartable: [table_name] unknown table to clear" );
+    else check(false, "admin.yield::cleartable: [table_name] unknown table to clear" );
+}
+
+name admin::parse_name(const string& str)
+{
+    if (str.length() == 0 || str.length() > 12) return {};
+    int i=0;
+    for (const auto c: str) {
+        if((c >= 'a' && c <= 'z') || ( c >= '0' && c <= '5') || c == '.') {
+            if(i == 0 && ( c >= '0' && c <= '5') ) return {};   //can't start with a digit
+            if(i == 11 && c == '.') return {};                  //can't end with a .
+        }
+        else return {};
+        i++;
+    }
+    return name{str};
 }
