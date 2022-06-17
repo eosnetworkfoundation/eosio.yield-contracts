@@ -136,7 +136,7 @@ public:
         asset                   tvl;
         asset                   usd;
 
-        uint64_t primary_key() const { return period.sec_since_epoch(); } // inverse index (latest to oldest)
+        uint64_t primary_key() const { return period.sec_since_epoch(); }
     };
     typedef eosio::multi_index< "periods"_n, periods_row> periods_table;
 
@@ -509,6 +509,7 @@ private:
     // getters
     asset get_balance_quantity( const name token_contract_account, const name owner, const symbol sym );
     asset get_eos_staked( const name owner );
+    periods_row get_median( const name protocol, const uint64_t period_start, const uint64_t period_end );
 
     // calculate prices
     int64_t calculate_usd_value( const asset quantity );
@@ -517,7 +518,6 @@ private:
     int64_t normalize_price( const int64_t price, const uint8_t precision );
     int64_t get_delphi_price( const name delphi_oracle_id );
     int64_t get_defibox_price( const uint64_t defibox_oracle_id );
-    // int64_t compute_average_tvl( );
 
     // debug
     template <typename T>

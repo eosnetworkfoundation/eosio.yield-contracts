@@ -352,6 +352,8 @@ void oracle::prune_protocol_periods( const name protocol )
 {
     oracle::periods_table _periods( get_self(), protocol.value );
 
+    // TO-DO validate if pruning is still functional
+
     // erase any periods that exceeds 32 hours
     const time_point_sec last_period = get_last_period( PERIOD_INTERVAL * MAX_PERIODS_REPORT );
     auto itr = _periods.begin();
@@ -364,102 +366,66 @@ void oracle::prune_protocol_periods( const name protocol )
 // generate report TVL to Yield+ Rewards
 void oracle::generate_report( const name protocol, const time_point_sec period )
 {
-    oracle::periods_table _periods( get_self(), protocol.value );
-
     // yield config
     auto config = get_config();
-    // yield::config_table _config( config.yield_contract, config.yield_contract.value );
-    // const asset min_tvl_report = config.min_tvl_report;
-
-    // *****
-    // TO-DO make sure report is valid (3x48 TVL buckets)
-    // *****
-
-    // calculates average TVL of period bucket 42 periods (~7 hours)
-    
-    /* 
-
-    int count = 0;
-    asset tvl = { 0, EOS };
-    asset usd = { 0, USD };
-    for ( const auto row : _periods ) {
-        if ( count >= MIN_BUCKET_PERIODS ) break; // stop sum when minimum periods has been reached
-        tvl += row.tvl;
-        usd += row.usd;
-        count += 1;
-    }
-    if ( count < MIN_BUCKET_PERIODS ) return; // skip if does not exceeed minimum periods
-    tvl /= count;
-    usd /= count;
-    
-    */
-
     asset tvl = { 0, EOS };
     asset usd = { 0, USD };
 
-    uint64_t c_ts = time_point_sec(current_time_point()).sec_since_epoch();
-
-    //slice values into 3 buckets of 8 hours each
-    uint64_t period_1 = c_ts - EIGHT_HOURS * 3;
+    // slice values into 3 buckets of 8 hours each
+    uint64_t current_time_sec = current_time_point().sec_since_epoch();
+    uint64_t period_1 = current_time_sec - EIGHT_HOURS * 3;
     uint64_t period_2 = period_1 + EIGHT_HOURS;
     uint64_t period_3 = period_2 + EIGHT_HOURS;
 
-    //find limit pointers
-    auto p1_itr = _periods.upper_bound(period_1);
-    auto p2_itr = _periods.upper_bound(period_2);
-    auto p3_itr = _periods.upper_bound(period_3);
+    // retrieve datapoint from timepoint
+    // skip generating report if any median contains no TVL
+    auto median_1 = get_median( protocol, period_1, period_2 );
+    if ( !median_1.tvl.amount ) return;
 
-    //calculate how many datapoints we have in each window of 8 hours
-    int d1 = std::distance(p1_itr, p2_itr);
-    int d2 = std::distance(p2_itr, p3_itr);
-    int d3 = std::distance(p3_itr, _periods.end());
-        
-     //verify if the number of datapoints for each 8 hours window is within acceptable range, return if any is outside of the range
-    if (d1<40 || d1>48) return ;
-    if (d2<40 || d2>48) return ;
-    if (d3<40 || d3>48) return ;
+    auto median_2 = get_median( protocol, period_2, period_3 );
+    if ( !median_2.tvl.amount ) return;
 
-    //add datapoints to vectors for sorting (first value is amount as uint64_t, second is datapoint time_point)
-    std::vector<std::pair<uint64_t, time_point>> v1;
-    std::vector<std::pair<uint64_t, time_point>> v2;
-    std::vector<std::pair<uint64_t, time_point>> v3;
+    auto median_3 = get_median( protocol, period_3, current_time_sec );
+    if ( !median_3.tvl.amount ) return;
 
-    for(int i=0;i<d1;i++) {v1.push_back({p1_itr->tvl.amount, p1_itr->period}); p1_itr++;}
-    for(int i=0;i<d2;i++) {v2.push_back({p2_itr->tvl.amount, p2_itr->period}); p2_itr++;}
-    for(int i=0;i<d3;i++) {v3.push_back({p3_itr->tvl.amount, p3_itr->period}); p3_itr++;}
-
-    int n1 = d1 / 2;
-    int n2 = d2 / 2;
-    int n3 = d3 / 2;
-
-    //run a partial sort to find the median datapoint for each 8 hours window
-    nth_element(v1.begin(), v1.begin()+n1, v1.end());
-    nth_element(v2.begin(), v2.begin()+n2, v2.end());
-    nth_element(v3.begin(), v3.begin()+n3, v3.end());
-
-    auto m_ptr_1 = v1[n1];
-    auto m_ptr_2 = v2[n2];
-    auto m_ptr_3 = v3[n3];
-
-    //retrieve datapoint from timepoint
-    auto median_ptr_1 = _periods.find(m_ptr_1.second.sec_since_epoch());
-    auto median_ptr_2 = _periods.find(m_ptr_2.second.sec_since_epoch());
-    auto median_ptr_3 = _periods.find(m_ptr_3.second.sec_since_epoch());
-
-    //compute the average of the 3 windows median
-    tvl+=(median_ptr_1->tvl + median_ptr_2->tvl + median_ptr_3->tvl) / 3;
-    usd+=(median_ptr_1->usd + median_ptr_2->usd +median_ptr_3->usd ) / 3;;
+    // compute the average of the 3 windows median
+    tvl += (median_1.tvl + median_2.tvl + median_3.tvl ) / 3;
+    usd += (median_1.usd + median_2.usd + median_3.usd ) / 3;
 
     // send oracle report to Yield+ Rewards
     yield::report_action report( config.yield_contract, { get_self(), "active"_n });
     report.send( protocol, period, PERIOD_INTERVAL, tvl, usd );
 }
 
-// int64_t oracle::compute_average_tvl( )
-// {
-//     // TO-DO
-//     return 0;
-// }
+oracle::periods_row oracle::get_median( const name protocol, const uint64_t period_start, const uint64_t period_end )
+{
+    oracle::periods_table _periods( get_self(), protocol.value );
+
+    // find limit pointers
+    auto start = _periods.upper_bound(period_start);
+    auto end = _periods.upper_bound(period_end);
+
+    // calculate how many datapoints we have in each window of 8 hours
+    int count = std::distance(start, end);
+
+    // verify if the number of datapoints for each 8 hours window is within acceptable range, return if any is outside of the range
+    if (count < MIN_BUCKET_PERIODS || count > BUCKET_PERIODS ) return {};
+
+    // add datapoints to vectors for sorting (first value is amount as uint64_t, second is datapoint time_point)
+    std::vector<std::pair<uint64_t, time_point>> datapoints;
+    for (int i = 0; i < count; i++) {
+        datapoints.push_back({ start->tvl.amount, start->period });
+        start++;
+    }
+
+    // run a partial sort to find the median datapoint for each 8 hours window
+    int half = count / 2;
+    nth_element(datapoints.begin(), datapoints.begin() + half, datapoints.end());
+    auto median = datapoints[half];
+
+    // retrieve datapoint from timepoint
+    return _periods.get( median.second.sec_since_epoch() );
+}
 
 // @eosio.code
 [[eosio::action]]
