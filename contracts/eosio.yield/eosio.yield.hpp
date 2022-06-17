@@ -90,6 +90,7 @@ public:
      *
      * - `{name} protocol` - primary protocol contract
      * - `{name} status="pending"` - status (`pending/active/denied`)
+     * - `{name} category` - protocol category (ex: `dexes/lending/staking`)
      * - `{set<name>} contracts.eos` - additional supporting EOS contracts
      * - `{set<string>} contracts.evm` - additional supporting EVM contracts
      * - `{asset} tvl` - reported TVL averaged value in EOS
@@ -107,6 +108,7 @@ public:
      * {
      *     "protocol": "myprotocol",
      *     "status": "active",
+     *     "category": "dexes",
      *     "contracts": ["myprotocol", "mytreasury"],
      *     "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"],
      *     "tvl": "200000.0000 EOS",
@@ -116,13 +118,14 @@ public:
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
      *     "claimed_at": "1970-01-01T00:00:00",
-     *     "period_at": "1970-01-01T00:00:00",
+     *     "period_at": "1970-01-01T00:00:00"
      * }
      * ```
      */
     struct [[eosio::table("protocols")]] protocols_row {
         name                    protocol;
         name                    status = "pending"_n;
+        name                    category = "unknown"_n;
         set<name>               contracts;
         set<string>             evm;
         asset                   tvl;
@@ -249,7 +252,7 @@ public:
      *
      * > Set EVM contracts
      *
-     * - **authority**: `protocol` AND `evm`
+     * - **authority**: (`protocol` AND `evm`) OR `admin.yield`
      *
      * ### params
      *
@@ -284,6 +287,27 @@ public:
      */
     [[eosio::action]]
     void approve( const name protocol );
+
+    /**
+     * ## ACTION `setcategory`
+     *
+     * > Set protocol category
+     *
+     * - **authority**: `admin.yield`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol to approve
+     * - `{name} category` - protocol category (eligible categories in `admin.yield`)
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield setcategory '[myprotocol, dexes]' -p admin.yield
+     * ```
+     */
+    [[eosio::action]]
+    void setcategory( const name protocol, const name category );
 
     /**
      * ## ACTION `deny`
@@ -340,6 +364,7 @@ public:
      * ### params
      *
      * - `{name} protocol` - protocol
+     * - `{name} category` - protocol category
      * - `{name} receiver` - receiver of rewards
      * - `{extended_asset} claimed` - claimed rewards
      *
@@ -348,13 +373,14 @@ public:
      * ```json
      * {
      *     "protocol": "myprotocol",
+     *     "category": "dexes",
      *     "receiver": "myreceiver",
      *     "claimed": {"contract": "eosio.token", "quantity": "1.5500 EOS"}
      * }
      * ```
      */
     [[eosio::action]]
-    void claimlog( const name protocol, const name receiver, const extended_asset claimed );
+    void claimlog( const name protocol, const name category, const name receiver, const extended_asset claimed );
 
     /**
      * ## ACTION `report`
@@ -390,6 +416,7 @@ public:
      * ### params
      *
      * - `{name} protocol` - protocol
+     * - `{name} category` - protocol category
      * - `{time_point_sec} period` - period time
      * - `{uint32_t} period_interval` - period interval (in seconds)
      * - `{asset} tvl` - TVL averaged value in EOS
@@ -402,6 +429,7 @@ public:
      * ```json
      * {
      *     "protocol": "myprotocol",
+     *     "category": "dexes",
      *     "period": "2022-05-13T00:00:00",
      *     "period_interval": 600,
      *     "tvl": "200000.0000 EOS",
@@ -412,7 +440,7 @@ public:
      * ```
      */
     [[eosio::action]]
-    void rewardslog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance );
+    void rewardslog( const name protocol, const name category, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance );
 
     // @debug
     [[eosio::action]]
@@ -439,6 +467,7 @@ private :
     time_point_sec get_current_period( const uint32_t period_interval );
     config_row get_config();
     void set_status( const name protocol, const name status );
+    void set_category( const name protocol, const name category );
     void transfer( const name from, const name to, const extended_asset value, const string& memo );
     void remove_active_protocol( const name protocol );
     void add_active_protocol( const name protocol );

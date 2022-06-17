@@ -107,3 +107,12 @@ summary: 'claimlog'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 claimlog
+
+<h1 class="contract">setcategory</h1>
+---
+spec_version: "0.2.0"
+title: setcategory
+summary: 'setcategory'
+icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
+---
+setcategory

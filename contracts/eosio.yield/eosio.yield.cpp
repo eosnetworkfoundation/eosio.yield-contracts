@@ -78,12 +78,12 @@ void yield::claim( const name protocol, const optional<name> receiver )
 
     // logging
     yield::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
-    claimlog.send( protocol, to, claimable );
+    claimlog.send( protocol, itr.category, to, claimable );
 }
 
 // @eosio.code
 [[eosio::action]]
-void yield::claimlog( const name protocol, const name receiver, const extended_asset claimed )
+void yield::claimlog( const name protocol, const name category, const name receiver, const extended_asset claimed )
 {
     require_auth( get_self() );
 }
@@ -101,17 +101,38 @@ void yield::set_status( const name protocol, const name status )
     });
 }
 
-// @system
+void yield::set_category( const name protocol, const name category )
+{
+    yield::protocols_table _protocols( get_self(), get_self().value );
+
+    auto & itr = _protocols.get(protocol.value, "yield::set_category: [protocol] does not exists");
+
+    _protocols.modify( itr, same_payer, [&]( auto& row ) {
+        check( row.category != category, "yield::set_category: [category] not modified");
+        row.category = category;
+    });
+}
+
+// @admin
 [[eosio::action]]
 void yield::approve( const name protocol )
 {
     const auto config = get_config();
     require_auth( config.admin_contract );
-    set_status( protocol, "active"_n);
+    set_status( protocol, "active"_n );
     add_active_protocol( protocol );
 }
 
-// @system
+// @admin
+[[eosio::action]]
+void yield::setcategory( const name protocol, const name category )
+{
+    const auto config = get_config();
+    require_auth( config.admin_contract );
+    set_category( protocol, category );
+}
+
+// @admin
 [[eosio::action]]
 void yield::deny( const name protocol )
 {
@@ -174,7 +195,7 @@ void yield::init( const extended_symbol rewards, const name oracle_contract, con
     _config.set(config, get_self());
 }
 
-// @protocol
+// @protocol or @admin
 [[eosio::action]]
 void yield::unregister( const name protocol )
 {
@@ -241,16 +262,17 @@ void yield::report( const name protocol, const time_point_sec period, const uint
 
     // log report
     yield::rewardslog_action rewardslog( get_self(), { get_self(), "active"_n });
-    rewardslog.send( protocol, period, period_interval, tvl, usd, rewards, itr.balance.quantity );
+    rewardslog.send( protocol, itr.category, period, period_interval, tvl, usd, rewards, itr.balance.quantity );
 }
 
+// @system
 [[eosio::action]]
-void yield::rewardslog( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance )
+void yield::rewardslog( const name protocol, const name category, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance )
 {
     require_auth( get_self() );
 }
 
-// @protocol
+// @protocol or @admin
 [[eosio::action]]
 void yield::setcontracts( const name protocol, const set<name> contracts )
 {
@@ -280,13 +302,13 @@ void yield::setcontracts( const name protocol, const set<name> contracts )
     remove_active_protocol( protocol );
 }
 
-// @protocol
+// @protocol or @admin
 [[eosio::action]]
 void yield::setevm( const name protocol, const set<string> evm )
 {
-    require_auth( protocol );
-
     auto config = get_config();
+    const bool is_admin = has_auth( config.admin_contract );
+    if ( !is_admin ) require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get(protocol.value, "yield::setevm: [protocol] does not exists");

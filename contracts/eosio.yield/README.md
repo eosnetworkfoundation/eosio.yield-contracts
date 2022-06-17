@@ -61,6 +61,7 @@ $ cleos push action eosio.yield report '[protocol, "2021-04-12T12:20:00", <TVL U
 - [ACTION `setcontracts`](#action-setcontracts)
 - [ACTION `setevm`](#action-setevm)
 - [ACTION `approve`](#action-approve)
+- [ACTION `setcategory`](#action-setcategory)
 - [ACTION `deny`](#action-deny)
 - [ACTION `report`](#action-report)
 - [ACTION `rewardslog`](#action-rewardslog)
@@ -107,6 +108,7 @@ $ cleos push action eosio.yield report '[protocol, "2021-04-12T12:20:00", <TVL U
 
 - `{name} protocol` - primary protocol contract
 - `{name} status="pending"` - status (`pending/active/denied`)
+- `{name} category` - protocol category (ex: `dexes/lending/staking`)
 - `{set<name>} contracts.eos` - additional supporting EOS contracts
 - `{set<string>} contracts.evm` - additional supporting EVM contracts
 - `{asset} tvl` - reported TVL averaged value in EOS
@@ -124,6 +126,7 @@ $ cleos push action eosio.yield report '[protocol, "2021-04-12T12:20:00", <TVL U
 {
     "protocol": "myprotocol",
     "status": "active",
+    "category": "dexes",
     "contracts": ["myprotocol", "mytreasury"],
     "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"],
     "tvl": "200000.0000 EOS",
@@ -133,7 +136,7 @@ $ cleos push action eosio.yield report '[protocol, "2021-04-12T12:20:00", <TVL U
     "created_at": "2022-05-13T00:00:00",
     "updated_at": "2022-05-13T00:00:00",
     "claimed_at": "1970-01-01T00:00:00",
-    "period_at": "1970-01-01T00:00:00",
+    "period_at": "1970-01-01T00:00:00"
 }
 ```
 
@@ -227,7 +230,7 @@ $ cleos push action eosio.yield setcontracts '[myprotocol, [myvault]]' -p myprot
 
 > Set EVM contracts
 
-- **authority**: `protocol` AND `evm`
+- **authority**: (`protocol` AND `evm`) OR `admin.yield`
 
 ### params
 
@@ -254,6 +257,23 @@ $ cleos push action eosio.yield setevm '[myprotocol, ["0x2f9ec37d6ccfff1cab21733
 
 ```bash
 $ cleos push action eosio.yield approve '[myprotocol]' -p admin.yield
+```
+
+## ACTION `setcategory`
+
+> Set protocol category
+
+- **authority**: `admin.yield`
+
+### params
+
+- `{name} protocol` - protocol to approve
+- `{name} category` - protocol category (eligible categories in `admin.yield`)
+
+### Example
+
+```bash
+$ cleos push action eosio.yield setcategory '[myprotocol, dexes]' -p admin.yield
 ```
 
 ## ACTION `deny`
@@ -302,6 +322,7 @@ $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
 ### params
 
 - `{name} protocol` - protocol
+- `{name} category` - protocol category
 - `{name} receiver` - receiver of rewards
 - `{extended_asset} claimed` - claimed rewards
 
@@ -310,6 +331,7 @@ $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
 ```json
 {
     "protocol": "myprotocol",
+    "category": "dexes",
     "receiver": "myreceiver",
     "claimed": {"contract": "eosio.token", "quantity": "1.5500 EOS"}
 }
@@ -344,6 +366,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ### params
 
 - `{name} protocol` - protocol
+- `{name} category` - protocol category
 - `{time_point_sec} period` - period time
 - `{uint32_t} period_interval` - period interval (in seconds)
 - `{asset} tvl` - TVL averaged value in EOS
@@ -356,6 +379,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ```json
 {
     "protocol": "myprotocol",
+    "category": "dexes",
     "period": "2022-05-13T00:00:00",
     "period_interval": 600,
     "tvl": "200000.0000 EOS",

@@ -103,13 +103,14 @@ public:
      * ### params
      *
      * - `{time_point_sec} period` - (primary key) period at time
-     * - `{int} period` - block number used for TAPOS
      * - `{name} protocol` - protocol contract
+     * - `{name} category` - protocol category
      * - `{set<name>} contracts.eos` - additional supporting EOS contracts
      * - `{set<string>} contracts.evm` - additional supporting EVM contracts
      * - `{vector<asset>} balances` - asset balances
      * - `{vector<asset>} prices` - currency prices
-     * - `{TVL} tvl` - reported TVL averaged value in EOS & USD
+     * - `{asset} tvl` - reported TVL averaged value in EOS
+     * - `{asset} usd` - reported TVL averaged value in USD
      *
      * ### example
      *
@@ -129,6 +130,7 @@ public:
     struct [[eosio::table("periods")]] periods_row {
         time_point_sec          period;
         name                    protocol;
+        name                    category;
         set<name>               contracts;
         set<string>             evm;
         vector<asset>           balances;
@@ -389,7 +391,6 @@ public:
     [[eosio::action]]
     void updateall( const name oracle, const optional<uint16_t> max_rows );
 
-
     /**
      * ## ACTION `updatelog`
      *
@@ -401,6 +402,7 @@ public:
      *
      * - `{name} oracle` - oracle initiated update
      * - `{name} protocol` - protocol updated
+     * - `{name} category` - protocol category
      * - `{set<name>} contracts` - EOS contracts
      * - `{set<string>} evm` - EVM contracts
      * - `{time_point_sec} period` - time period
@@ -415,6 +417,7 @@ public:
      * {
      *     "oracle": "myoracle",
      *     "protocol": "myprotocol",
+     *     "category": "dexes",
      *     "contracts": ["myprotocol"],
      *     "evm": [],
      *     "period": "2022-06-16T01:40:00",
@@ -426,7 +429,7 @@ public:
      * ```
      */
     [[eosio::action]]
-    void updatelog( const name oracle, const name protocol, const set<name> contracts, const set<string> evm, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const asset tvl, const asset usd );
+    void updatelog( const name oracle, const name protocol, const name category, const set<name> contracts, const set<string> evm, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const asset tvl, const asset usd );
 
     /**
      * ## ACTION `claim`
@@ -437,17 +440,16 @@ public:
      *
      * ### params
      *
-     * - `{name} oracle` - oracle
-     * - `{name} [receiver=""]` - (optional) receiver of rewards (default=oracle)
+     * - `{name} oracle` - oracle claiming rewards
      *
      * ### Example
      *
      * ```bash
-     * $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
+     * $ cleos push action oracle.yield claim '[myoracle]' -p myoracle
      * ```
      */
     [[eosio::action]]
-    void claim( const name oracle, const optional<name> receiver );
+    void claim( const name oracle );
 
     /**
      * ## ACTION `claimlog`
@@ -458,22 +460,20 @@ public:
      *
      * ### params
      *
-     * - `{name} protocol` - protocol
-     * - `{name} receiver` - receiver of rewards
+     * - `{name} oracle` - oracle account which received rewards
      * - `{extended_asset} claimed` - claimed funds
      *
      * ### Example
      *
      * ```json
      * {
-     *     "protocol": "myprotocol",
-     *     "receiver": "myreceiver",
+     *     "oracle": "myoracle",
      *     "claimed": {"contract": "eosio.token", "quantity": "0.5500 EOS"}
      * }
      * ```
      */
     [[eosio::action]]
-    void claimlog( const name protocol, const name receiver, const extended_asset claimed );
+    void claimlog( const name oracle, const extended_asset claimed );
 
     // @debug
     [[eosio::action]]

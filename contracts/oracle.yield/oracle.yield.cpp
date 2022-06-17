@@ -66,13 +66,11 @@ void oracle::deny( const name oracle )
 
 // @oracle
 [[eosio::action]]
-void oracle::claim( const name oracle, const optional<name> receiver )
+void oracle::claim( const name oracle )
 {
     require_auth( oracle );
 
     oracle::oracles_table _oracles( get_self(), get_self().value );
-
-    if ( receiver ) check( is_account( *receiver ), "oracle::claim: [receiver] does not exists");
 
     // validate
     auto & itr = _oracles.get(oracle.value, "oracle::claim: [oracle] does not exists");
@@ -81,8 +79,7 @@ void oracle::claim( const name oracle, const optional<name> receiver )
     check( claimable.quantity.amount > 0, "oracle::claim: nothing to claim");
 
     // transfer funds to receiver
-    const name to = receiver ? *receiver : oracle;
-    transfer( get_self(), to, claimable, "Yield+ Oracle reward");
+    transfer( get_self(), oracle, claimable, "Yield+ Oracle reward");
 
     // modify balances
     _oracles.modify( itr, same_payer, [&]( auto& row ) {
@@ -92,12 +89,12 @@ void oracle::claim( const name oracle, const optional<name> receiver )
 
     // logging
     oracle::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
-    claimlog.send( oracle, to, claimable );
+    claimlog.send( oracle, claimable );
 }
 
 // @eosio.code
 [[eosio::action]]
-void oracle::claimlog( const name protocol, const name receiver, const extended_asset claimed )
+void oracle::claimlog( const name oracle, const extended_asset claimed )
 {
     require_auth( get_self() );
 }
@@ -273,6 +270,7 @@ void oracle::update( const name oracle, const name protocol )
     // contracts
     const set<name> contracts = protocol_itr.contracts;
     const set<string> evm = protocol_itr.evm;
+    const name category = protocol_itr.category;
 
     // get all balances from protocol EOS contracts
     vector<asset> balances;
@@ -315,6 +313,7 @@ void oracle::update( const name oracle, const name protocol )
     _periods.emplace( get_self(), [&]( auto& row ) {
         row.period = period;
         row.protocol = protocol;
+        row.category = category;
         row.contracts = contracts;
         row.evm = evm;
         row.balances = balances;
@@ -325,7 +324,7 @@ void oracle::update( const name oracle, const name protocol )
 
     // log update
     oracle::updatelog_action updatelog( get_self(), { get_self(), "active"_n });
-    updatelog.send( oracle, protocol, contracts, evm, period, balances, prices, tvl, usd );
+    updatelog.send( oracle, protocol, category, contracts, evm, period, balances, prices, tvl, usd );
 
     // prune last 24 hours
     prune_protocol_periods( protocol );
@@ -429,7 +428,7 @@ oracle::periods_row oracle::get_median( const name protocol, const uint64_t peri
 
 // @eosio.code
 [[eosio::action]]
-void oracle::updatelog( const name oracle, const name protocol, const set<name> contracts, const set<string> evm, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const asset tvl, const asset usd )
+void oracle::updatelog( const name oracle, const name protocol, const name category, const set<name> contracts, const set<string> evm, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const asset tvl, const asset usd )
 {
     require_auth( get_self() );
 }

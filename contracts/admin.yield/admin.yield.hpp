@@ -159,6 +159,9 @@ public:
     [[eosio::on_notify("*::regoracle")]]
     void on_regoracle( const name oracle, const map<name, string> metadata );
 
+    [[eosio::on_notify("*::approve")]]
+    void on_approve( const name protocol, const name category );
+
     // action wrappers
     using setmetakey_action = eosio::action_wrapper<"setmetakey"_n, &admin::setmetakey>;
     using setcategory_action = eosio::action_wrapper<"setcategory"_n, &admin::setcategory>;
@@ -168,8 +171,9 @@ public:
 private :
     // admin
     void check_metadata_keys(const map<name, string> metadata );
-    void check_category( const string category );
+    void check_category( const name category );
     void check_metakey( const name key );
+    void check_value( const name key, const string value );
     name parse_name( const string& str );
 
     // debug

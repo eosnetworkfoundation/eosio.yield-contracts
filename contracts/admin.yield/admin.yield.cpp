@@ -72,6 +72,12 @@ void admin::on_regoracle( const name oracle, const map<name, string> metadata )
     check_metadata_keys( metadata );
 }
 
+[[eosio::on_notify("*::approve")]]
+void admin::on_approve( const name protocol, const name category )
+{
+    check_category( category );
+}
+
 void admin::check_metadata_keys( const map<name, string> metadata )
 {
     admin::metakeys_table _metakeys( get_self(), get_self().value );
@@ -81,13 +87,9 @@ void admin::check_metadata_keys( const map<name, string> metadata )
         const name key = item.first;
         const string value = item.second;
 
-        // validate length of value
-        const int maxsize = key == "description"_n ? 10240 : 256;
-        check( value.size() <= maxsize, "admin.yield::check_metadata_keys: value exceeds " + std::to_string(maxsize) + " bytes [metadata_key=" + key.to_string() + "]");
-
         // validate key/value
         check_metakey( key );
-        if ( key == "category"_n ) check_category(value);
+        check_value( key, value );
     }
 
     // check for missing required keys
@@ -97,6 +99,13 @@ void admin::check_metadata_keys( const map<name, string> metadata )
     }
 }
 
+void admin::check_value( const name key, const string value )
+{
+    // validate length of value
+    const int maxsize = key == "description"_n ? 10240 : 256;
+    check( value.size() <= maxsize, "admin.yield::check_metadata_keys: value exceeds " + std::to_string(maxsize) + " bytes [metadata_key=" + key.to_string() + "]");
+}
+
 void admin::check_metakey( const name key )
 {
     admin::metakeys_table _metakeys( get_self(), get_self().value );
@@ -104,14 +113,13 @@ void admin::check_metakey( const name key )
     check( itr != _metakeys.end(), "admin.yield::get_metakey: [key=" + key.to_string() + "] is not valid");
 }
 
-void admin::check_category( const string category )
+void admin::check_category( const name category )
 {
-    const name key = parse_name(category);
     admin::categories_table _categories( get_self(), get_self().value );
-    check( key.value, "admin.yield::is_category: [key=" + key.to_string() + "] must be `name` type (ex: `category=dexes`)");
+    check( category.value, "admin.yield::check_category: [category] must not be empty");
 
-    auto itr = _categories.find( key.value );
-    check( itr != _categories.end(), "admin.yield::is_category: [key=" + key.to_string() + "] is not valid (ex: `category=dexes`)");
+    auto itr = _categories.find( category.value );
+    check( itr != _categories.end(), "admin.yield::check_category: [category=" + category.to_string() + "] is not valid (ex: `dexes`)");
 }
 
 // @debug
