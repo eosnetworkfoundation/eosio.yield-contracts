@@ -130,6 +130,7 @@ void yield::setcategory( const name protocol, const name category )
     const auto config = get_config();
     require_auth( config.admin_contract );
     set_category( protocol, category );
+    require_recipient( config.admin_contract );
 }
 
 // @admin
