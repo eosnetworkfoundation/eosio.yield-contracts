@@ -72,8 +72,8 @@ void admin::on_regoracle( const name oracle, const map<name, string> metadata )
     check_metadata_keys( metadata );
 }
 
-[[eosio::on_notify("*::approve")]]
-void admin::on_approve( const name protocol, const name category )
+[[eosio::on_notify("*::setcategory")]]
+void admin::on_setcategory( const name protocol, const name category )
 {
     check_category( category );
 }
