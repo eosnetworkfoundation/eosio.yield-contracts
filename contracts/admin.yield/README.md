@@ -38,6 +38,7 @@ $ cleos push action admin.yield setcategory '[dexes, "Protocols where you can sw
 ## TABLE `metakeys`
 
 - `{name} key` - metadata key
+- `{name} type` - value type (ex: string/boolean/ipfs/url)
 - `{bool} required` - is required (true/false)
 - `{string} description` - metadata description
 
@@ -46,6 +47,7 @@ $ cleos push action admin.yield setcategory '[dexes, "Protocols where you can sw
 ```json
 {
     "key": "name",
+    "type": "string",
     "required": true,
     "description": "Name of protocol"
 }
@@ -74,13 +76,14 @@ $ cleos push action admin.yield setcategory '[dexes, "Protocols where you can sw
 ### params
 
 - `{name} key` - metadata key
+- `{name} type` - value type (ex: string/boolean/ipfs/url)
 - `{bool} required` - is required (true/false)
 - `{string} description` - metadata description
 
 ### Example
 
 ```bash
-$ cleos push action admin.yield setmetakey '[url, true, "Protocol URL"]' -p admin.yield
+$ cleos push action admin.yield setmetakey '[website, url, true, "Protocol website"]' -p admin.yield
 ```
 
 ## ACTION `setcategory`

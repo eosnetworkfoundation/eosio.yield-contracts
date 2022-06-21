@@ -17,10 +17,14 @@ class [[eosio::contract("admin.yield")]] admin : public eosio::contract {
 public:
     using contract::contract;
 
+    // CONSTANTS
+    const set<name> VALUE_TYPES = set<name>{"string"_n, "boolean"_n, "ipfs"_n, "url"_n};
+
     /**
      * ## TABLE `metakeys`
      *
      * - `{name} key` - metadata key
+     * - `{name} type` - value type (ex: string/boolean/ipfs/url)
      * - `{bool} required` - is required (true/false)
      * - `{string} description` - metadata description
      *
@@ -29,6 +33,7 @@ public:
      * ```json
      * {
      *     "key": "name",
+     *     "type": "string",
      *     "required": true,
      *     "description": "Name of protocol"
      * }
@@ -36,6 +41,7 @@ public:
      */
     struct [[eosio::table("metakeys")]] metakeys_row {
         name            key;
+        name            type;
         bool            required;
         string          description;
 
@@ -76,17 +82,18 @@ public:
      * ### params
      *
      * - `{name} key` - metadata key
+     * - `{name} type` - value type (ex: string/boolean/ipfs/url)
      * - `{bool} required` - is required (true/false)
      * - `{string} description` - metadata description
      *
      * ### Example
      *
      * ```bash
-     * $ cleos push action admin.yield setmetakey '[url, true, "Protocol URL"]' -p admin.yield
+     * $ cleos push action admin.yield setmetakey '[website, url, true, "Protocol website"]' -p admin.yield
      * ```
      */
     [[eosio::action]]
-    void setmetakey( const name key, const bool required, const string description );
+    void setmetakey( const name key, const name type, const bool required, const string description );
 
     /**
      * ## ACTION `setcategory`

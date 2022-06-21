@@ -2,14 +2,17 @@
 
 // @system
 [[eosio::action]]
-void admin::setmetakey( const name key, const bool required, const string description )
+void admin::setmetakey( const name key, const name type, const bool required, const string description )
 {
     require_auth( get_self() );
 
     admin::metakeys_table _metakeys( get_self(), get_self().value );
 
+    check( VALUE_TYPES.find( type ) != VALUE_TYPES.end(), "admin::setmetakey: [type] is invalid");
+
     auto insert = [&]( auto& row ) {
         row.key = key;
+        row.type = type;
         row.required = required;
         row.description = description;
     };

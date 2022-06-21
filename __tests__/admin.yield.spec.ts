@@ -36,10 +36,9 @@ describe('admin.yield', () => {
 
   it("config::setmetakey", async () => {
     const metakeys = [
-      {required: true, key: "url", description: "Protocol URL"},
-      {required: true, key: "category", description: "Protocol category"},
-      {required: true, key: "name", description: "Protocol name"},
-      {required: false, key: "dappradar", description: "DappRadar identifier"},
+      {required: true,  type: "url", key: "website", description: "Protocol website"},
+      {required: true,  type: "string", key: "name", description: "Protocol name"},
+      {required: false, type: "string", key: "dappradar", description: "DappRadar identifier"},
     ]
     for ( const metakey of metakeys ) {
       await adminYield.actions.setmetakey(metakey).send();
