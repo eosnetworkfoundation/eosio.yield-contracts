@@ -18,7 +18,7 @@ public:
     using contract::contract;
 
     // CONSTANTS
-    const set<name> VALUE_TYPES = set<name>{"string"_n, "boolean"_n, "ipfs"_n, "url"_n};
+    const set<name> VALUE_TYPES = set<name>{"string"_n, "integer"_n, "boolean"_n, "ipfs"_n, "url"_n, "urls"_n};
 
     /**
      * ## TABLE `metakeys`
