@@ -15,5 +15,11 @@ cleos push action eosio.yield setcontracts '[myprotocol, ["myvault"], []]' -p my
 # approve protocol
 cleos push action eosio.yield approve '[myprotocol]' -p admin.yield
 
+# @DEBUG add balance
+cleos push action eosio.yield addbalance '[myprotocol, "1.0000 EOS"]' -p admin.yield
+
 # claim
 cleos push action eosio.yield claim '[myprotocol, null]' -p myprotocol
+
+# unregister
+cleos push action eosio.yield unregister '[myprotocol]' -p myprotocol

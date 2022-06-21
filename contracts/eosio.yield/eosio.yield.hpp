@@ -446,6 +446,10 @@ public:
     [[eosio::action]]
     void cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows );
 
+    // @debug
+    [[eosio::action]]
+    void addbalance( const name protocol, const asset quantity );
+
     [[eosio::on_notify("*::transfer")]]
     void on_transfer( const name from, const name to, const asset quantity, const std::string memo );
 

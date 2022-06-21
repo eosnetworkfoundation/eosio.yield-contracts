@@ -5,6 +5,9 @@
 // self
 #include <eosio.yield/eosio.yield.hpp>
 
+// DEBUG (used to help testing)
+#include "src/debug.cpp"
+
 // @protocol
 [[eosio::action]]
 void yield::regprotocol( const name protocol, const map<name, string> metadata )
@@ -205,7 +208,7 @@ void yield::unregister( const name protocol )
 
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get(protocol.value, "yield::unregister: [protocol] does not exists");
-    if ( itr.balance.quantity.amount > 0 ) claim( protocol, ""_n ); // claim if any balance remaining
+    check( itr.balance.quantity.amount == 0, "yield::unregister: protocol has " + itr.balance.quantity.to_string() + " remaining balance, must execute `claim` ACTION before `unregister`");
     _protocols.erase( itr );
     remove_active_protocol( protocol );
 }
@@ -370,33 +373,4 @@ time_point_sec yield::get_current_period( const uint32_t period_interval )
 {
     const uint32_t now = current_time_point().sec_since_epoch();
     return time_point_sec((now / period_interval) * period_interval);
-}
-
-// @debug
-template <typename T>
-void yield::clear_table( T& table, uint64_t rows_to_clear )
-{
-    auto itr = table.begin();
-    while ( itr != table.end() && rows_to_clear-- ) {
-        itr = table.erase( itr );
-    }
-}
-
-// @debug
-[[eosio::action]]
-void yield::cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows )
-{
-    require_auth( get_self() );
-    const uint64_t rows_to_clear = (!max_rows || *max_rows == 0) ? -1 : *max_rows;
-    const uint64_t value = scope ? scope->value : get_self().value;
-
-    // tables
-    yield::config_table _config( get_self(), value );
-    yield::protocols_table _protocols( get_self(), value );
-    yield::state_table _state( get_self(), value );
-
-    if (table_name == "protocols"_n) clear_table( _protocols, rows_to_clear );
-    else if (table_name == "config"_n) _config.remove();
-    else if (table_name == "state"_n) _state.remove();
-    else check(false, "yield::cleartable: [table_name] unknown table to clear" );
 }
