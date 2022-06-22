@@ -150,7 +150,7 @@ public:
      * ### Example
      *
      * ```bash
-     * $ cleos push action admin.yield delmetakey '[url]' -p admin.yield
+     * $ cleos push action admin.yield delmetakey '[website]' -p admin.yield
      * ```
      */
     [[eosio::action]]
@@ -162,6 +162,9 @@ public:
 
     [[eosio::on_notify("*::regprotocol")]]
     void on_regprotocol( const name protocol, const map<name, string> metadata );
+
+    [[eosio::on_notify("*::setmetakey")]]
+    void on_setmetakey( const name protocol, const name key, const string value );
 
     [[eosio::on_notify("*::regoracle")]]
     void on_regoracle( const name oracle, const map<name, string> metadata );

@@ -19,7 +19,7 @@ Admin account for Yield+ on-notification events
 
 ```bash
 # set metakey
-$ cleos push action admin.yield setmetakey '[url, true, "Protocol URL"]' -p admin.yield
+$ cleos push action admin.yield setmetakey '[website, true, "Protocol website"]' -p admin.yield
 
 # set category
 $ cleos push action admin.yield setcategory '[dexes, "Protocols where you can swap/trade cryptocurrency"]' -p admin.yield
@@ -132,5 +132,5 @@ $ cleos push action admin.yield delcategory '[dexes]' -p admin.yield
 ### Example
 
 ```bash
-$ cleos push action admin.yield delmetakey '[url]' -p admin.yield
+$ cleos push action admin.yield delmetakey '[website]' -p admin.yield
 ```

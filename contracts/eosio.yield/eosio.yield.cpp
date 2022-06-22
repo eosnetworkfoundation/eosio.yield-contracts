@@ -8,7 +8,7 @@
 // DEBUG (used to help testing)
 #include "src/debug.cpp"
 
-// @protocol
+// @protocol OR @admin
 [[eosio::action]]
 void yield::regprotocol( const name protocol, const map<name, string> metadata )
 {
@@ -46,6 +46,28 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
     // update state if not present
     if ( itr->status == "active"_n ) add_active_protocol( protocol );
     else remove_active_protocol( protocol );
+}
+
+// @protocol OR @admin
+[[eosio::action]]
+void yield::setmetakey( const name protocol, const name key, const optional<string> value )
+{
+    const auto config = get_config();
+    const bool is_admin = has_auth( config.admin_contract );
+    if ( !is_admin ) require_auth( protocol );
+
+    yield::protocols_table _protocols( get_self(), get_self().value );
+    auto itr = _protocols.get( protocol.value, "yield::setmetakey: [protocol] does not exists");
+
+    const name ram_payer = is_admin ? config.admin_contract : protocol;
+    _protocols.modify( itr, ram_payer, [&]( auto& row ) {
+        if ( value ) row.metadata[key] = *value;
+        else delete row.metadata[key];
+        row.updated_at = current_time_point();
+    });
+
+    // validate via admin contract
+    require_recipient( config.admin_contract );
 }
 
 // @protocol

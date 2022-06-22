@@ -114,7 +114,7 @@ public:
      *     "tvl": "200000.0000 EOS",
      *     "usd": "300000.0000 USD",
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
-     *     "metadata": [{"key": "type", "value": "swap"}, {"key": "url", "value": "https://myprotocol.com"}],
+     *     "metadata": [{"key": "type", "value": "swap"}, {"key": "website", "value": "https://myprotocol.com"}],
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
      *     "claimed_at": "1970-01-01T00:00:00",
@@ -200,11 +200,33 @@ public:
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield regprotocol '[myprotocol, [{"key": "url", "value":"https://myprotocol.com"}]]' -p myprotocol
+     * $ cleos push action eosio.yield regprotocol '[myprotocol, [{"key": "website", "value":"https://myprotocol.com"}]]' -p myprotocol
      * ```
      */
     [[eosio::action]]
     void regprotocol( const name protocol, const map<name, string> metadata );
+
+    /**
+     * ## ACTION `setmetakey`
+     *
+     * > Set protocol metakey
+     *
+     * - **authority**: `protocol` OR `admin.yield`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol main contract
+     * - `{name} key` - metakey (ex: name/website/description)
+     * - `{string} [value=null]` - (optional) metakey value (if empty, will erase metakey)
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield setmetakey '[myprotocol, website, "https://myprotocol.com"]' -p myprotocol
+     * ```
+     */
+    [[eosio::action]]
+    void setmetakey( const name protocol, const name key, const optional<string> value );
 
     /**
      * ## ACTION `unregister`

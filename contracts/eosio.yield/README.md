@@ -20,7 +20,7 @@ Yield+ is a Rewards system that incentivizes DeFi protocols to retain long-term 
 
 ```bash
 # register protocol
-$ cleos push action eosio.yield regprotocol '[protocol, [{"key": "url", "value": "https://myprotocol.com"}]]' -p protocol
+$ cleos push action eosio.yield regprotocol '[protocol, [{"key": "website", "value": "https://myprotocol.com"}]]' -p protocol
 
 # set additional protocol contracts
 # > action can only be called during [status="pending"]
@@ -61,6 +61,7 @@ $ cleos push action eosio.yield report '[protocol, "2021-04-12T12:20:00", <TVL U
 - [ACTION `init`](#action-init)
 - [ACTION `setrate`](#action-setrate)
 - [ACTION `regprotocol`](#action-regprotocol)
+- [ACTION `setmetakey`](#action-setmetakey)
 - [ACTION `unregister`](#action-unregister)
 - [ACTION `setcontracts`](#action-setcontracts)
 - [ACTION `setevm`](#action-setevm)
@@ -136,7 +137,7 @@ $ cleos push action eosio.yield report '[protocol, "2021-04-12T12:20:00", <TVL U
     "tvl": "200000.0000 EOS",
     "usd": "300000.0000 USD",
     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
-    "metadata": [{"key": "type", "value": "swap"}, {"key": "url", "value": "https://myprotocol.com"}],
+    "metadata": [{"key": "type", "value": "swap"}, {"key": "website", "value": "https://myprotocol.com"}],
     "created_at": "2022-05-13T00:00:00",
     "updated_at": "2022-05-13T00:00:00",
     "claimed_at": "1970-01-01T00:00:00",
@@ -194,7 +195,25 @@ $ cleos push action eosio.yield setrate '[500, "200000.0000 EOS", "6000000.0000 
 ### Example
 
 ```bash
-$ cleos push action eosio.yield regprotocol '[myprotocol, [{"key": "url", "value":"https://myprotocol.com"}]]' -p myprotocol
+$ cleos push action eosio.yield regprotocol '[myprotocol, [{"key": "website", "value":"https://myprotocol.com"}]]' -p myprotocol
+```
+
+## ACTION `setmetakey`
+
+> Set protocol metakey
+
+- **authority**: `protocol` OR `admin.yield`
+
+### params
+
+- `{name} protocol` - protocol main contract
+- `{name} key` - metakey (ex: name/website/description)
+- `{string} [value=null]` - (optional) metakey value (if empty, will erase metakey)
+
+### Example
+
+```bash
+$ cleos push action eosio.yield setmetakey '[myprotocol, website, "https://myprotocol.com"]' -p myprotocol
 ```
 
 ## ACTION `unregister`

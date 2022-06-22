@@ -81,6 +81,12 @@ void admin::on_setcategory( const name protocol, const name category )
     check_category( category );
 }
 
+[[eosio::on_notify("*::setmetakey")]]
+void admin::on_setmetakey( const name protocol, const name key, const string value );
+{
+    check_metakey( key, value );
+}
+
 void admin::check_metadata_keys( const map<name, string> metadata )
 {
     admin::metakeys_table _metakeys( get_self(), get_self().value );
