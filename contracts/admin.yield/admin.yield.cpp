@@ -105,7 +105,7 @@ void admin::check_value( const name key, const name type, const string value )
 {
     // validate length of value
     int maxsize = 256;
-    if ( type == "text"_n || type == "urls" ) maxsize = 10240;
+    if ( type == "text"_n || type == "urls"_n ) maxsize = 10240;
     check( value.size() <= maxsize, "admin.yield::check_metadata_keys: value exceeds " + std::to_string(maxsize) + " bytes [metadata_key=" + key.to_string() + "]");
 }
 
