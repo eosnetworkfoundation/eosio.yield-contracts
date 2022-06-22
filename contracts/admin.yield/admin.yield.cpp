@@ -91,8 +91,7 @@ void admin::check_metadata_keys( const map<name, string> metadata )
         const string value = item.second;
 
         // validate key/value
-        check_metakey( key );
-        check_value( key, value );
+        check_metakey( key, value );
     }
 
     // check for missing required keys
@@ -102,18 +101,21 @@ void admin::check_metadata_keys( const map<name, string> metadata )
     }
 }
 
-void admin::check_value( const name key, const string value )
+void admin::check_value( const name key, const name type, const string value )
 {
     // validate length of value
-    const int maxsize = key == "description"_n ? 10240 : 256;
+    int maxsize = 256;
+    if ( type == "text"_n || type == "urls" ) maxsize = 10240;
     check( value.size() <= maxsize, "admin.yield::check_metadata_keys: value exceeds " + std::to_string(maxsize) + " bytes [metadata_key=" + key.to_string() + "]");
 }
 
-void admin::check_metakey( const name key )
+void admin::check_metakey( const name key, const string value )
 {
     admin::metakeys_table _metakeys( get_self(), get_self().value );
     auto itr = _metakeys.find( key.value );
     check( itr != _metakeys.end(), "admin.yield::get_metakey: [key=" + key.to_string() + "] is not valid");
+
+    check_value( key, itr->type, value );
 }
 
 void admin::check_category( const name category )
