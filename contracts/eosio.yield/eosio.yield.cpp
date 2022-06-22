@@ -247,22 +247,25 @@ void yield::report( const name protocol, const time_point_sec period, const uint
         row.updated_at = current_time_point();
     });
 
-    // determine if project is eligible for rewards
-    if ( tvl <= config.min_tvl_report ) return; // skip if below min TVL value
-    if ( itr.status != "active"_n ) return; // skip if not active (denied or pending)
-
     // set to maximum value if exceeds max TVL value
     const int64_t tvl_amount = (tvl > config.max_tvl_report) ? config.max_tvl_report.amount : tvl.amount;
 
     // calculate rewards based on 5% APY
     // TVL * 5% / 365 days / 10 minute interval
-    const int64_t rewards_amount = uint128_t(tvl_amount) * config.annual_rate * period_interval / 10000 / YEAR;
-    const asset rewards = { rewards_amount, config.rewards.get_symbol() };
+    int64_t rewards_amount = uint128_t(tvl_amount) * config.annual_rate * period_interval / 10000 / YEAR;
+
+    // determine if project is eligible for rewards
+    // set rewards to 0
+    if ( tvl <= config.min_tvl_report ) rewards_amount = 0; // TVL must be above minimum TVL requirement
+    if ( itr.status != "active"_n ) rewards_amount = 0; // protocol must be active to receive rewards (denied or pending)
 
     // update rewards to protocol's balance
-    _protocols.modify( itr, same_payer, [&]( auto& row ) {
-        row.balance.quantity += rewards;
-    });
+    const asset rewards = { rewards_amount, config.rewards.get_symbol() };
+    if ( rewards.amount ) {
+        _protocols.modify( itr, same_payer, [&]( auto& row ) {
+            row.balance.quantity += rewards;
+        });
+    }
 
     // log report
     yield::rewardslog_action rewardslog( get_self(), { get_self(), "active"_n });
