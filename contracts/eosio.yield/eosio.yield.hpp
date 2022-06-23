@@ -114,7 +114,7 @@ public:
      *     "tvl": "200000.0000 EOS",
      *     "usd": "300000.0000 USD",
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
-     *     "metadata": [{"key": "type", "value": "swap"}, {"key": "website", "value": "https://myprotocol.com"}],
+     *     "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}],
      *     "created_at": "2022-05-13T00:00:00",
      *     "updated_at": "2022-05-13T00:00:00",
      *     "claimed_at": "1970-01-01T00:00:00",
@@ -409,7 +409,7 @@ public:
      *
      * - **authority**: `oracle.yield@eosio.code`
      *
-     * Report TVL from oracle
+     * > Report TVL from oracle
      *
      * ### params
      *
@@ -431,7 +431,7 @@ public:
     /**
      * ## ACTION `rewardslog`
      *
-     * > Rewards logging
+     * > When rewards are allocated from report generation
      *
      * - **authority**: `get_self()`
      *
@@ -463,6 +463,174 @@ public:
      */
     [[eosio::action]]
     void rewardslog( const name protocol, const name category, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance );
+
+    /**
+     * ## ACTION `statuslog`
+     *
+     * > When protocol status is modified
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - primary protocol contract
+     * - `{name} status="pending"` - status (`pending/active/denied`)
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "protocol": "myprotocol",
+     *     "status": "active",
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void statuslog( const name protocol, const name status );
+
+    /**
+     * ## ACTION `contractslog`
+     *
+     * > When protocol contracts are modified
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - primary protocol contract
+     * - `{set<name>} contracts.eos` - additional supporting EOS contracts
+     * - `{set<string>} contracts.evm` - additional supporting EVM contracts
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "protocol": "myprotocol",
+     *     "contracts": ["myprotocol", "mytreasury"],
+     *     "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void contractslog( const name protocol, const set<name> contracts, const set<string> evm );
+
+    /**
+     * ## ACTION `categorylog`
+     *
+     * > When protocol category is modified
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - primary protocol contract
+     * - `{name} category` - protocol category (ex: `dexes/lending/staking`)
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "protocol": "myprotocol",
+     *     "category": "dexes"
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void categorylog( const name protocol, const name category );
+
+    /**
+     * ## ACTION `createlog`
+     *
+     * > When protocol is created
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - primary protocol contract
+     * - `{map<string, string>} metadata` - metadata
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "protocol": "myprotocol",
+     *     "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}]
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void createlog( const name protocol, const map<string, string> metadata);
+
+    /**
+     * ## ACTION `eraselog`
+     *
+     * > When protocol is erased
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - primary protocol contract
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "protocol": "myprotocol"
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void eraselog( const name protocol );
+
+    /**
+     * ## ACTION `balancelog`
+     *
+     * > When protocol's balance is updated
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - primary protocol contract
+     * - `{extended_asset} balance` - balance available to be claimed
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "protocol": "myprotocol",
+     *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"}
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void balancelog( const name protocol, const extended_asset balance );
+
+    /**
+     * ## ACTION `metadatalog`
+     *
+     * > When protocol metadata is modified
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - primary protocol contract
+     * - `{map<string, string>} metadata` - metadata
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "protocol": "myprotocol",
+     *     "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}]
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void metadatalog( const name protocol, const map<string, string> metadata );
 
     // @debug
     [[eosio::action]]

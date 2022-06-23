@@ -2,8 +2,11 @@
 #include <eosio.token/eosio.token.hpp>
 #include <eosio.system/eosio.system.hpp>
 
-// self
+// core
 #include <eosio.yield/eosio.yield.hpp>
+
+// logging (used for backend syncing)
+#include "src/logs.cpp"
 
 // DEBUG (used to help testing)
 #include "src/debug.cpp"
@@ -62,7 +65,7 @@ void yield::setmetakey( const name protocol, const name key, const optional<stri
     const name ram_payer = is_admin ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
         if ( value ) row.metadata[key] = *value;
-        else delete row.metadata[key];
+        else row.metadata.erase(key);
         row.updated_at = current_time_point();
     });
 
@@ -104,13 +107,6 @@ void yield::claim( const name protocol, const optional<name> receiver )
     // logging
     yield::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
     claimlog.send( protocol, itr.category, to, claimable );
-}
-
-// @eosio.code
-[[eosio::action]]
-void yield::claimlog( const name protocol, const name category, const name receiver, const extended_asset claimed )
-{
-    require_auth( get_self() );
 }
 
 void yield::set_status( const name protocol, const name status )
@@ -292,13 +288,6 @@ void yield::report( const name protocol, const time_point_sec period, const uint
     // log report
     yield::rewardslog_action rewardslog( get_self(), { get_self(), "active"_n });
     rewardslog.send( protocol, itr.category, period, period_interval, tvl, usd, rewards, itr.balance.quantity );
-}
-
-// @system
-[[eosio::action]]
-void yield::rewardslog( const name protocol, const name category, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance )
-{
-    require_auth( get_self() );
 }
 
 // @protocol or @admin

@@ -72,6 +72,13 @@ $ cleos push action eosio.yield report '[protocol, "2021-04-12T12:20:00", <TVL U
 - [ACTION `rewardslog`](#action-rewardslog)
 - [ACTION `claim`](#action-claim)
 - [ACTION `claimlog`](#action-claimlog)
+- [ACTION `statuslog`](#action-statuslog)
+- [ACTION `contractslog`](#action-contractslog)
+- [ACTION `categorylog`](#action-categorylog)
+- [ACTION `createlog`](#action-createlog)
+- [ACTION `eraselog`](#action-eraselog)
+- [ACTION `balancelog`](#action-balancelog)
+- [ACTION `metadatalog`](#action-metadatalog)
 
 ## TABLE `config`
 
@@ -137,7 +144,7 @@ $ cleos push action eosio.yield report '[protocol, "2021-04-12T12:20:00", <TVL U
     "tvl": "200000.0000 EOS",
     "usd": "300000.0000 USD",
     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
-    "metadata": [{"key": "type", "value": "swap"}, {"key": "website", "value": "https://myprotocol.com"}],
+    "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}],
     "created_at": "2022-05-13T00:00:00",
     "updated_at": "2022-05-13T00:00:00",
     "claimed_at": "1970-01-01T00:00:00",
@@ -364,7 +371,7 @@ $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
 
 - **authority**: `oracle.yield`
 
-Report TVL from oracle
+> Report TVL from oracle
 
 ### params
 
@@ -382,7 +389,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 
 ## ACTION `rewardslog`
 
-> Rewards logging
+> When rewards are allocated from report generation
 
 - **authority**: `get_self()`
 
@@ -409,5 +416,145 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
     "usd": "300000.0000 USD",
     "rewards": "2.5500 EOS",
     "balance": "10.5500 EOS"
+}
+```
+
+## ACTION `statuslog`
+
+> When protocol status is modified
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} protocol` - primary protocol contract
+- `{name} status="pending"` - status (`pending/active/denied`)
+
+### example
+
+```json
+{
+    "protocol": "myprotocol",
+    "status": "active",
+}
+```
+
+## ACTION `contractslog`
+
+> When protocol contracts are modified
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} protocol` - primary protocol contract
+- `{set<name>} contracts.eos` - additional supporting EOS contracts
+- `{set<string>} contracts.evm` - additional supporting EVM contracts
+
+### example
+
+```json
+{
+    "protocol": "myprotocol",
+    "contracts": ["myprotocol", "mytreasury"],
+    "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
+}
+```
+
+## ACTION `categorylog`
+
+> When protocol category is modified
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} protocol` - primary protocol contract
+- `{name} category` - protocol category (ex: `dexes/lending/staking`)
+
+### example
+
+```json
+{
+    "protocol": "myprotocol",
+    "category": "dexes"
+}
+```
+
+## ACTION `createlog`
+
+> When protocol is created
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} protocol` - primary protocol contract
+- `{map<string, string>} metadata` - metadata
+
+### example
+
+```json
+{
+    "protocol": "myprotocol",
+    "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}]
+}
+```
+
+## ACTION `eraselog`
+
+> When protocol is erased
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} protocol` - primary protocol contract
+
+### example
+
+```json
+{
+    "protocol": "myprotocol"
+}
+```
+
+## ACTION `balancelog`
+
+> When protocol's balance is updated
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} protocol` - primary protocol contract
+- `{extended_asset} balance` - balance available to be claimed
+
+### example
+
+```json
+{
+    "protocol": "myprotocol",
+    "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"}
+}
+```
+
+## ACTION `metadatalog`
+
+> When protocol metadata is modified
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} protocol` - primary protocol contract
+- `{map<string, string>} metadata` - metadata
+
+### example
+
+```json
+{
+    "protocol": "myprotocol",
+    "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}]
 }
 ```
