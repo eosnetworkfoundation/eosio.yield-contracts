@@ -63,9 +63,16 @@ void admin::delcategory( const name category )
     _categories.erase( itr );
 }
 
-[[eosio::on_notify("*::regprotocol")]]
-void admin::on_regprotocol( const name protocol, const map<name, string> metadata )
+[[eosio::on_notify("*::claim")]]
+void admin::claim( const name protocol, const optional<name> receiver )
 {
+    // no checks
+}
+
+[[eosio::on_notify("*::regprotocol")]]
+void admin::on_regprotocol( const name protocol, const name category, const map<name, string> metadata )
+{
+    check_category( category );
     check_metadata_keys( metadata );
 }
 
@@ -82,9 +89,15 @@ void admin::on_setcategory( const name protocol, const name category )
 }
 
 [[eosio::on_notify("*::setmetakey")]]
-void admin::on_setmetakey( const name protocol, const name key, const string value );
+void admin::on_setmetakey( const name protocol, const name key, const string value )
 {
     check_metakey( key, value );
+}
+
+[[eosio::on_notify("*::setmetadata")]]
+void admin::on_setmetadata( const name protocol, const map<name, string> metadata )
+{
+    check_metadata_keys( metadata );
 }
 
 void admin::check_metadata_keys( const map<name, string> metadata )

@@ -197,12 +197,30 @@ $ cleos push action eosio.yield setrate '[500, "200000.0000 EOS", "6000000.0000 
 ### params
 
 - `{name} protocol` - protocol main contract
+- `{name} category` - protocol category (dexes/lending/yield)
 - `{map<name, string>} metadata` - (optional) key/value
 
 ### Example
 
 ```bash
-$ cleos push action eosio.yield regprotocol '[myprotocol, [{"key": "website", "value":"https://myprotocol.com"}]]' -p myprotocol
+$ cleos push action eosio.yield regprotocol '[myprotocol, dexes, [{"key": "website", "value":"https://myprotocol.com"}]]' -p myprotocol
+```
+
+## ACTION `setmetadata`
+
+> Set protocol metadata
+
+- **authority**: `protocol` OR `admin.yield`
+
+### params
+
+- `{name} protocol` - protocol main contract
+- `{map<name, string>} metadata` - (optional) key/value
+
+### Example
+
+```bash
+$ cleos push action eosio.yield setmetadata '[myprotocol, [{"key": "website", "value":"https://myprotocol.com"}]]' -p myprotocol
 ```
 
 ## ACTION `setmetakey`
@@ -490,6 +508,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ### params
 
 - `{name} protocol` - primary protocol contract
+- `{name} category` - protocol category (dexes/lending/yield)
 - `{map<string, string>} metadata` - metadata
 
 ### example
@@ -497,6 +516,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ```json
 {
     "protocol": "myprotocol",
+    "category": "dexes",
     "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}]
 }
 ```

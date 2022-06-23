@@ -35,7 +35,7 @@ void yield::categorylog( const name protocol, const name category )
 
 // @eosio.code
 [[eosio::action]]
-void yield::createlog( const name protocol, const map<string, string> metadata)
+void yield::createlog( const name protocol, const name category, const map<string, string> metadata)
 {
     require_auth( get_self() );
 }

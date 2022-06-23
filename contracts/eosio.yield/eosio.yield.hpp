@@ -125,7 +125,7 @@ public:
     struct [[eosio::table("protocols")]] protocols_row {
         name                    protocol;
         name                    status = "pending"_n;
-        name                    category = "unknown"_n;
+        name                    category;
         set<name>               contracts;
         set<string>             evm;
         asset                   tvl;
@@ -195,16 +195,38 @@ public:
      * ### params
      *
      * - `{name} protocol` - protocol main contract
+     * - `{name} category` - protocol category (dexes/lending/yield)
      * - `{map<name, string>} metadata` - (optional) key/value
      *
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield regprotocol '[myprotocol, [{"key": "website", "value":"https://myprotocol.com"}]]' -p myprotocol
+     * $ cleos push action eosio.yield regprotocol '[myprotocol, dexes, [{"key": "website", "value":"https://myprotocol.com"}]]' -p myprotocol
      * ```
      */
     [[eosio::action]]
-    void regprotocol( const name protocol, const map<name, string> metadata );
+    void regprotocol( const name protocol, const name category, const map<name, string> metadata );
+
+    /**
+     * ## ACTION `setmetadata`
+     *
+     * > Set protocol metadata
+     *
+     * - **authority**: `protocol` OR `admin.yield`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol main contract
+     * - `{map<name, string>} metadata` - (optional) key/value
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield setmetadata '[myprotocol, [{"key": "website", "value":"https://myprotocol.com"}]]' -p myprotocol
+     * ```
+     */
+    [[eosio::action]]
+    void setmetadata( const name protocol, const map<name, string> metadata );
 
     /**
      * ## ACTION `setmetakey`
@@ -548,6 +570,7 @@ public:
      * ### params
      *
      * - `{name} protocol` - primary protocol contract
+     * - `{name} category` - protocol category (dexes/lending/yield)
      * - `{map<string, string>} metadata` - metadata
      *
      * ### example
@@ -555,12 +578,13 @@ public:
      * ```json
      * {
      *     "protocol": "myprotocol",
+     *     "category": "dexes",
      *     "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}]
      * }
      * ```
      */
     [[eosio::action]]
-    void createlog( const name protocol, const map<string, string> metadata);
+    void createlog( const name protocol, const name category, const map<string, string> metadata);
 
     /**
      * ## ACTION `eraselog`
@@ -655,6 +679,16 @@ public:
     using claimlog_action = eosio::action_wrapper<"claimlog"_n, &yield::claimlog>;
     using rewardslog_action = eosio::action_wrapper<"rewardslog"_n, &yield::rewardslog>;
     using cleartable_action = eosio::action_wrapper<"cleartable"_n, &yield::cleartable>;
+
+    using statuslog_action = eosio::action_wrapper<"statuslog"_n, &yield::statuslog>;
+    using contractslog_action = eosio::action_wrapper<"contractslog"_n, &yield::contractslog>;
+    using categorylog_action = eosio::action_wrapper<"categorylog"_n, &yield::categorylog>;
+    using createlog_action = eosio::action_wrapper<"createlog"_n, &yield::createlog>;
+    using eraselog_action = eosio::action_wrapper<"eraselog"_n, &yield::eraselog>;
+    using balancelog_action = eosio::action_wrapper<"balancelog"_n, &yield::balancelog>;
+    using metadatalog_action = eosio::action_wrapper<"metadatalog"_n, &yield::metadatalog>;
+
+
 
 private :
     // utils

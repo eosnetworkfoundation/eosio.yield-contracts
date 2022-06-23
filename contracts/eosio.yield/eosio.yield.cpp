@@ -13,7 +13,7 @@
 
 // @protocol OR @admin
 [[eosio::action]]
-void yield::regprotocol( const name protocol, const map<name, string> metadata )
+void yield::regprotocol( const name protocol, const name category, const map<name, string> metadata )
 {
     const auto config = get_config();
     const bool is_admin = has_auth( config.admin_contract );
@@ -26,13 +26,14 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
     _abihash.get( protocol.value, "yield::regprotocol: [protocol] must be a smart contract");
 
     auto insert = [&]( auto& row ) {
+        row.protocol = protocol;
+        row.category = category;
         row.tvl.symbol = EOS;
         row.usd.symbol = USD;
         row.contracts.insert( protocol );
-        row.protocol = protocol;
-        row.metadata = metadata;
         row.balance.contract = config.rewards.get_contract();
         row.balance.quantity.symbol = config.rewards.get_symbol();
+        row.metadata = metadata;
         if ( !row.created_at.sec_since_epoch() ) row.created_at = current_time_point();
         row.updated_at = current_time_point();
     };
@@ -40,15 +41,46 @@ void yield::regprotocol( const name protocol, const map<name, string> metadata )
     // modify or create
     const name ram_payer = is_admin ? config.admin_contract : protocol;
     auto itr = _protocols.find( protocol.value );
-    if ( itr == _protocols.end() ) _protocols.emplace( ram_payer, insert );
-    else _protocols.modify( itr, ram_payer, insert );
+    const bool is_exists = itr != _protocols.end();
+    if ( is_exists ) _protocols.modify( itr, ram_payer, insert );
+    else _protocols.emplace( ram_payer, insert );
+
+    // logging
+    yield::createlog_action createlog( get_self(), { get_self(), "active"_n });
+    yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
+    yield::categorylog_action categorylog( get_self(), { get_self(), "active"_n });
+
+    // if ( !is_exists ) createlog.send( protocol, category, metadata );
+    // metadatalog.send( protocol, metadata );
+    // categorylog.send( protocol, category );
 
     // validate via admin contract
     require_recipient( config.admin_contract );
+}
 
-    // update state if not present
-    if ( itr->status == "active"_n ) add_active_protocol( protocol );
-    else remove_active_protocol( protocol );
+// @protocol OR @admin
+[[eosio::action]]
+void yield::setmetadata( const name protocol, const map<name, string> metadata )
+{
+    const auto config = get_config();
+    const bool is_admin = has_auth( config.admin_contract );
+    if ( !is_admin ) require_auth( protocol );
+
+    yield::protocols_table _protocols( get_self(), get_self().value );
+    auto itr = _protocols.get( protocol.value, "yield::setmetadata: [protocol] does not exists");
+
+    const name ram_payer = is_admin ? config.admin_contract : protocol;
+    _protocols.modify( itr, ram_payer, [&]( auto& row ) {
+        row.metadata = metadata;
+        row.updated_at = current_time_point();
+    });
+
+    // logging
+    // yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
+    // metadatalog.send( protocol, metadata );
+
+    // validate via admin contract
+    require_recipient( config.admin_contract );
 }
 
 // @protocol OR @admin
@@ -68,6 +100,10 @@ void yield::setmetakey( const name protocol, const name key, const optional<stri
         else row.metadata.erase(key);
         row.updated_at = current_time_point();
     });
+
+    // logging
+    // yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
+    // metadatalog.send( protocol, itr.metadata );
 
     // validate via admin contract
     require_recipient( config.admin_contract );
@@ -107,6 +143,13 @@ void yield::claim( const name protocol, const optional<name> receiver )
     // logging
     yield::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
     claimlog.send( protocol, itr.category, to, claimable );
+
+    // logging
+    yield::balancelog_action balancelog( get_self(), { get_self(), "active"_n });
+    balancelog.send( protocol, itr.balance );
+
+    // validate via admin contract
+    require_recipient( config.admin_contract );
 }
 
 void yield::set_status( const name protocol, const name status )
@@ -120,6 +163,10 @@ void yield::set_status( const name protocol, const name status )
         check( row.status != status, "yield::set_status: [status] not modified");
         row.status = status;
     });
+
+    // logging
+    yield::statuslog_action statuslog( get_self(), { get_self(), "active"_n });
+    statuslog.send( protocol, status );
 }
 
 void yield::set_category( const name protocol, const name category )
@@ -132,6 +179,10 @@ void yield::set_category( const name protocol, const name category )
         check( row.category != category, "yield::set_category: [category] not modified");
         row.category = category;
     });
+
+    // logging
+    yield::categorylog_action categorylog( get_self(), { get_self(), "active"_n });
+    categorylog.send( protocol, category );
 }
 
 // @admin
@@ -229,6 +280,10 @@ void yield::unregister( const name protocol )
     check( itr.balance.quantity.amount == 0, "yield::unregister: protocol has " + itr.balance.quantity.to_string() + " remaining balance, must execute `claim` ACTION before `unregister`");
     _protocols.erase( itr );
     remove_active_protocol( protocol );
+
+    // logging
+    yield::eraselog_action eraselog( get_self(), { get_self(), "active"_n });
+    eraselog.send( protocol );
 }
 
 // @oracle.yield

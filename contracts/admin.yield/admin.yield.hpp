@@ -161,16 +161,22 @@ public:
     void cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows );
 
     [[eosio::on_notify("*::regprotocol")]]
-    void on_regprotocol( const name protocol, const map<name, string> metadata );
+    void on_regprotocol( const name protocol, const name category, const map<name, string> metadata );
 
     [[eosio::on_notify("*::setmetakey")]]
     void on_setmetakey( const name protocol, const name key, const string value );
+
+    [[eosio::on_notify("*::setmetadata")]]
+    void on_setmetadata( const name protocol, const map<name, string> metadata );
 
     [[eosio::on_notify("*::regoracle")]]
     void on_regoracle( const name oracle, const map<name, string> metadata );
 
     [[eosio::on_notify("*::setcategory")]]
     void on_setcategory( const name protocol, const name category );
+
+    [[eosio::on_notify("*::claim")]]
+    void claim( const name protocol, const optional<name> receiver );
 
     // action wrappers
     using setmetakey_action = eosio::action_wrapper<"setmetakey"_n, &admin::setmetakey>;
