@@ -35,7 +35,7 @@ void yield::categorylog( const name protocol, const name category )
 
 // @eosio.code
 [[eosio::action]]
-void yield::createlog( const name protocol, const name category, const map<string, string> metadata)
+void yield::createlog( const name protocol, const name category, const map<name, string> metadata)
 {
     require_auth( get_self() );
 }
@@ -56,7 +56,7 @@ void yield::balancelog( const name protocol, const extended_asset balance )
 
 // @eosio.code
 [[eosio::action]]
-void yield::metadatalog( const name protocol, const map<string, string> metadata )
+void yield::metadatalog( const name protocol, const map<name, string> metadata )
 {
     require_auth( get_self() );
 }

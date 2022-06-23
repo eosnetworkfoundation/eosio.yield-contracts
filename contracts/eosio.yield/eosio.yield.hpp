@@ -584,7 +584,7 @@ public:
      * ```
      */
     [[eosio::action]]
-    void createlog( const name protocol, const name category, const map<string, string> metadata);
+    void createlog( const name protocol, const name category, const map<name, string> metadata );
 
     /**
      * ## ACTION `eraselog`
@@ -654,7 +654,7 @@ public:
      * ```
      */
     [[eosio::action]]
-    void metadatalog( const name protocol, const map<string, string> metadata );
+    void metadatalog( const name protocol, const map<name, string> metadata );
 
     // @debug
     [[eosio::action]]
@@ -687,8 +687,6 @@ public:
     using eraselog_action = eosio::action_wrapper<"eraselog"_n, &yield::eraselog>;
     using balancelog_action = eosio::action_wrapper<"balancelog"_n, &yield::balancelog>;
     using metadatalog_action = eosio::action_wrapper<"metadatalog"_n, &yield::metadatalog>;
-
-
 
 private :
     // utils

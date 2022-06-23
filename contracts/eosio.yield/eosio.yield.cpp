@@ -50,9 +50,9 @@ void yield::regprotocol( const name protocol, const name category, const map<nam
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
     yield::categorylog_action categorylog( get_self(), { get_self(), "active"_n });
 
-    // if ( !is_exists ) createlog.send( protocol, category, metadata );
-    // metadatalog.send( protocol, metadata );
-    // categorylog.send( protocol, category );
+    if ( !is_exists ) createlog.send( protocol, category, metadata );
+    metadatalog.send( protocol, metadata );
+    categorylog.send( protocol, category );
 
     // validate via admin contract
     require_recipient( config.admin_contract );
@@ -76,8 +76,8 @@ void yield::setmetadata( const name protocol, const map<name, string> metadata )
     });
 
     // logging
-    // yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
-    // metadatalog.send( protocol, metadata );
+    yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
+    metadatalog.send( protocol, metadata );
 
     // validate via admin contract
     require_recipient( config.admin_contract );
@@ -102,8 +102,8 @@ void yield::setmetakey( const name protocol, const name key, const optional<stri
     });
 
     // logging
-    // yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
-    // metadatalog.send( protocol, itr.metadata );
+    yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
+    metadatalog.send( protocol, itr.metadata );
 
     // validate via admin contract
     require_recipient( config.admin_contract );
