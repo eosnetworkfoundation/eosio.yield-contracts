@@ -51,8 +51,10 @@ void yield::regprotocol( const name protocol, const name category, const map<nam
     yield::categorylog_action categorylog( get_self(), { get_self(), "active"_n });
 
     if ( !is_exists ) createlog.send( protocol, category, metadata );
-    metadatalog.send( protocol, metadata );
-    categorylog.send( protocol, category );
+    else  {
+        metadatalog.send( protocol, metadata );
+        categorylog.send( protocol, category );
+    }
 
     // validate via admin contract
     require_recipient( config.admin_contract );
