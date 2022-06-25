@@ -1,4 +1,4 @@
-import { Name } from "@greymass/eosio";
+import { Name, API, Authority, UInt32, PermissionLevelWeight, Weight, PermissionLevel } from "@greymass/eosio";
 import { Blockchain } from "@proton/vert"
 import { expectToThrow } from "./helpers";
 import { KV, ExtendedAsset, ExtendedSymbol } from "./interfaces"
@@ -7,7 +7,7 @@ import { KV, ExtendedAsset, ExtendedSymbol } from "./interfaces"
  * Initialize
  */
 const blockchain = new Blockchain()
-const eosioYield = blockchain.createContract('eosio.yield', 'contracts/eosio.yield/eosio.yield');
+const eosioYield = blockchain.createContract('eosio.yield', 'contracts/eosio.yield/eosio.yield', true);
 const eosioSystem = blockchain.createContract('eosio', 'external/eosio.system/eosio.system');
 const eosioToken = blockchain.createContract('eosio.token', 'external/eosio.token/eosio.token');
 blockchain.createAccounts('myprotocol', 'myvault', "protocol1", "protocol2", "myaccount", "oracle.yield", "admin.yield");
@@ -20,7 +20,7 @@ export interface Protocol {
   tvl: string; //  "200000.0000 EOS"
   usd: string; //  "300000.0000 USD"
   balance: ExtendedAsset; //  {"quantity": "2.5000 EOS", "contract": "eosio.token"}
-  metadata: KV[]; //  [{"key": "url", "value": "https://myprotocol.com"}]
+  metadata: KV[]; //  [{"key": "website", "value": "https://myprotocol.com"}]
   created_at: string; //  "2022-05-13T00:00:00"
   updated_at: string; //  "2022-05-13T00:00:00"
   claimed_at: string; //  "1970-01-01T00:00:00"
@@ -58,6 +58,9 @@ beforeAll(async () => {
   await eosioSystem.actions.abihash(["protocol1", hash]).send();
   await eosioSystem.actions.abihash(["protocol2", hash]).send();
 
+  // setcode
+  // await eosioYield.actions.
+
   // create token
   await eosioToken.actions.create(["eosio", "1000000000.0000 EOS"]).send();
   await eosioToken.actions.issue(["eosio", "1000000000.0000 EOS", "init"]).send("eosio@active");
@@ -74,20 +77,24 @@ describe('eosio.yield', () => {
   });
 
   // Register Protocol
-  const metadata = [{"key": "url", "value": "https://myprotocol.com"}];
+  const category = "dexes";
+  const metadata = [
+    {"key": "name", "value": "My Protocol"},
+    {"key": "website", "value": "https://myprotocol.com"}
+  ];
   it("regprotocol::success", async () => {
-    await eosioYield.actions.regprotocol(["myprotocol", metadata]).send('myprotocol@active');
+    await eosioYield.actions.regprotocol(["myprotocol", category, metadata]).send('myprotocol@active');
     const protocol = getProtocol("myprotocol");
     expect(protocol.metadata).toEqual(metadata);
   });
 
   it("regprotocol::error::missing required authority", async () => {
-    const action = eosioYield.actions.regprotocol(["myprotocol", metadata]).send('myaccount@active')
+    const action = eosioYield.actions.regprotocol(["myprotocol", category, metadata]).send('myaccount@active')
     await expectToThrow(action, "missing required authority");
   });
 
   it("regprotocol::error::invalid metadata_key", async () => {
-    const action = eosioYield.actions.regprotocol(["protocol1", [{"key": "foo", "value": "bar"}]]).send('protocol1@active')
+    const action = eosioYield.actions.regprotocol(["protocol1", category, [{"key": "foo", "value": "bar"}]]).send('protocol1@active')
     await expectToThrow(action, "invalid [metadata_key=foo]");
   });
 
