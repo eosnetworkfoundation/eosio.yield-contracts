@@ -121,8 +121,8 @@ cleos push action eosio.yield report '[protocol, "2022-05-13T00:00:00", 600, "20
 - `{name} protocol` - primary protocol contract
 - `{name} status="pending"` - status (`pending/active/denied`)
 - `{name} category` - protocol category (ex: `dexes/lending/staking`)
-- `{set<name>} contracts.eos` - additional supporting EOS contracts
-- `{set<string>} contracts.evm` - additional supporting EVM contracts
+- `{set<name>} contracts` - additional supporting EOS contracts
+- `{set<string>} evm` - additional supporting EVM contracts
 - `{asset} tvl` - reported TVL averaged value in EOS
 - `{asset} usd` - reported TVL averaged value in USD
 - `{extended_asset} balance` - balance available to be claimed

@@ -57,6 +57,8 @@ const metadata = [
   {"key": "name", "value": "My Protocol"},
   {"key": "website", "value": "https://myprotocol.com"}
 ];
+const contracts = ["myprotocol", "myvault"];
+const evms = ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"];
 
 // one-time setup
 beforeAll(async () => {
@@ -112,13 +114,16 @@ describe('eosio.yield', () => {
     expect(protocol.metadata).toEqual(metadata);
   });
 
-  // Set Contracts
-  const contracts = ["myprotocol", "myvault"];
   it("setcontracts", async () => {
     const auth = contracts.map(contract => { return { actor: contract, permission: "active"} });
     await eosioYield.actions.setcontracts([ "myprotocol", contracts ]).send(auth);
     const protocol = getProtocol("myprotocol");
     expect(protocol.contracts).toEqual(contracts);
+  });
+
+  it("setevm", async () => {
+    const action = eosioYield.actions.setevm([ "myprotocol", evms ]).send("myprotocol@active");
+    await expectToThrow(action, "NOT IMPLEMENTED");
   });
 
   it("admin::approve", async () => {

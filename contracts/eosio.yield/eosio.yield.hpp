@@ -91,8 +91,8 @@ public:
      * - `{name} protocol` - primary protocol contract
      * - `{name} status="pending"` - status (`pending/active/denied`)
      * - `{name} category` - protocol category (ex: `dexes/lending/staking`)
-     * - `{set<name>} contracts.eos` - additional supporting EOS contracts
-     * - `{set<string>} contracts.evm` - additional supporting EVM contracts
+     * - `{set<name>} contracts` - additional supporting EOS contracts
+     * - `{set<string>} evm` - additional supporting EVM contracts
      * - `{asset} tvl` - reported TVL averaged value in EOS
      * - `{asset} usd` - reported TVL averaged value in USD
      * - `{extended_asset} balance` - balance available to be claimed

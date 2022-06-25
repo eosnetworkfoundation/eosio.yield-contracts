@@ -14,7 +14,8 @@ cleos push action eosio.yield setmetadata '[protocol2, [{"key": "name", "value":
 cleos push action eosio.yield setmetakey '[protocol2, "name", "myprotocol2"]' -p protocol2
 
 # set contracts
-cleos push action eosio.yield setcontracts '[myprotocol, ["myvault"], []]' -p myprotocol -p myvault
+cleos push action eosio.yield setcontracts '[myprotocol, ["myvault"]]' -p myprotocol -p myvault
+cleos push action eosio.yield setevm '[myprotocol, ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
 
 # approve protocol
 cleos push action eosio.yield approve '[myprotocol]' -p admin.yield
