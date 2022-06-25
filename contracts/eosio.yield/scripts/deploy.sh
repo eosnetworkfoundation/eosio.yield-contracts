@@ -20,9 +20,13 @@ cleos set contract eosio.token ../../external/eosio.token eosio.token.wasm eosio
 # permissions
 cleos set account permission eosio.yield active --add-code
 
+
 # create tokens
 cleos push action eosio.token create '["eosio", "1000000000.0000 EOS"]' -p eosio.token
 cleos push action eosio.token issue '["eosio", "1000000000.0000 EOS", "init"]' -p eosio
+
+# init contract
+cleos push action eosio.yield init '[["4,EOS", "eosio.token"], oracle.yield, admin.yield]' -p eosio.yield
 cleos transfer eosio eosio.yield "10000 EOS"
 
 # setup ABI

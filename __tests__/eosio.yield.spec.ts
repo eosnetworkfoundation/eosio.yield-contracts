@@ -1,4 +1,4 @@
-import { Name, API, Authority, UInt32, PermissionLevelWeight, Weight, PermissionLevel } from "@greymass/eosio";
+import { Name } from "@greymass/eosio";
 import { Blockchain } from "@proton/vert"
 import { expectToThrow } from "./helpers";
 import { KV, ExtendedAsset, ExtendedSymbol } from "./interfaces"
@@ -14,6 +14,7 @@ blockchain.createAccounts('myprotocol', 'myvault', "protocol1", "protocol2", "my
 
 export interface Protocol {
   protocol: string; //  "myprotocol"
+  category: string; //  "dexes"
   status: string; //  "active"
   contracts: string[]; //  ["myprotocol", "mytreasury"]
   evm: string[]; //  ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]

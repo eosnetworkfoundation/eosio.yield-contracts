@@ -375,6 +375,13 @@ void yield::setcontracts( const name protocol, const set<name> contracts )
         check( row.contracts != before_contracts, "yield::setcontracts: [contracts] was not modified");
     });
     remove_active_protocol( protocol );
+
+    // logging
+    yield::contractslog_action contractslog( get_self(), { get_self(), "active"_n });
+    yield::statuslog_action statuslog( get_self(), { get_self(), "active"_n });
+
+    contractslog.send( protocol, itr.contracts, itr.evm );
+    statuslog.send( protocol, itr.status );
 }
 
 // @protocol or @admin
@@ -402,6 +409,13 @@ void yield::setevm( const name protocol, const set<string> evm )
         row.updated_at = current_time_point();
         check( row.evm != before_evm, "yield::setevm: [evm] was not modified");
     });
+
+    // logging
+    yield::contractslog_action contractslog( get_self(), { get_self(), "active"_n });
+    yield::statuslog_action statuslog( get_self(), { get_self(), "active"_n });
+
+    contractslog.send( protocol, itr.contracts, itr.evm );
+    statuslog.send( protocol, itr.status );
 }
 
 [[eosio::on_notify("*::transfer")]]
