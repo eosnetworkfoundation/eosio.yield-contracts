@@ -14,7 +14,7 @@
     "test": "jest __tests__/*.spec.ts --verbose"
   },
   "devDependencies": {
-    "@proton/vert": "^0.2.14",
+    "@proton/vert": "^0.3.4",
     "@types/jest": "^28.1.1",
     "jest": "^28.1.0",
     "ts-jest": "^28.0.4",

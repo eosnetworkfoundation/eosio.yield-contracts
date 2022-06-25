@@ -9,6 +9,10 @@ cleos push action eosio.yield regprotocol '[myprotocol, dexes, [{"key": "name", 
 cleos push action eosio.yield regprotocol '[protocol1, dexes, [{"key": "name", "value": "myprotocol1"}, {"key": "website", "value":"https://protocol1.com"}]]' -p protocol1
 cleos push action eosio.yield regprotocol '[protocol2, dexes, [{"key": "name", "value": "myprotocol2"}, {"key": "website", "value":"https://protocol2.com"}]]' -p protocol2
 
+# set metadata
+cleos push action eosio.yield setmetadata '[protocol2, [{"key": "name", "value": "myprotocol2"}, {"key": "website", "value":"https://protocol2.com"}]]' -p protocol2
+cleos push action eosio.yield setmetakey '[protocol2, "name", "myprotocol2"]' -p protocol2
+
 # set contracts
 cleos push action eosio.yield setcontracts '[myprotocol, ["myvault"], []]' -p myprotocol -p myvault
 

@@ -69,7 +69,7 @@ void yield::setmetadata( const name protocol, const map<name, string> metadata )
     if ( !is_admin ) require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
-    auto itr = _protocols.get( protocol.value, "yield::setmetadata: [protocol] does not exists");
+    auto & itr = _protocols.get( protocol.value, "yield::setmetadata: [protocol] does not exists");
 
     const name ram_payer = is_admin ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
@@ -94,7 +94,7 @@ void yield::setmetakey( const name protocol, const name key, const optional<stri
     if ( !is_admin ) require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
-    auto itr = _protocols.get( protocol.value, "yield::setmetakey: [protocol] does not exists");
+    auto & itr = _protocols.get( protocol.value, "yield::setmetakey: [protocol] does not exists");
 
     const name ram_payer = is_admin ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {

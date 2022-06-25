@@ -7,7 +7,7 @@ import { KV, ExtendedAsset, ExtendedSymbol } from "./interfaces"
  * Initialize
  */
 const blockchain = new Blockchain()
-const eosioYield = blockchain.createContract('eosio.yield', 'contracts/eosio.yield/eosio.yield', true);
+const eosioYield = blockchain.createContract('eosio.yield', 'contracts/eosio.yield/eosio.yield');
 const eosioSystem = blockchain.createContract('eosio', 'external/eosio.system/eosio.system');
 const eosioToken = blockchain.createContract('eosio.token', 'external/eosio.token/eosio.token');
 blockchain.createAccounts('myprotocol', 'myvault', "protocol1", "protocol2", "myaccount", "oracle.yield", "admin.yield");
@@ -51,6 +51,13 @@ const getProtocol = ( protocol: string ): Protocol => {
   return eosioYield.tables.protocols(scope).getTableRow(primary_key)
 }
 
+// defaults
+const category = "dexes";
+const metadata = [
+  {"key": "name", "value": "My Protocol"},
+  {"key": "website", "value": "https://myprotocol.com"}
+];
+
 // one-time setup
 beforeAll(async () => {
   // set ABI hashes for protocols
@@ -77,13 +84,7 @@ describe('eosio.yield', () => {
     expect(config.max_tvl_report).toBe("6000000.0000 EOS");
   });
 
-  // Register Protocol
-  const category = "dexes";
-  const metadata = [
-    {"key": "name", "value": "My Protocol"},
-    {"key": "website", "value": "https://myprotocol.com"}
-  ];
-  it("regprotocol::success", async () => {
+  it("regprotocol", async () => {
     await eosioYield.actions.regprotocol(["myprotocol", category, metadata]).send('myprotocol@active');
     const protocol = getProtocol("myprotocol");
     expect(protocol.metadata).toEqual(metadata);
@@ -99,9 +100,21 @@ describe('eosio.yield', () => {
     await expectToThrow(action, "invalid [metadata_key=foo]");
   });
 
+  it("setmetadata", async () => {
+    await eosioYield.actions.setmetadata(["myprotocol", metadata]).send('myprotocol@active');
+    const protocol = getProtocol("myprotocol");
+    expect(protocol.metadata).toEqual(metadata);
+  });
+
+  it("setmetakey", async () => {
+    await eosioYield.actions.setmetakey(["myprotocol", metadata[0].key, metadata[0].value]).send('myprotocol@active');
+    const protocol = getProtocol("myprotocol");
+    expect(protocol.metadata).toEqual(metadata);
+  });
+
   // Set Contracts
   const contracts = ["myprotocol", "myvault"];
-  it("setcontracts::multi-authority", async () => {
+  it("setcontracts", async () => {
     const auth = contracts.map(contract => { return { actor: contract, permission: "active"} });
     await eosioYield.actions.setcontracts([ "myprotocol", contracts ]).send(auth);
     const protocol = getProtocol("myprotocol");

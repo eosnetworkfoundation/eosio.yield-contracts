@@ -543,10 +543,10 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
-"@proton/vert@^0.2.14":
-  version "0.2.14"
-  resolved "https://registry.yarnpkg.com/@proton/vert/-/vert-0.2.14.tgz#541f97ced07d9509ac8b4fca61bd242ab3dbab35"
-  integrity sha512-flBt5uJskc8NNY6tjWZId6i/KdhjLcUFb0n0ctaqUWwJQEOE7HdxH0+S3Ngqk9Odxvp0osrrUZwGCNHH0D7TAg==
+"@proton/vert@^0.3.4":
+  version "0.3.4"
+  resolved "https://registry.yarnpkg.com/@proton/vert/-/vert-0.3.4.tgz#efde2f079c017adb4e1b8c8b66be9d9e22a967fb"
+  integrity sha512-CbMZY2ka2efwfxLfSqS5eSH9aHQP2xpf0AoC2kxjwt7uOQSwUJd6JUh10QwNSLdmEJgNB07GOyOLNPfvDY9/Bg==
   dependencies:
     "@greymass/eosio" "^0.5.5"
     bn.js "^5.2.0"
@@ -556,6 +556,7 @@
     cross-fetch "^3.1.5"
     elliptic "^6.5.4"
     hash.js "^1.1.7"
+    lodash.set "^4.3.2"
     loglevel "^1.8.0"
     loglevel-plugin-prefix "^0.8.4"
     sorted-btree "^1.6.0"
@@ -611,11 +612,6 @@
   integrity sha512-kVzjari1s2YVi77D3w1yuvohV2idweYXMCDzqBiVNN63TcDWrIlTVOYpqVrvbbyOE/IyzBoTKF0fdnLPEORFxA==
   dependencies:
     "@babel/types" "^7.3.0"
-
-"@types/chai@^4.3.1":
-  version "4.3.1"
-  resolved "https://registry.yarnpkg.com/@types/chai/-/chai-4.3.1.tgz#e2c6e73e0bdeb2521d00756d099218e9f5d90a04"
-  integrity sha512-/zPMqDkzSZ8t3VtxOa4KPq7uzzW978M9Tvh+j7GHKuo6k6GTLxPJ4J5gE5cjfJ26pnXst0N5Hax8Sr0T2Mi9zQ==
 
 "@types/graceful-fs@^4.1.3":
   version "4.1.5"
@@ -1799,6 +1795,11 @@ lodash.memoize@4.x:
   version "4.1.2"
   resolved "https://registry.yarnpkg.com/lodash.memoize/-/lodash.memoize-4.1.2.tgz#bcc6c49a42a2840ed997f323eada5ecd182e0bfe"
   integrity sha512-t7j+NzmgnQzTAYXcsHYLgimltOV1MXHtlOWf6GjL9Kj8GK5FInw5JotxvbOs+IvV1/Dzo04/fCGfLVs7aXb4Ag==
+
+lodash.set@^4.3.2:
+  version "4.3.2"
+  resolved "https://registry.yarnpkg.com/lodash.set/-/lodash.set-4.3.2.tgz#d8757b1da807dde24816b0d6a84bea1a76230b23"
+  integrity sha512-4hNPN5jlm/N/HLMCO43v8BXKq9Z7QdAGc/VGrRD61w8gN9g/6jF9A4L1pbUgBLCffi0w9VsXfTOij5x8iTyFvg==
 
 loglevel-plugin-prefix@^0.8.4:
   version "0.8.4"
