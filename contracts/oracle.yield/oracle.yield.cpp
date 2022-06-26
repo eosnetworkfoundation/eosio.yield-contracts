@@ -52,16 +52,20 @@ void oracle::unregister( const name oracle )
 [[eosio::action]]
 void oracle::approve( const name oracle )
 {
-    require_auth( get_self() );
+    const auto config = get_config();
+    require_auth( config.admin_contract );
     set_status( oracle, "active"_n );
+    require_recipient( config.admin_contract );
 }
 
 // @admin
 [[eosio::action]]
 void oracle::deny( const name oracle )
 {
-    require_auth( get_self() );
+    const auto config = get_config();
+    require_auth( config.admin_contract );
     set_status( oracle, "denied"_n );
+    require_recipient( config.admin_contract );
 }
 
 // @oracle

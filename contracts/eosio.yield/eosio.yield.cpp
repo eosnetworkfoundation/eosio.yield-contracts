@@ -195,6 +195,7 @@ void yield::approve( const name protocol )
     require_auth( config.admin_contract );
     set_status( protocol, "active"_n );
     add_active_protocol( protocol );
+    require_recipient( config.admin_contract );
 }
 
 // @admin
@@ -215,6 +216,7 @@ void yield::deny( const name protocol )
     require_auth( config.admin_contract );
     set_status( protocol, "denied"_n);
     remove_active_protocol( protocol );
+    require_recipient( config.admin_contract );
 }
 
 // @system

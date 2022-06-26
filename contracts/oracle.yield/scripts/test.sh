@@ -12,7 +12,7 @@ cleos push action oracle.yield addtoken '["USDT", "tethertether", null, null]' -
 cleos push action oracle.yield regoracle '[myoracle, [{"key": "url", "value":"https://myoracle"}]]' -p myoracle
 
 # approve
-cleos push action oracle.yield approve '[myoracle]' -p oracle.yield
+cleos push action oracle.yield approve '[myoracle]' -p admin.yield
 
 # updateall
 cleos -v push action oracle.yield updateall '[myoracle, null]' -p myoracle

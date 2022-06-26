@@ -1,57 +1,41 @@
 import { Name } from "@greymass/eosio";
-import { Blockchain } from "@proton/vert"
-import { expectToThrow } from "./helpers";
+import { Metakey, Category } from "./interfaces";
+import { contracts } from "./init";
 
-export interface Metakey {
-  key: string; //  "category"
-  required: boolean; // true
-  description: string; // "Protocol category"
-}
-
-export interface Category {
-  category: string; //  "dexes"
-  description: string; // "Protocols where you can swap/trade cryptocurrency"
-}
-
-/**
- * Initialize
- */
-const blockchain = new Blockchain()
-const adminYield = blockchain.createContract('admin.yield', 'contracts/admin.yield/admin.yield');
-
-/**
- * Helpers
- */
+// get tables
 const getMetakeys = (key: string): Metakey => {
-  const scope =Name.from('admin.yield').value.value;
-  return adminYield.tables.metakeys(scope).getTableRow( Name.from(key).value.value );
+  const scope = Name.from('admin.yield').value.value;
+  return contracts.yield.admin.tables.metakeys(scope).getTableRow( Name.from(key).value.value );
 }
 
 const getCategory = (category: string): Category => {
   const scope = Name.from('admin.yield').value.value;
-  return adminYield.tables.categories(scope).getTableRow( Name.from(category).value.value );
+  return contracts.yield.admin.tables.categories(scope).getTableRow( Name.from(category).value.value );
 }
+
+// defaults
+const metakeys = [
+  {required: true,  type: "url", key: "website", description: "Protocol website"},
+  {required: true,  type: "string", key: "name", description: "Protocol name"},
+  {required: false, type: "string", key: "dappradar", description: "DappRadar identifier"},
+]
+
+const categories = [
+  {category: "dexes", description: "Protocols where you can swap/trade cryptocurrency"},
+]
 
 describe('admin.yield', () => {
 
   it("config::setmetakey", async () => {
-    const metakeys = [
-      {required: true,  type: "url", key: "website", description: "Protocol website"},
-      {required: true,  type: "string", key: "name", description: "Protocol name"},
-      {required: false, type: "string", key: "dappradar", description: "DappRadar identifier"},
-    ]
     for ( const metakey of metakeys ) {
-      await adminYield.actions.setmetakey(metakey).send();
+      await contracts.yield.admin.actions.setmetakey(metakey).send();
       expect(getMetakeys(metakey.key)).toEqual(metakey);
     }
   });
 
   it("config::setcategory", async () => {
-    const categories = [
-      {category: "dexes", description: "Protocols where you can swap/trade cryptocurrency"},
-    ]
     for ( const metakey of categories ) {
-      await adminYield.actions.setcategory(metakey).send();
+      await contracts.yield.admin.actions.setcategory(metakey).send();
       expect(getCategory(metakey.category)).toEqual(metakey);
     }
   });

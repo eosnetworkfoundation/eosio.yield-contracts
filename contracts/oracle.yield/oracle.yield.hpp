@@ -204,7 +204,6 @@ public:
     [[eosio::action]]
     void init( const extended_symbol rewards, const name yield_contract, const name admin_contract );
 
-
     /**
      * ## ACTION `addtoken`
      *
