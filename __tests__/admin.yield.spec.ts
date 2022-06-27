@@ -1,6 +1,7 @@
 import { Name } from "@greymass/eosio";
 import { Metakey, Category } from "./interfaces";
 import { contracts } from "./init";
+import { metakeys, categories } from "./constants"
 
 // get tables
 const getMetakeys = (key: string): Metakey => {
@@ -12,17 +13,6 @@ const getCategory = (category: string): Category => {
   const scope = Name.from('admin.yield').value.value;
   return contracts.yield.admin.tables.categories(scope).getTableRow( Name.from(category).value.value );
 }
-
-// defaults
-const metakeys = [
-  {required: true,  type: "url", key: "website", description: "Protocol website"},
-  {required: true,  type: "string", key: "name", description: "Protocol name"},
-  {required: false, type: "string", key: "dappradar", description: "DappRadar identifier"},
-]
-
-const categories = [
-  {category: "dexes", description: "Protocols where you can swap/trade cryptocurrency"},
-]
 
 describe('admin.yield', () => {
 

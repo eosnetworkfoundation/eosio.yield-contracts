@@ -1,7 +1,8 @@
-import { Name } from "@greymass/eosio";
+import { Name, Asset } from "@greymass/eosio";
 import { expectToThrow } from "./helpers";
 import { contracts } from "./init"
 import { OracleConfig, Oracle } from "./interfaces"
+import { metadata_oracle } from "./constants"
 
 // get tables
 const getConfig = (): OracleConfig => {
@@ -15,11 +16,12 @@ const getOracle = ( oracle: string ): Oracle => {
   return contracts.yield.oracle.tables.oracles(scope).getTableRow(primary_key)
 }
 
-// defaults
-const metadata = [
-  {key: "name", value: "My Oracle"},
-  {key: "website", value: "https://myoracle.com"}
-];
+beforeAll(async () => {
+  await contracts.yield.eosio.actions.init([{sym: "4,EOS", contract: "eosio.token"}, "oracle.yield", "admin.yield"]).send();
+  await contracts.yield.eosio.actions.setrate([500, "200000.0000 EOS", "6000000.0000 EOS"]).send();
+  await contracts.yield.eosio.actions.regprotocol(["myprotocol", "dexes", metadata_oracle]).send('myprotocol@active');
+  await contracts.yield.eosio.actions.approve([ "myprotocol" ]).send("admin.yield@active");
+});
 
 describe('oracle.yield', () => {
   it("config::init", async () => {
@@ -35,20 +37,14 @@ describe('oracle.yield', () => {
   });
 
   it("regoracle", async () => {
-    await contracts.yield.oracle.actions.regoracle(["myoracle", metadata]).send('myoracle@active');
+    await contracts.yield.oracle.actions.regoracle(["myoracle", metadata_oracle]).send('myoracle@active');
     const oracle = getOracle("myoracle");
-    expect(oracle.metadata).toEqual(metadata);
+    expect(oracle.metadata).toEqual(metadata_oracle);
     expect(oracle.status).toEqual("pending");
   });
 
-  it("regoracle::approve", async () => {
-    await contracts.yield.oracle.actions.approve(["myoracle"]).send('admin.yield@active');
-    const oracle = getOracle("myoracle");
-    expect(oracle.status).toEqual("active");
-  });
-
   it("regoracle::error::missing required authority", async () => {
-    const action = contracts.yield.oracle.actions.regoracle(["myoracle", metadata]).send('foobar@active');
+    const action = contracts.yield.oracle.actions.regoracle(["myoracle", metadata_oracle]).send('foobar@active');
     await expectToThrow(action, "missing required authority");
   });
 
@@ -58,35 +54,29 @@ describe('oracle.yield', () => {
   });
 
   it("setmetadata", async () => {
-    await contracts.yield.oracle.actions.setmetadata(["myoracle", metadata]).send('myoracle@active');
+    await contracts.yield.oracle.actions.setmetadata(["myoracle", metadata_oracle]).send('myoracle@active');
     const protocol = getOracle("myoracle");
-    expect(protocol.metadata).toEqual(metadata);
+    expect(protocol.metadata).toEqual(metadata_oracle);
   });
 
   it("setmetakey", async () => {
-    await contracts.yield.oracle.actions.setmetakey(["myoracle", metadata[0].key, metadata[0].value]).send('myoracle@active');
+    await contracts.yield.oracle.actions.setmetakey(["myoracle", metadata_oracle[0].key, metadata_oracle[0].value]).send('myoracle@active');
     const oracle = getOracle("myoracle");
-    expect(oracle.metadata).toEqual(metadata);
+    expect(oracle.metadata).toEqual(metadata_oracle);
   });
 
-  // it("setcontracts", async () => {
-  //   const auth = contracts.map(contract => { return { actor: contract, permission: "active"} });
-  //   await contracts.yield.oracle.actions.setcontracts([ "myoracle", contracts ]).send(auth);
-  //   const oracle = getOracle("myoracle");
-  //   expect(oracle.contracts).toEqual(contracts);
-  // });
+  it("admin::approve", async () => {
+    const before = getOracle("myoracle");
+    expect(before.status).toEqual("pending");
 
-  // it("setevm", async () => {
-  //   const action = contracts.yield.oracle.actions.setevm([ "myoracle", evms ]).send("myoracle@active");
-  //   await expectToThrow(action, "NOT IMPLEMENTED");
-  // });
+    await contracts.yield.oracle.actions.approve([ "myoracle" ]).send("admin.yield@active");
+    const after = getOracle("myoracle");
+    expect(after.status).toEqual("active");
+  });
 
-  // it("admin::approve", async () => {
-  //   const before = getOracle("myoracle");
-  //   expect(before.status).toEqual("pending");
-
-  //   await contracts.yield.oracle.actions.approve([ "myoracle" ]).send("admin.yield@active");
-  //   const after = getOracle("myoracle");
-  //   expect(after.status).toEqual("active");
-  // });
+  it("updateall", async () => {
+    await contracts.yield.oracle.actions.updateall(["myoracle", 20]).send("myoracle@active");
+    const oracle = getOracle("myoracle");
+    expect(Asset.from(oracle.balance.quantity).value).toEqual(200);
+  });
 });

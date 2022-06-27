@@ -2,6 +2,7 @@ import { Name } from "@greymass/eosio";
 import { expectToThrow } from "./helpers";
 import { YieldConfig, Protocol } from "./interfaces"
 import { contracts } from "./init"
+import { category, eos_contracts, evm_contracts, metadata_yield } from "./constants"
 
 // get tables
 const getConfig = (): YieldConfig => {
@@ -15,15 +16,6 @@ const getProtocol = ( protocol: string ): Protocol => {
   return contracts.yield.eosio.tables.protocols(scope).getTableRow(primary_key)
 }
 
-// defaults
-const category = "dexes";
-const eos_contracts = ["myprotocol", "myvault"];
-const evms = ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"];
-const metadata = [
-  {key: "name", value: "My Protocol"},
-  {key: "website", value: "https://myprotocol.com"}
-];
-
 describe('eosio.yield', () => {
   it("config::init", async () => {
     await contracts.yield.eosio.actions.init([{sym: "4,EOS", contract: "eosio.token"}, "oracle.yield", "admin.yield"]).send();
@@ -35,13 +27,13 @@ describe('eosio.yield', () => {
   });
 
   it("regprotocol", async () => {
-    await contracts.yield.eosio.actions.regprotocol(["myprotocol", category, metadata]).send('myprotocol@active');
+    await contracts.yield.eosio.actions.regprotocol(["myprotocol", category, metadata_yield]).send('myprotocol@active');
     const protocol = getProtocol("myprotocol");
-    expect(protocol.metadata).toEqual(metadata);
+    expect(protocol.metadata).toEqual(metadata_yield);
   });
 
   it("regprotocol::error::missing required authority", async () => {
-    const action = contracts.yield.eosio.actions.regprotocol(["myprotocol", category, metadata]).send('myaccount@active')
+    const action = contracts.yield.eosio.actions.regprotocol(["myprotocol", category, metadata_yield]).send('myaccount@active')
     await expectToThrow(action, "missing required authority");
   });
 
@@ -51,15 +43,15 @@ describe('eosio.yield', () => {
   });
 
   it("setmetadata", async () => {
-    await contracts.yield.eosio.actions.setmetadata(["myprotocol", metadata]).send('myprotocol@active');
+    await contracts.yield.eosio.actions.setmetadata(["myprotocol", metadata_yield]).send('myprotocol@active');
     const protocol = getProtocol("myprotocol");
-    expect(protocol.metadata).toEqual(metadata);
+    expect(protocol.metadata).toEqual(metadata_yield);
   });
 
   it("setmetakey", async () => {
-    await contracts.yield.eosio.actions.setmetakey(["myprotocol", metadata[0].key, metadata[0].value]).send('myprotocol@active');
+    await contracts.yield.eosio.actions.setmetakey(["myprotocol", metadata_yield[0].key, metadata_yield[0].value]).send('myprotocol@active');
     const protocol = getProtocol("myprotocol");
-    expect(protocol.metadata).toEqual(metadata);
+    expect(protocol.metadata).toEqual(metadata_yield);
   });
 
   it("setcontracts", async () => {
@@ -70,7 +62,7 @@ describe('eosio.yield', () => {
   });
 
   it("setevm", async () => {
-    const action = contracts.yield.eosio.actions.setevm([ "myprotocol", evms ]).send("myprotocol@active");
+    const action = contracts.yield.eosio.actions.setevm([ "myprotocol", evm_contracts ]).send("myprotocol@active");
     await expectToThrow(action, "NOT IMPLEMENTED");
   });
 
