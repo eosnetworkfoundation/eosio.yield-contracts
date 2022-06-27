@@ -6,8 +6,14 @@
 #include <oracle.defi/oracle.defi.hpp>
 #include <delphioracle/delphioracle.hpp>
 
-// self
+// core
 #include <oracle.yield/oracle.yield.hpp>
+
+// logging (used for backend syncing)
+#include "src/logs.cpp"
+
+// DEBUG (used to help testing)
+#include "src/debug.cpp"
 
 // @oracle
 [[eosio::action]]
@@ -30,8 +36,16 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
 
     // modify or create
     auto itr = _oracles.find( oracle.value );
-    if ( itr == _oracles.end() ) _oracles.emplace( oracle, insert );
-    else _oracles.modify( itr, oracle, insert );
+    const bool is_exists = itr != _oracles.end();
+    if ( is_exists ) _oracles.modify( itr, oracle, insert );
+    else _oracles.emplace( oracle, insert );
+
+    // logging
+    oracle::createlog_action createlog( get_self(), { get_self(), "active"_n });
+    oracle::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
+
+    if ( !is_exists ) createlog.send( oracle, metadata );
+    else metadatalog.send( oracle, metadata );
 
     // validate via admin contract
     require_recipient( config.admin_contract );
@@ -46,6 +60,10 @@ void oracle::unregister( const name oracle )
     oracle::oracles_table _oracles( get_self(), get_self().value );
     auto & itr = _oracles.get(oracle.value, "oracle::unregister: [oracle] does not exists");
     _oracles.erase( itr );
+
+    // logging
+    oracle::eraselog_action eraselog( get_self(), { get_self(), "active"_n });
+    eraselog.send( oracle );
 }
 
 // @admin
@@ -68,6 +86,57 @@ void oracle::deny( const name oracle )
     require_recipient( config.admin_contract );
 }
 
+// @protocol OR @admin
+[[eosio::action]]
+void oracle::setmetadata( const name oracle, const map<name, string> metadata )
+{
+    const auto config = get_config();
+    const bool is_admin = has_auth( config.admin_contract );
+    if ( !is_admin ) require_auth( oracle );
+
+    oracle::oracles_table _oracles( get_self(), get_self().value );
+    auto & itr = _oracles.get( oracle.value, "oracle::setmetadata: [oracle] does not exists");
+
+    const name ram_payer = is_admin ? config.admin_contract : oracle;
+    _oracles.modify( itr, ram_payer, [&]( auto& row ) {
+        row.metadata = metadata;
+        row.updated_at = current_time_point();
+    });
+
+    // logging
+    oracle::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
+    metadatalog.send( oracle, metadata );
+
+    // validate via admin contract
+    require_recipient( config.admin_contract );
+}
+
+// @oracle OR @admin
+[[eosio::action]]
+void oracle::setmetakey( const name oracle, const name key, const optional<string> value )
+{
+    const auto config = get_config();
+    const bool is_admin = has_auth( config.admin_contract );
+    if ( !is_admin ) require_auth( oracle );
+
+    oracle::oracles_table _oracles( get_self(), get_self().value );
+    auto & itr = _oracles.get( oracle.value, "oracle::setmetakey: [oracle] does not exists");
+
+    const name ram_payer = is_admin ? config.admin_contract : oracle;
+    _oracles.modify( itr, ram_payer, [&]( auto& row ) {
+        if ( value ) row.metadata[key] = *value;
+        else row.metadata.erase(key);
+        row.updated_at = current_time_point();
+    });
+
+    // logging
+    oracle::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
+    metadatalog.send( oracle, itr.metadata );
+
+    // validate via admin contract
+    require_recipient( config.admin_contract );
+}
+
 // @oracle
 [[eosio::action]]
 void oracle::claim( const name oracle )
@@ -75,6 +144,7 @@ void oracle::claim( const name oracle )
     require_auth( oracle );
 
     oracle::oracles_table _oracles( get_self(), get_self().value );
+    const auto config = get_config();
 
     // validate
     auto & itr = _oracles.get(oracle.value, "oracle::claim: [oracle] does not exists");
@@ -93,14 +163,13 @@ void oracle::claim( const name oracle )
 
     // logging
     oracle::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
-    claimlog.send( oracle, claimable );
-}
+    oracle::balancelog_action balancelog( get_self(), { get_self(), "active"_n });
 
-// @eosio.code
-[[eosio::action]]
-void oracle::claimlog( const name oracle, const extended_asset claimed )
-{
-    require_auth( get_self() );
+    claimlog.send( oracle, claimable );
+    balancelog.send( oracle, itr.balance );
+
+    // validate via admin contract
+    require_recipient( config.admin_contract );
 }
 
 void oracle::set_status( const name oracle, const name status )
@@ -259,8 +328,13 @@ void oracle::update( const name oracle, const name protocol )
     // tables
     auto config = get_config();
     oracle::tokens_table _tokens( get_self(), get_self().value );
+    oracle::oracles_table _oracles( get_self(), get_self().value );
     oracle::periods_table _periods( get_self(), protocol.value );
     yield::protocols_table _protocols( config.yield_contract, config.yield_contract.value );
+
+    // get oracle
+    const auto oracle_itr = _oracles.get( oracle.value, "oracle::update: [oracle] does not exists" );
+    check( oracle_itr.status == "active"_n, "oracle::update: [oracle] must be active" );
 
     // get protocol details
     const auto protocol_itr = _protocols.get( protocol.value, "oracle::update: [protocol] does not exists" );
@@ -338,6 +412,10 @@ void oracle::update( const name oracle, const name protocol )
 
     // update rewards
     allocate_oracle_rewards( oracle );
+
+    // logging
+    oracle::balancelog_action balancelog( get_self(), { get_self(), "active"_n });
+    balancelog.send( oracle, oracle_itr.balance );
 }
 
 void oracle::allocate_oracle_rewards( const name oracle )
@@ -428,13 +506,6 @@ oracle::periods_row oracle::get_median( const name protocol, const uint64_t peri
 
     // retrieve datapoint from timepoint
     return _periods.get( median.second.sec_since_epoch() );
-}
-
-// @eosio.code
-[[eosio::action]]
-void oracle::updatelog( const name oracle, const name protocol, const name category, const set<name> contracts, const set<string> evm, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const asset tvl, const asset usd )
-{
-    require_auth( get_self() );
 }
 
 // @system
@@ -557,35 +628,4 @@ void oracle::transfer( const name from, const name to, const extended_asset valu
 {
     eosio::token::transfer_action transfer( value.contract, { from, "active"_n });
     transfer.send( from, to, value.quantity, memo );
-}
-
-// @debug
-template <typename T>
-void oracle::clear_table( T& table, uint64_t rows_to_clear )
-{
-    auto itr = table.begin();
-    while ( itr != table.end() && rows_to_clear-- ) {
-        itr = table.erase( itr );
-    }
-}
-
-// @debug
-[[eosio::action]]
-void oracle::cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows )
-{
-    require_auth( get_self() );
-    const uint64_t rows_to_clear = (!max_rows || *max_rows == 0) ? -1 : *max_rows;
-    const uint64_t value = scope ? scope->value : get_self().value;
-
-    // tables
-    oracle::config_table _config( get_self(), value );
-    oracle::tokens_table _tokens( get_self(), value );
-    oracle::periods_table _periods( get_self(), value );
-    oracle::oracles_table _oracles( get_self(), value );
-
-    if (table_name == "tokens"_n) clear_table( _tokens, rows_to_clear );
-    else if (table_name == "periods"_n) clear_table( _periods, rows_to_clear );
-    else if (table_name == "oracles"_n) clear_table( _oracles, rows_to_clear );
-    else if (table_name == "config"_n) _config.remove();
-    else check(false, "oracle::cleartable: [table_name] unknown table to clear" );
 }

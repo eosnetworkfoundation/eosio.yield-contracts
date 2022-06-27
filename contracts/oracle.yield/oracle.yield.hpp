@@ -309,6 +309,49 @@ public:
     void unregister( const name oracle );
 
     /**
+     * ## ACTION `setmetadata`
+     *
+     * > Set oracle metadata
+     *
+     * - **authority**: `oracle` OR `admin.yield`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle main contract
+     * - `{map<name, string>} metadata` - (optional) key/value
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield setmetadata '[myoracle, [{"key": "website", "value":"https://myoracle.com"}]]' -p myoracle
+     * ```
+     */
+    [[eosio::action]]
+    void setmetadata( const name oracle, const map<name, string> metadata );
+
+    /**
+     * ## ACTION `setmetakey`
+     *
+     * > Set oracle metakey
+     *
+     * - **authority**: `oracle` OR `admin.yield`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle main contract
+     * - `{name} key` - metakey (ex: name/website/description)
+     * - `{string} [value=null]` - (optional) metakey value (if empty, will erase metakey)
+     *
+     * ### Example
+     *
+     * ```bash
+     * $ cleos push action eosio.yield setmetakey '[myoracle, website, "https://myoracle.com"]' -p myoracle
+     * ```
+     */
+    [[eosio::action]]
+    void setmetakey( const name oracle, const name key, const optional<string> value );
+
+    /**
      * ## ACTION `approve`
      *
      * > Approve oracle
@@ -474,6 +517,124 @@ public:
     [[eosio::action]]
     void claimlog( const name oracle, const extended_asset claimed );
 
+    /**
+     * ## ACTION `statuslog`
+     *
+     * > When oracle status is modified
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle account
+     * - `{name} status="pending"` - status (`pending/active/denied`)
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "oracle": "myoracle",
+     *     "status": "active",
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void statuslog( const name oracle, const name status );
+
+    /**
+     * ## ACTION `createlog`
+     *
+     * > When oracle is created
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle account
+     * - `{map<string, string>} metadata` - metadata
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "oracle": "myoracle",
+     *     "metadata": [{"key": "name", "value": "My oracle"}, {"key": "website", "value": "https://myoracle.com"}]
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void createlog( const name oracle, const map<name, string> metadata );
+
+    /**
+     * ## ACTION `eraselog`
+     *
+     * > When oracle is erased
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle account
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "oracle": "myoracle"
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void eraselog( const name oracle );
+
+    /**
+     * ## ACTION `balancelog`
+     *
+     * > When oracle's balance is updated
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle account
+     * - `{extended_asset} balance` - balance available to be claimed
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "oracle": "myoracle",
+     *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"}
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void balancelog( const name oracle, const extended_asset balance );
+
+    /**
+     * ## ACTION `metadatalog`
+     *
+     * > When oracle metadata is modified
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle account
+     * - `{map<string, string>} metadata` - metadata
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "oracle": "myoracle",
+     *     "metadata": [{"key": "name", "value": "My oracle"}, {"key": "website", "value": "https://myoracle.com"}]
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void metadatalog( const name oracle, const map<name, string> metadata );
+
     // @debug
     [[eosio::action]]
     void cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows );
@@ -487,11 +648,16 @@ public:
     using deny_action = eosio::action_wrapper<"deny"_n, &oracle::deny>;
     using addtoken_action = eosio::action_wrapper<"addtoken"_n, &oracle::addtoken>;
     using deltoken_action = eosio::action_wrapper<"deltoken"_n, &oracle::deltoken>;
-    using updatelog_action = eosio::action_wrapper<"updatelog"_n, &oracle::updatelog>;
     using setreward_action = eosio::action_wrapper<"setreward"_n, &oracle::setreward>;
     using claim_action = eosio::action_wrapper<"claim"_n, &oracle::claim>;
-    using claimlog_action = eosio::action_wrapper<"claimlog"_n, &oracle::claimlog>;
     using cleartable_action = eosio::action_wrapper<"cleartable"_n, &oracle::cleartable>;
+    using updatelog_action = eosio::action_wrapper<"updatelog"_n, &oracle::updatelog>;
+    using claimlog_action = eosio::action_wrapper<"claimlog"_n, &oracle::claimlog>;
+    using statuslog_action = eosio::action_wrapper<"statuslog"_n, &oracle::statuslog>;
+    using createlog_action = eosio::action_wrapper<"createlog"_n, &oracle::createlog>;
+    using eraselog_action = eosio::action_wrapper<"eraselog"_n, &oracle::eraselog>;
+    using balancelog_action = eosio::action_wrapper<"balancelog"_n, &oracle::balancelog>;
+    using metadatalog_action = eosio::action_wrapper<"metadatalog"_n, &oracle::metadatalog>;
 
 private:
     // utils

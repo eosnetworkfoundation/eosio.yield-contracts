@@ -57,36 +57,36 @@ describe('oracle.yield', () => {
     await expectToThrow(action, "[key=foo] is not valid");
   });
 
-  // it("setmetadata", async () => {
-  //   await contracts.yield.oracle.actions.setmetadata(["myprotocol", metadata]).send('myprotocol@active');
-  //   const protocol = getProtocol("myprotocol");
-  //   expect(protocol.metadata).toEqual(metadata);
-  // });
+  it("setmetadata", async () => {
+    await contracts.yield.oracle.actions.setmetadata(["myoracle", metadata]).send('myoracle@active');
+    const protocol = getOracle("myoracle");
+    expect(protocol.metadata).toEqual(metadata);
+  });
 
-  // it("setmetakey", async () => {
-  //   await contracts.yield.oracle.actions.setmetakey(["myprotocol", metadata[0].key, metadata[0].value]).send('myprotocol@active');
-  //   const protocol = getProtocol("myprotocol");
-  //   expect(protocol.metadata).toEqual(metadata);
-  // });
+  it("setmetakey", async () => {
+    await contracts.yield.oracle.actions.setmetakey(["myoracle", metadata[0].key, metadata[0].value]).send('myoracle@active');
+    const oracle = getOracle("myoracle");
+    expect(oracle.metadata).toEqual(metadata);
+  });
 
   // it("setcontracts", async () => {
   //   const auth = contracts.map(contract => { return { actor: contract, permission: "active"} });
-  //   await contracts.yield.oracle.actions.setcontracts([ "myprotocol", contracts ]).send(auth);
-  //   const protocol = getProtocol("myprotocol");
-  //   expect(protocol.contracts).toEqual(contracts);
+  //   await contracts.yield.oracle.actions.setcontracts([ "myoracle", contracts ]).send(auth);
+  //   const oracle = getOracle("myoracle");
+  //   expect(oracle.contracts).toEqual(contracts);
   // });
 
   // it("setevm", async () => {
-  //   const action = contracts.yield.oracle.actions.setevm([ "myprotocol", evms ]).send("myprotocol@active");
+  //   const action = contracts.yield.oracle.actions.setevm([ "myoracle", evms ]).send("myoracle@active");
   //   await expectToThrow(action, "NOT IMPLEMENTED");
   // });
 
   // it("admin::approve", async () => {
-  //   const before = getProtocol("myprotocol");
+  //   const before = getOracle("myoracle");
   //   expect(before.status).toEqual("pending");
 
-  //   await contracts.yield.oracle.actions.approve([ "myprotocol" ]).send("admin.yield@active");
-  //   const after = getProtocol("myprotocol");
+  //   await contracts.yield.oracle.actions.approve([ "myoracle" ]).send("admin.yield@active");
+  //   const after = getOracle("myoracle");
   //   expect(after.status).toEqual("active");
   // });
 });

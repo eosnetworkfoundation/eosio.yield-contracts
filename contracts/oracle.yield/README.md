@@ -400,3 +400,101 @@ $ cleos push action oracle.yield claim '[myoracle]' -p myoracle
     "claimed": {"contract": "eosio.token", "quantity": "0.5500 EOS"}
 }
 ```
+
+## ACTION `statuslog`
+
+> When oracle status is modified
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} oracle` - oracle account
+- `{name} status="pending"` - status (`pending/active/denied`)
+
+### example
+
+```json
+{
+    "oracle": "myoracle",
+    "status": "active",
+}
+```
+
+## ACTION `createlog`
+
+> When oracle is created
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} oracle` - oracle account
+- `{map<string, string>} metadata` - metadata
+
+### example
+
+```json
+{
+    "oracle": "myoracle",
+    "metadata": [{"key": "name", "value": "My oracle"}, {"key": "website", "value": "https://myoracle.com"}]
+}
+```
+
+## ACTION `eraselog`
+
+> When oracle is erased
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} oracle` - oracle account
+
+### example
+
+```json
+{
+    "oracle": "myoracle"
+}
+```
+
+## ACTION `balancelog`
+
+> When oracle's balance is updated
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} oracle` - oracle account
+- `{extended_asset} balance` - balance available to be claimed
+
+### example
+
+```json
+{
+    "oracle": "myoracle",
+    "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"}
+}
+```
+
+## ACTION `metadatalog`
+
+> When oracle metadata is modified
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} oracle` - oracle account
+- `{map<string, string>} metadata` - metadata
+
+### example
+
+```json
+{
+    "oracle": "myoracle",
+    "metadata": [{"key": "name", "value": "My oracle"}, {"key": "website", "value": "https://myoracle.com"}]
+}
+```
