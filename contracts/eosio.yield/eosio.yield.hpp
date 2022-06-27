@@ -399,34 +399,6 @@ public:
     void claim( const name protocol, const optional<name> receiver );
 
     /**
-     * ## ACTION `claimlog`
-     *
-     * > Claim logging
-     *
-     * - **authority**: `get_self()`
-     *
-     * ### params
-     *
-     * - `{name} protocol` - protocol
-     * - `{name} category` - protocol category
-     * - `{name} receiver` - receiver of rewards
-     * - `{extended_asset} claimed` - claimed rewards
-     *
-     * ### Example
-     *
-     * ```json
-     * {
-     *     "protocol": "myprotocol",
-     *     "category": "dexes",
-     *     "receiver": "myreceiver",
-     *     "claimed": {"contract": "eosio.token", "quantity": "1.5500 EOS"}
-     * }
-     * ```
-     */
-    [[eosio::action]]
-    void claimlog( const name protocol, const name category, const name receiver, const extended_asset claimed );
-
-    /**
      * ## ACTION `report`
      *
      * - **authority**: `oracle.yield@eosio.code`
@@ -449,6 +421,34 @@ public:
      */
     [[eosio::action]]
     void report( const name protocol, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd );
+
+    /**
+     * ## ACTION `claimlog`
+     *
+     * > Claim logging
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} protocol` - protocol
+     * - `{name} category` - protocol category
+     * - `{name} receiver` - receiver of rewards
+     * - `{extended_asset} claimed` - claimed rewards
+     *
+     * ### Example
+     *
+     * ```json
+     * {
+     *     "protocol": "myprotocol",
+     *     "category": "dexes",
+     *     "receiver": "myreceiver",
+     *     "claimed": "1.5500 EOS"
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void claimlog( const name protocol, const name category, const name receiver, const asset claimed );
 
     /**
      * ## ACTION `rewardslog`
@@ -618,19 +618,19 @@ public:
      * ### params
      *
      * - `{name} protocol` - primary protocol contract
-     * - `{extended_asset} balance` - balance available to be claimed
+     * - `{asset} balance` - balance available to be claimed
      *
      * ### example
      *
      * ```json
      * {
      *     "protocol": "myprotocol",
-     *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"}
+     *     "balance": "2.5000 EOS"
      * }
      * ```
      */
     [[eosio::action]]
-    void balancelog( const name protocol, const extended_asset balance );
+    void balancelog( const name protocol, const asset balance );
 
     /**
      * ## ACTION `metadatalog`

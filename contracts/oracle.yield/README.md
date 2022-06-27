@@ -390,14 +390,14 @@ $ cleos push action oracle.yield claim '[myoracle]' -p myoracle
 ### params
 
 - `{name} oracle` - oracle account which received rewards
-- `{extended_asset} claimed` - claimed funds
+- `{asset} claimed` - claimed funds
 
 ### Example
 
 ```json
 {
     "protocol": "myprotocol",
-    "claimed": {"contract": "eosio.token", "quantity": "0.5500 EOS"}
+    "claimed": "0.5500 EOS"
 }
 ```
 
@@ -468,14 +468,14 @@ $ cleos push action oracle.yield claim '[myoracle]' -p myoracle
 ### params
 
 - `{name} oracle` - oracle account
-- `{extended_asset} balance` - balance available to be claimed
+- `{asset} balance` - balance available to be claimed
 
 ### example
 
 ```json
 {
     "oracle": "myoracle",
-    "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"}
+    "balance": "2.5000 EOS"
 }
 ```
 

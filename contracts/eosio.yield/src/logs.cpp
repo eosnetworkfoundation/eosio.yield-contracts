@@ -7,7 +7,7 @@ void yield::rewardslog( const name protocol, const name category, const time_poi
 
 // @eosio.code
 [[eosio::action]]
-void yield::claimlog( const name protocol, const name category, const name receiver, const extended_asset claimed )
+void yield::claimlog( const name protocol, const name category, const name receiver, const asset claimed )
 {
     require_auth( get_self() );
 }
@@ -35,7 +35,7 @@ void yield::categorylog( const name protocol, const name category )
 
 // @eosio.code
 [[eosio::action]]
-void yield::createlog( const name protocol, const name category, const map<name, string> metadata)
+void yield::createlog( const name protocol, const name category, const map<name, string> metadata )
 {
     require_auth( get_self() );
 }
@@ -49,7 +49,7 @@ void yield::eraselog( const name protocol )
 
 // @eosio.code
 [[eosio::action]]
-void yield::balancelog( const name protocol, const extended_asset balance )
+void yield::balancelog( const name protocol, const asset balance )
 {
     require_auth( get_self() );
 }

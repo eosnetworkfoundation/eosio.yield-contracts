@@ -503,19 +503,19 @@ public:
      * ### params
      *
      * - `{name} oracle` - oracle account which received rewards
-     * - `{extended_asset} claimed` - claimed funds
+     * - `{asset} claimed` - claimed funds
      *
      * ### Example
      *
      * ```json
      * {
      *     "oracle": "myoracle",
-     *     "claimed": {"contract": "eosio.token", "quantity": "0.5500 EOS"}
+     *     "claimed": "0.5500 EOS"
      * }
      * ```
      */
     [[eosio::action]]
-    void claimlog( const name oracle, const extended_asset claimed );
+    void claimlog( const name oracle, const asset claimed );
 
     /**
      * ## ACTION `statuslog`
@@ -597,19 +597,19 @@ public:
      * ### params
      *
      * - `{name} oracle` - oracle account
-     * - `{extended_asset} balance` - balance available to be claimed
+     * - `{asset} balance` - balance available to be claimed
      *
      * ### example
      *
      * ```json
      * {
      *     "oracle": "myoracle",
-     *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"}
+     *     "balance": "2.5000 EOS"
      * }
      * ```
      */
     [[eosio::action]]
-    void balancelog( const name oracle, const extended_asset balance );
+    void balancelog( const name oracle, const asset balance );
 
     /**
      * ## ACTION `metadatalog`

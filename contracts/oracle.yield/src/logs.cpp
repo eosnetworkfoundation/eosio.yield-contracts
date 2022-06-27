@@ -7,7 +7,7 @@ void oracle::updatelog( const name oracle, const name protocol, const name categ
 
 // @eosio.code
 [[eosio::action]]
-void oracle::claimlog( const name oracle, const extended_asset claimed )
+void oracle::claimlog( const name oracle, const asset claimed )
 {
     require_auth( get_self() );
 }
@@ -35,7 +35,7 @@ void oracle::eraselog( const name oracle )
 
 // @eosio.code
 [[eosio::action]]
-void oracle::balancelog( const name oracle, const extended_asset balance )
+void oracle::balancelog( const name oracle, const asset balance )
 {
     require_auth( get_self() );
 }

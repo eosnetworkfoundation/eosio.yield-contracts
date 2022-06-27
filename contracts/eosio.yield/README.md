@@ -372,7 +372,7 @@ $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
 - `{name} protocol` - protocol
 - `{name} category` - protocol category
 - `{name} receiver` - receiver of rewards
-- `{extended_asset} claimed` - claimed rewards
+- `{asset} claimed` - claimed rewards
 
 ### Example
 
@@ -381,7 +381,7 @@ $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
     "protocol": "myprotocol",
     "category": "dexes",
     "receiver": "myreceiver",
-    "claimed": {"contract": "eosio.token", "quantity": "1.5500 EOS"}
+    "claimed":"1.5500 EOS"
 }
 ```
 
@@ -548,14 +548,14 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ### params
 
 - `{name} protocol` - primary protocol contract
-- `{extended_asset} balance` - balance available to be claimed
+- `{asset} balance` - balance available to be claimed
 
 ### example
 
 ```json
 {
     "protocol": "myprotocol",
-    "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"}
+    "balance": "2.5000 EOS"
 }
 ```
 

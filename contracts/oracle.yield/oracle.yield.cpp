@@ -165,8 +165,8 @@ void oracle::claim( const name oracle )
     oracle::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
     oracle::balancelog_action balancelog( get_self(), { get_self(), "active"_n });
 
-    claimlog.send( oracle, claimable );
-    balancelog.send( oracle, itr.balance );
+    claimlog.send( oracle, claimable.quantity );
+    balancelog.send( oracle, itr.balance.quantity );
 
     // validate via admin contract
     require_recipient( config.admin_contract );
@@ -415,7 +415,7 @@ void oracle::update( const name oracle, const name protocol )
 
     // logging
     oracle::balancelog_action balancelog( get_self(), { get_self(), "active"_n });
-    balancelog.send( oracle, oracle_itr.balance );
+    balancelog.send( oracle, oracle_itr.balance.quantity );
 }
 
 void oracle::allocate_oracle_rewards( const name oracle )

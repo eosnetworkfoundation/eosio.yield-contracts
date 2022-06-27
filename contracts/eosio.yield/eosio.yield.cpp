@@ -146,8 +146,8 @@ void yield::claim( const name protocol, const optional<name> receiver )
     yield::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
     yield::balancelog_action balancelog( get_self(), { get_self(), "active"_n });
 
-    claimlog.send( protocol, itr.category, to, claimable );
-    balancelog.send( protocol, itr.balance );
+    claimlog.send( protocol, itr.category, to, claimable.quantity );
+    balancelog.send( protocol, itr.balance.quantity );
 
     // validate via admin contract
     require_recipient( config.admin_contract );
@@ -345,7 +345,10 @@ void yield::report( const name protocol, const time_point_sec period, const uint
 
     // log report
     yield::rewardslog_action rewardslog( get_self(), { get_self(), "active"_n });
+    yield::balancelog_action balancelog( get_self(), { get_self(), "active"_n });
+
     rewardslog.send( protocol, itr.category, period, period_interval, tvl, usd, rewards, itr.balance.quantity );
+    balancelog.send( protocol, itr.balance.quantity );
 }
 
 // @protocol or @admin
