@@ -19,7 +19,8 @@ void delphioracle::setprice( const name pair, const uint64_t value )
 void delphioracle::setpair( const name pair, const symbol base_symbol, const name base_contract, const uint64_t quoted_precision )
 {
     pairstable _pairstable( get_self(), get_self().value );
-    check( _pairstable.find( pair.value ) == _pairstable.end(), "pair already exists");
+    // check( _pairstable.find( pair.value ) == _pairstable.end(), "pair already exists");
+    if ( _pairstable.find( pair.value ) != _pairstable.end() ) return;
 
     // create
     _pairstable.emplace( get_self(), [&]( auto & row ) {

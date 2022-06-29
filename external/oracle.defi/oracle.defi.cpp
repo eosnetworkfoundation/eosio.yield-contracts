@@ -5,7 +5,8 @@ namespace defi {
 [[eosio::action]]
 void oracle::setprice( const uint64_t id, const name contract, const symbol sym, const uint64_t avg_price ) {
     prices _prices( get_self(), get_self().value );
-    eosio::check( _prices.find(id) == _prices.end(), "oracle.defi: pair already exists" );
+    // eosio::check( _prices.find(id) == _prices.end(), "oracle.defi: pair already exists" );
+    if ( _prices.find(id) != _prices.end() ) return;
 
     // create user row
     _prices.emplace( get_self(), [&]( auto & row ) {
