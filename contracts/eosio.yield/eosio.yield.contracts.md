@@ -246,6 +246,7 @@ This action can only be called by the Yield+ contract self account. It generates
 
 
 <h1 class="contract">setmetadata</h1>
+
 ---
 spec_version: "0.2.0"
 title: Set Metadata
@@ -258,6 +259,7 @@ This action can only be called by the {{oracle}} account or the Yield+ administr
 
 
 <h1 class="contract">cleartable</h1>
+
 ---
 spec_version: "0.2.0"
 title: Clear Table
@@ -269,6 +271,7 @@ This function is used for debug purposes and will be removed in the final releas
 
 
 <h1 class="contract">addbalance</h1>
+
 ---
 spec_version: "0.2.0"
 title: Add Balance
