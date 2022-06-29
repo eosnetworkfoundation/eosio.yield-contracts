@@ -3,11 +3,15 @@
 ---
 spec_version: "0.2.0"
 title: Claim
-summary: 'Claim {{contract}} rewards to {{receiver}}.'
+summary: 'Claims the Yield+ rewards for the {{protocol}} protocol.'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 
-Claim {{contract}} rewards to {{receiver}}.
+This action can only be called by the {{protocol}} protocol account. It will claim all rewards earned by the {{protocol}} protocol.
+
+{{#if_has_value receiver}}The rewards will be sent to the {{receiver}} account. {{/if_has_value}}
+
+
 
 <h1 class="contract">init</h1>
 
