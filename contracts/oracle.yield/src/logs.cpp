@@ -3,13 +3,15 @@
 void oracle::updatelog( const name oracle, const name protocol, const name category, const set<name> contracts, const set<string> evm, const time_point_sec period, const vector<asset> balances, const vector<asset> prices, const asset tvl, const asset usd )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
 [[eosio::action]]
-void oracle::claimlog( const name oracle, const asset claimed )
+void oracle::claimlog( const name oracle, const name type, const name receiver, const asset claimed )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
@@ -17,6 +19,7 @@ void oracle::claimlog( const name oracle, const asset claimed )
 void oracle::statuslog( const name oracle, const name status )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
@@ -24,6 +27,7 @@ void oracle::statuslog( const name oracle, const name status )
 void oracle::createlog( const name oracle, const map<name, string> metadata )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
@@ -31,6 +35,7 @@ void oracle::createlog( const name oracle, const map<name, string> metadata )
 void oracle::eraselog( const name oracle )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
@@ -38,6 +43,7 @@ void oracle::eraselog( const name oracle )
 void oracle::balancelog( const name oracle, const asset balance )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
@@ -45,4 +51,5 @@ void oracle::balancelog( const name oracle, const asset balance )
 void oracle::metadatalog( const name oracle, const map<name, string> metadata )
 {
     require_auth( get_self() );
+    notify_admin();
 }

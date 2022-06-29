@@ -476,22 +476,27 @@ public:
     /**
      * ## ACTION `claim`
      *
-     * > Claim Oracle rewards
+     * > Claim oracle rewards
      *
      * - **authority**: `oracle`
      *
      * ### params
      *
-     * - `{name} oracle` - oracle claiming rewards
+     * - `{name} oracle` - oracle
+     * - `{name} [receiver=""]` - (optional) receiver of rewards (default=oracle)
      *
      * ### Example
      *
      * ```bash
-     * $ cleos push action oracle.yield claim '[myoracle]' -p myoracle
+     * $ cleos push action eosio.yield claim '[myoracle, null]' -p myoracle
+     * //=> rewards sent to myoracle
+     *
+     * $ cleos push action eosio.yield claim '[myoracle, myreceiver]' -p myoracle
+     * //=> rewards sent to myreceiver
      * ```
      */
     [[eosio::action]]
-    void claim( const name oracle );
+    void claim( const name oracle, const optional<name> receiver );
 
     /**
      * ## ACTION `claimlog`
@@ -502,20 +507,24 @@ public:
      *
      * ### params
      *
-     * - `{name} oracle` - oracle account which received rewards
-     * - `{asset} claimed` - claimed funds
+     * - `{name} oracle` - oracle
+     * - `{name} type` - oracle category
+     * - `{name} receiver` - receiver of rewards
+     * - `{extended_asset} claimed` - claimed rewards
      *
      * ### Example
      *
      * ```json
      * {
      *     "oracle": "myoracle",
-     *     "claimed": "0.5500 EOS"
+     *     "type": "oracle",
+     *     "receiver": "myreceiver",
+     *     "claimed": "1.5500 EOS"
      * }
      * ```
      */
     [[eosio::action]]
-    void claimlog( const name oracle, const asset claimed );
+    void claimlog( const name oracle, const name type, const name receiver, const asset claimed );
 
     /**
      * ## ACTION `statuslog`
@@ -674,6 +683,8 @@ private:
     void allocate_oracle_rewards( const name oracle );
     void transfer( const name from, const name to, const extended_asset value, const string& memo );
     void prune_protocol_periods( const name protocol );
+    void notify_admin();
+    void require_auth_admin();
 
     // getters
     asset get_balance_quantity( const name token_contract_account, const name owner, const symbol sym );

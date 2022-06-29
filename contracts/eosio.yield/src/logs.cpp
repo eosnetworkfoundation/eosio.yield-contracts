@@ -3,6 +3,7 @@
 void yield::rewardslog( const name protocol, const name category, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
@@ -10,6 +11,7 @@ void yield::rewardslog( const name protocol, const name category, const time_poi
 void yield::claimlog( const name protocol, const name category, const name receiver, const asset claimed )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
@@ -17,6 +19,7 @@ void yield::claimlog( const name protocol, const name category, const name recei
 void yield::statuslog( const name protocol, const name status )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
@@ -24,6 +27,7 @@ void yield::statuslog( const name protocol, const name status )
 void yield::contractslog( const name protocol, const set<name> contracts, const set<string> evm )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
@@ -31,6 +35,7 @@ void yield::contractslog( const name protocol, const set<name> contracts, const 
 void yield::categorylog( const name protocol, const name category )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
@@ -38,6 +43,7 @@ void yield::categorylog( const name protocol, const name category )
 void yield::createlog( const name protocol, const name category, const map<name, string> metadata )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
@@ -45,6 +51,7 @@ void yield::createlog( const name protocol, const name category, const map<name,
 void yield::eraselog( const name protocol )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
@@ -52,6 +59,7 @@ void yield::eraselog( const name protocol )
 void yield::balancelog( const name protocol, const asset balance )
 {
     require_auth( get_self() );
+    notify_admin();
 }
 
 // @eosio.code
@@ -59,4 +67,5 @@ void yield::balancelog( const name protocol, const asset balance )
 void yield::metadatalog( const name protocol, const map<name, string> metadata )
 {
     require_auth( get_self() );
+    notify_admin();
 }

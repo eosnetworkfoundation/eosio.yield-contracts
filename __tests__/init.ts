@@ -1,4 +1,5 @@
 import { Blockchain } from "@proton/vert"
+import { TimePointSec } from "@greymass/eosio";
 
 export const blockchain = new Blockchain()
 
@@ -37,6 +38,8 @@ export const accounts = blockchain.createAccounts('myprotocol', 'myoracle', 'myv
 
 // one-time setup
 beforeAll(async () => {
+  blockchain.addTime(TimePointSec.from(new Date()));
+
   // set ABI hashes for protocols
   const hash = "fead01c2fc2a294e9c3d1adb97511954315518d7f1b7eff4f53a042c20cd27d3";
   await contracts.eosio.system.actions.abihash(["myprotocol", hash]).send();

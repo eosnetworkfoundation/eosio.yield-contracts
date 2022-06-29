@@ -46,9 +46,6 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
 
     if ( !is_exists ) createlog.send( oracle, metadata );
     else metadatalog.send( oracle, metadata );
-
-    // validate via admin contract
-    require_recipient( config.admin_contract );
 }
 
 // @protocol
@@ -70,20 +67,16 @@ void oracle::unregister( const name oracle )
 [[eosio::action]]
 void oracle::approve( const name oracle )
 {
-    const auto config = get_config();
-    require_auth( config.admin_contract );
+    require_auth_admin();
     set_status( oracle, "active"_n );
-    require_recipient( config.admin_contract );
 }
 
 // @admin
 [[eosio::action]]
 void oracle::deny( const name oracle )
 {
-    const auto config = get_config();
-    require_auth( config.admin_contract );
+    require_auth_admin();
     set_status( oracle, "denied"_n );
-    require_recipient( config.admin_contract );
 }
 
 // @protocol OR @admin
@@ -137,14 +130,17 @@ void oracle::setmetakey( const name oracle, const name key, const optional<strin
     require_recipient( config.admin_contract );
 }
 
+
 // @oracle
 [[eosio::action]]
-void oracle::claim( const name oracle )
+void oracle::claim( const name oracle, const optional<name> receiver )
 {
     require_auth( oracle );
 
     oracle::oracles_table _oracles( get_self(), get_self().value );
     const auto config = get_config();
+
+    if ( receiver ) check( is_account( *receiver ), "oracle::claim: [receiver] does not exists");
 
     // validate
     auto & itr = _oracles.get(oracle.value, "oracle::claim: [oracle] does not exists");
@@ -152,8 +148,13 @@ void oracle::claim( const name oracle )
     check( itr.status == "active"_n, "oracle::claim: [status] must be `active`");
     check( claimable.quantity.amount > 0, "oracle::claim: nothing to claim");
 
+    // check oracle.yield balance
+    const asset balance = eosio::token::get_balance( claimable.contract, get_self(), claimable.quantity.symbol.code() );
+    check( balance >= claimable.quantity, "oracle::claim: contract has insuficient balance, please contact administrator");
+
     // transfer funds to receiver
-    transfer( get_self(), oracle, claimable, "Yield+ Oracle reward");
+    const name to = receiver ? *receiver : oracle;
+    transfer( get_self(), to, claimable, "Yield+ TVL reward");
 
     // modify balances
     _oracles.modify( itr, same_payer, [&]( auto& row ) {
@@ -165,7 +166,7 @@ void oracle::claim( const name oracle )
     oracle::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
     oracle::balancelog_action balancelog( get_self(), { get_self(), "active"_n });
 
-    claimlog.send( oracle, claimable.quantity );
+    claimlog.send( oracle, "oracle"_n, to, claimable.quantity );
     balancelog.send( oracle, itr.balance.quantity );
 
     // validate via admin contract
@@ -183,6 +184,10 @@ void oracle::set_status( const name oracle, const name status )
         check( row.status != status, "oracle::set_status: [status] not modified");
         row.status = status;
     });
+
+    // logging
+    oracle::statuslog_action statuslog( get_self(), { get_self(), "active"_n });
+    statuslog.send( oracle, status );
 }
 
 void oracle::check_oracle_active( const name oracle )
@@ -435,7 +440,7 @@ void oracle::prune_protocol_periods( const name protocol )
 
     // TO-DO validate if pruning is still functional
 
-    // erase any periods that exceeds 32 hours
+    // erase any periods that exceeds 24 hours
     const time_point_sec last_period = get_last_period( PERIOD_INTERVAL * MAX_PERIODS_REPORT );
     auto itr = _periods.begin();
     while ( itr != _periods.end() ) {
@@ -628,4 +633,14 @@ void oracle::transfer( const name from, const name to, const extended_asset valu
 {
     eosio::token::transfer_action transfer( value.contract, { from, "active"_n });
     transfer.send( from, to, value.quantity, memo );
+}
+
+void oracle::notify_admin()
+{
+    require_recipient( get_config().admin_contract );
+}
+
+void oracle::require_auth_admin()
+{
+    require_auth( get_config().admin_contract );
 }

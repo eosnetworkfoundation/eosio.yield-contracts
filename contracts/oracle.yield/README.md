@@ -367,18 +367,23 @@ $ cleos push action oracle.yield updateall '[myoracle, 20]' -p myoracle
 
 ## ACTION `claim`
 
-> Claim Oracle rewards
+> Claim oracle rewards
 
 - **authority**: `oracle`
 
 ### params
 
-- `{name} oracle` - oracle claiming rewards
+- `{name} oracle` - oracle
+- `{name} [receiver=""]` - (optional) receiver of rewards (default=oracle)
 
 ### Example
 
 ```bash
-$ cleos push action oracle.yield claim '[myoracle]' -p myoracle
+$ cleos push action eosio.yield claim '[myoracle, null]' -p myoracle
+//=> rewards sent to myoracle
+
+$ cleos push action eosio.yield claim '[myoracle, myreceiver]' -p myoracle
+//=> rewards sent to myreceiver
 ```
 
 ## ACTION `claimlog`
@@ -389,15 +394,19 @@ $ cleos push action oracle.yield claim '[myoracle]' -p myoracle
 
 ### params
 
-- `{name} oracle` - oracle account which received rewards
-- `{asset} claimed` - claimed funds
+- `{name} oracle` - oracle
+- `{name} type` - oracle category
+- `{name} receiver` - receiver of rewards
+- `{extended_asset} claimed` - claimed rewards
 
 ### Example
 
 ```json
 {
-    "protocol": "myprotocol",
-    "claimed": "0.5500 EOS"
+    "oracle": "myoracle",
+    "type": "oracle",
+    "receiver": "myreceiver",
+    "claimed": "1.5500 EOS"
 }
 ```
 

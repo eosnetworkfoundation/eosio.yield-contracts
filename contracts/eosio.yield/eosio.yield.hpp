@@ -697,6 +697,8 @@ private :
     void transfer( const name from, const name to, const extended_asset value, const string& memo );
     void remove_active_protocol( const name protocol );
     void add_active_protocol( const name protocol );
+    void notify_admin();
+    void require_auth_admin();
 
     // debug
     template <typename T>

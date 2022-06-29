@@ -55,9 +55,6 @@ void yield::regprotocol( const name protocol, const name category, const map<nam
         metadatalog.send( protocol, metadata );
         categorylog.send( protocol, category );
     }
-
-    // validate via admin contract
-    require_recipient( config.admin_contract );
 }
 
 // @protocol OR @admin
@@ -80,9 +77,6 @@ void yield::setmetadata( const name protocol, const map<name, string> metadata )
     // logging
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
     metadatalog.send( protocol, metadata );
-
-    // validate via admin contract
-    require_recipient( config.admin_contract );
 }
 
 // @protocol OR @admin
@@ -106,9 +100,6 @@ void yield::setmetakey( const name protocol, const name key, const optional<stri
     // logging
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
     metadatalog.send( protocol, itr.metadata );
-
-    // validate via admin contract
-    require_recipient( config.admin_contract );
 }
 
 // @protocol
@@ -148,9 +139,6 @@ void yield::claim( const name protocol, const optional<name> receiver )
 
     claimlog.send( protocol, itr.category, to, claimable.quantity );
     balancelog.send( protocol, itr.balance.quantity );
-
-    // validate via admin contract
-    require_recipient( config.admin_contract );
 }
 
 void yield::set_status( const name protocol, const name status )
@@ -190,32 +178,26 @@ void yield::set_category( const name protocol, const name category )
 [[eosio::action]]
 void yield::approve( const name protocol )
 {
-    const auto config = get_config();
-    require_auth( config.admin_contract );
+    require_auth_admin();
     set_status( protocol, "active"_n );
     add_active_protocol( protocol );
-    require_recipient( config.admin_contract );
 }
 
 // @admin
 [[eosio::action]]
 void yield::setcategory( const name protocol, const name category )
 {
-    const auto config = get_config();
-    require_auth( config.admin_contract );
+    require_auth_admin();
     set_category( protocol, category );
-    require_recipient( config.admin_contract );
 }
 
 // @admin
 [[eosio::action]]
 void yield::deny( const name protocol )
 {
-    const auto config = get_config();
-    require_auth( config.admin_contract );
+    require_auth_admin();
     set_status( protocol, "denied"_n);
     remove_active_protocol( protocol );
-    require_recipient( config.admin_contract );
 }
 
 // @system
@@ -462,4 +444,14 @@ time_point_sec yield::get_current_period( const uint32_t period_interval )
 {
     const uint32_t now = current_time_point().sec_since_epoch();
     return time_point_sec((now / period_interval) * period_interval);
+}
+
+void yield::notify_admin()
+{
+    require_recipient( get_config().admin_contract );
+}
+
+void yield::require_auth_admin()
+{
+    require_auth( get_config().admin_contract );
 }
