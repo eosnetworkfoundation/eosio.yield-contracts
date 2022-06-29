@@ -379,10 +379,10 @@ $ cleos push action oracle.yield updateall '[myoracle, 20]' -p myoracle
 ### Example
 
 ```bash
-$ cleos push action eosio.yield claim '[myoracle, null]' -p myoracle
+$ cleos push action oracle.yield claim '[myoracle, null]' -p myoracle
 //=> rewards sent to myoracle
 
-$ cleos push action eosio.yield claim '[myoracle, myreceiver]' -p myoracle
+$ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
 //=> rewards sent to myreceiver
 ```
 
@@ -395,7 +395,7 @@ $ cleos push action eosio.yield claim '[myoracle, myreceiver]' -p myoracle
 ### params
 
 - `{name} oracle` - oracle
-- `{name} type` - oracle category
+- `{name} [category=oracle]` - oracle category type
 - `{name} receiver` - receiver of rewards
 - `{extended_asset} claimed` - claimed rewards
 
@@ -404,7 +404,7 @@ $ cleos push action eosio.yield claim '[myoracle, myreceiver]' -p myoracle
 ```json
 {
     "oracle": "myoracle",
-    "type": "oracle",
+    "category": "oracle",
     "receiver": "myreceiver",
     "claimed": "1.5500 EOS"
 }
@@ -439,6 +439,7 @@ $ cleos push action eosio.yield claim '[myoracle, myreceiver]' -p myoracle
 ### params
 
 - `{name} oracle` - oracle account
+- `{name} [category=oracle]` - oracle category type
 - `{map<string, string>} metadata` - metadata
 
 ### example
@@ -446,6 +447,7 @@ $ cleos push action eosio.yield claim '[myoracle, myreceiver]' -p myoracle
 ```json
 {
     "oracle": "myoracle",
+    "category": "oracle",
     "metadata": [{"key": "name", "value": "My oracle"}, {"key": "website", "value": "https://myoracle.com"}]
 }
 ```

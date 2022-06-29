@@ -44,7 +44,7 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
     oracle::createlog_action createlog( get_self(), { get_self(), "active"_n });
     oracle::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
 
-    if ( !is_exists ) createlog.send( oracle, metadata );
+    if ( !is_exists ) createlog.send( oracle, "oracle"_n, metadata );
     else metadatalog.send( oracle, metadata );
 }
 

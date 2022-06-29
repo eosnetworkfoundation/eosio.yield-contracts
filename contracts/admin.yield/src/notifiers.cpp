@@ -16,9 +16,10 @@ void admin::on_claimlog( const name protocol, const name category, const name re
     // no checks
 }
 
-[[eosio::action]]
+[[eosio::on_notify("*::createlog")]]
 void admin::on_createlog( const name protocol, const name category, const map<name, string> metadata )
 {
+    if ( category == "oracle"_n) return; // skip if oracle
     check_category( category );
     check_metadata_keys( metadata );
 }

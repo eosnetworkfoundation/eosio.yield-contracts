@@ -170,7 +170,7 @@ public:
     void on_metadatalog( const name protocol, const map<name, string> metadata );
 
     [[eosio::on_notify("*::claimlog")]]
-    void on_claimlog( const name oracle, const name type, const name receiver, const asset claimed );
+    void on_claimlog( const name protocol, const name category, const name receiver, const asset claimed );
 
     // action wrappers
     using setmetakey_action = eosio::action_wrapper<"setmetakey"_n, &admin::setmetakey>;

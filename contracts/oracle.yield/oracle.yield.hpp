@@ -488,10 +488,10 @@ public:
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield claim '[myoracle, null]' -p myoracle
+     * $ cleos push action oracle.yield claim '[myoracle, null]' -p myoracle
      * //=> rewards sent to myoracle
      *
-     * $ cleos push action eosio.yield claim '[myoracle, myreceiver]' -p myoracle
+     * $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
      * //=> rewards sent to myreceiver
      * ```
      */
@@ -508,7 +508,7 @@ public:
      * ### params
      *
      * - `{name} oracle` - oracle
-     * - `{name} type` - oracle category
+     * - `{name} [category=oracle]` - oracle category type
      * - `{name} receiver` - receiver of rewards
      * - `{extended_asset} claimed` - claimed rewards
      *
@@ -517,14 +517,14 @@ public:
      * ```json
      * {
      *     "oracle": "myoracle",
-     *     "type": "oracle",
+     *     "category": "oracle",
      *     "receiver": "myreceiver",
      *     "claimed": "1.5500 EOS"
      * }
      * ```
      */
     [[eosio::action]]
-    void claimlog( const name oracle, const name type, const name receiver, const asset claimed );
+    void claimlog( const name oracle, const name category, const name receiver, const asset claimed );
 
     /**
      * ## ACTION `statuslog`
@@ -560,6 +560,7 @@ public:
      * ### params
      *
      * - `{name} oracle` - oracle account
+     * - `{name} [category=oracle]` - oracle category type
      * - `{map<string, string>} metadata` - metadata
      *
      * ### example
@@ -567,12 +568,13 @@ public:
      * ```json
      * {
      *     "oracle": "myoracle",
+     *     "category": "oracle",
      *     "metadata": [{"key": "name", "value": "My oracle"}, {"key": "website", "value": "https://myoracle.com"}]
      * }
      * ```
      */
     [[eosio::action]]
-    void createlog( const name oracle, const map<name, string> metadata );
+    void createlog( const name oracle, const name category, const map<name, string> metadata );
 
     /**
      * ## ACTION `eraselog`

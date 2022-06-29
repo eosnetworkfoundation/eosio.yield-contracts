@@ -78,16 +78,15 @@ describe('oracle.yield', () => {
   });
 
   it("claim", async () => {
-    blockchain.addTime(TimePointSec.from(86400));
     await contracts.yield.oracle.actions.claim(["myoracle"]).send("myoracle@active");
     const oracle = getters.getOracle("myoracle");
-    console.log(oracle)
     expect(Asset.from(oracle.balance.quantity).value).toEqual(0.00);
   });
 
-  // it("updateall", async () => {
-  //   await contracts.yield.oracle.actions.updateall(["myoracle", 20]).send("myoracle@active");
-  //   const oracle = getters.getOracle("myoracle");
-  //   expect(Asset.from(oracle.balance.quantity).value).toEqual(0.02);
-  // });
+  it("updateall", async () => {
+    blockchain.addTime(TimePointSec.from(600)); // push time by 10 minutes
+    await contracts.yield.oracle.actions.updateall(["myoracle", 20]).send("myoracle@active");
+    const oracle = getters.getOracle("myoracle");
+    expect(Asset.from(oracle.balance.quantity).value).toEqual(0.02);
+  });
 });

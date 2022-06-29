@@ -24,7 +24,7 @@ void oracle::statuslog( const name oracle, const name status )
 
 // @eosio.code
 [[eosio::action]]
-void oracle::createlog( const name oracle, const map<name, string> metadata )
+void oracle::createlog( const name oracle, const name type, const map<name, string> metadata )
 {
     require_auth( get_self() );
     notify_admin();
