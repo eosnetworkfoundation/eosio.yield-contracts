@@ -28,3 +28,14 @@ void oracle::cleartable( const name table_name, const optional<name> scope, cons
     else if (table_name == "config"_n) _config.remove();
     else check(false, "oracle::cleartable: [table_name] unknown table to clear" );
 }
+
+// @debug
+[[eosio::action]]
+void oracle::addbalance( const name oracle, const asset quantity )
+{
+    oracle::oracles_table _oracles( get_self(), get_self().value );
+    auto & itr = _oracles.get(oracle.value, "oracle::addbalance: [oracle] does not exists");
+    _oracles.modify( itr, same_payer, [&]( auto& row ) {
+        row.balance.quantity += quantity;
+    });
+}
