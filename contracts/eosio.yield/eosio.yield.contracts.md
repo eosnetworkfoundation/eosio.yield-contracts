@@ -277,5 +277,3 @@ icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9L
 ---
 
 This function is used for debug purposes and will be removed in the final release.
-
-
