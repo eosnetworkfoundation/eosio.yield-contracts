@@ -262,7 +262,7 @@ This action can only be called by the {{oracle}} account or the Yield+ administr
 
 ---
 spec_version: "0.2.0"
-title: Clear Table
+title: Clear Table (debug)
 summary: 'Clears the smart contract table. Deletes all data.'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
@@ -274,7 +274,7 @@ This function is used for debug purposes and will be removed in the final releas
 
 ---
 spec_version: "0.2.0"
-title: Add Balance
+title: Add Balance (debug)
 summary: 'Adds to a protocol's Yield+ rewards balance'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
