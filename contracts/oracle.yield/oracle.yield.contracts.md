@@ -7,7 +7,7 @@ summary: 'Add {{sym}} token as supported asset.'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 
-This action can only be called by the Yield+ oracle contract's self permission. It will add the {{symcode}}@{{contract}} token as a supported asset using {{defibox_oracle_id}} Defibox Oracle ID & {{delphi_oracle_id}} Delphi Oracle ID.
+This action can only be called by the Yield+ oracle contract self permission. It will add the {{symcode}}@{{contract}} token as a supported asset using {{defibox_oracle_id}} Defibox Oracle ID & {{delphi_oracle_id}} Delphi Oracle ID.
 
 <h1 class="contract">init</h1>
 
@@ -69,6 +69,33 @@ icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9L
 ---
 
 This action can only be called by the specific {{oracle}} oracle's account. It will unregister {{oracle}} from the Yield+ oracle contract.
+
+
+
+<h1 class="contract">setmetadata</h1>
+
+---
+spec_version: "0.2.0"
+title: Set Metadata
+summary: 'Set metadata for the {{oracle}} oracle'
+icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
+---
+
+This action can be called by the specific {{oracle}} oracle's account or the Yield+ administrator account. It will set the {{oracle}} oracle with the following metadata: {{metadata}}.
+
+
+
+<h1 class="contract">setmetakey</h1>
+
+---
+spec_version: "0.2.0"
+title: Set Meta Key
+summary: 'Set specific metadata key-value pairs'
+icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
+---
+
+This action can be called by the specific {{oracle}} oracle's account or the Yield+ administrator account. It will set the {{oracle}} oracle's {{key}} key with the {{value}} value.
+
 
 
 <h1 class="contract">approve</h1>
@@ -156,7 +183,7 @@ summary: 'Generates a log when Yield+ rewards are claimed.'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 
-This action can only be called by the Yield+ oracle contract's self permission. It will record that {{oracle}} claimed {{with claimed}} {{quantity}} {{/with}}.
+This action can only be called by the Yield+ oracle contract's self permission. It will record that {{oracle}} claimed {{claimed.quantity}}.
 
 <h1 class="contract">statuslog</h1>
 
@@ -206,7 +233,7 @@ summary: 'Generates a log when an oracle balance is modified.'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 
-This action can only be called by the Yield+ oracle contract self permission. It will record that the {{oracle}} Yield+ rewards balance has been updated to {{with balance}} {{quantity}} {{/with}}.
+This action can only be called by the Yield+ oracle contract self permission. It will record that the {{oracle}} Yield+ rewards balance has been updated to {{balance.quantity}}.
 
 
 
@@ -236,29 +263,3 @@ icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9L
 This option is for debug purposes and will be removed in production. Clears all tables from {{table_name}}
 {{if_has_value scope}} with the scope {{scope}} {{/if_has_value}}
 {{if_has_value max_rows}} with a maxiumum of {{max_rows}} rows{{/if_has_value}}.
-
-
-<h1 class="contract">setmetadata</h1>
-
----
-spec_version: "0.2.0"
-title: Set Metadata
-summary: 'Set metadata for the {{oracle}} oracle'
-icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
----
-
-This action can be called by the specific {{oracle}} oracle's account or the Yield+ administrator account. It will set the {{oracle}} oracle with the following metadata: {{metadata}}.
-
-
-
-<h1 class="contract">setmetakey</h1>
-
----
-spec_version: "0.2.0"
-title: Set Meta Key
-summary: 'Set specific metadata key-value pairs'
-icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
----
-
-This action can be called by the specific {{oracle}} oracle's account or the Yield+ administrator account. It will set the {{oracle}} oracle's {{key}} key with the {{value}} value.
-
