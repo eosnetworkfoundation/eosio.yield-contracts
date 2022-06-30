@@ -26,6 +26,7 @@ void yield::regprotocol( const name protocol, const name category, const map<nam
     _abihash.get( protocol.value, "yield::regprotocol: [protocol] must be a smart contract");
 
     auto insert = [&]( auto& row ) {
+        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         row.protocol = protocol;
         row.category = category;
         row.tvl.symbol = EOS;
@@ -70,6 +71,7 @@ void yield::setmetadata( const name protocol, const map<name, string> metadata )
 
     const name ram_payer = is_admin ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
+        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         row.metadata = metadata;
         row.updated_at = current_time_point();
     });
@@ -92,6 +94,7 @@ void yield::setmetakey( const name protocol, const name key, const optional<stri
 
     const name ram_payer = is_admin ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
+        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         if ( value ) row.metadata[key] = *value;
         else row.metadata.erase(key);
         row.updated_at = current_time_point();
@@ -165,6 +168,7 @@ void yield::set_category( const name protocol, const name category )
     auto & itr = _protocols.get(protocol.value, "yield::set_category: [protocol] does not exists");
 
     _protocols.modify( itr, same_payer, [&]( auto& row ) {
+        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         check( row.category != category, "yield::set_category: [category] not modified");
         row.category = category;
     });
@@ -187,7 +191,7 @@ void yield::approve( const name protocol )
 [[eosio::action]]
 void yield::setcategory( const name protocol, const name category )
 {
-    require_auth_admin();
+    require_auth_admin( protocol );
     set_category( protocol, category );
 }
 
@@ -454,4 +458,10 @@ void yield::notify_admin()
 void yield::require_auth_admin()
 {
     require_auth( get_config().admin_contract );
+}
+
+void yield::require_auth_admin( const name protocol )
+{
+    if ( has_auth( get_config().admin_contract ) ) return;
+    require_auth( protocol );
 }

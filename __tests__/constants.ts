@@ -7,10 +7,12 @@ export const metakeys = [
 
 export const categories = [
   {category: "dexes", description: "Protocols where you can swap/trade cryptocurrency"},
+  {category: "lending", description: "Protocols that allow users to borrow and lend assets"},
 ]
 
 // yield
-export const category = "dexes";
+export const category = categories[0].category;
+export const category1 = categories[1].category;
 export const eos_contracts = ["myprotocol", "myvault"];
 export const evm_contracts = ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"];
 export const metadata_yield = [

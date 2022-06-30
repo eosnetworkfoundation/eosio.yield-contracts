@@ -1,5 +1,6 @@
 import { Blockchain } from "@proton/vert"
 import { TimePointSec } from "@greymass/eosio";
+import { categories, metakeys } from "./constants"
 
 export const blockchain = new Blockchain()
 
@@ -22,16 +23,6 @@ export const contracts = {
     system: blockchain.createContract('eosio', 'external/eosio.system/eosio.system'),
   }
 }
-
-// defaults
-const metakeys = [
-  {required: true,  type: "url", key: "website", description: "Protocol website"},
-  {required: true,  type: "string", key: "name", description: "Protocol name"},
-]
-
-const categories = [
-  {category: "dexes", description: "Protocols where you can swap/trade cryptocurrency"},
-]
 
 // accounts
 export const accounts = blockchain.createAccounts('myprotocol', 'myoracle', 'myvault', "protocol1", "protocol2", "myaccount", "foobar");

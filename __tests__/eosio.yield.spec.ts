@@ -2,7 +2,7 @@ import { Name } from "@greymass/eosio";
 import { expectToThrow } from "./helpers";
 import { YieldConfig, Protocol } from "./interfaces"
 import { contracts } from "./init"
-import { category, eos_contracts, evm_contracts, metadata_yield } from "./constants"
+import { category, category1, eos_contracts, evm_contracts, metadata_yield } from "./constants"
 
 // get tables
 const getConfig = (): YieldConfig => {
@@ -14,6 +14,14 @@ const getProtocol = ( protocol: string ): Protocol => {
   const scope = Name.from('eosio.yield').value.value;
   const primary_key = Name.from(protocol).value.value;
   return contracts.yield.eosio.tables.protocols(scope).getTableRow(primary_key)
+}
+
+const getStatus = ( protocol: string ): string | null => {
+  try {
+    return getProtocol( protocol ).status;
+  } catch (e) {
+    return null;
+  }
 }
 
 describe('eosio.yield', () => {
@@ -46,6 +54,49 @@ describe('eosio.yield', () => {
     await contracts.yield.eosio.actions.setmetadata(["myprotocol", metadata_yield]).send('myprotocol@active');
     const protocol = getProtocol("myprotocol");
     expect(protocol.metadata).toEqual(metadata_yield);
+  });
+
+  it("regprotocol::approve/deny/register/unregister", async () => {
+    // register
+    await contracts.yield.eosio.actions.regprotocol(["protocol1", category, metadata_yield]).send('protocol1@active');
+    expect(getStatus("protocol1")).toEqual("pending");
+
+    // approve
+    await contracts.yield.eosio.actions.approve(["protocol1"]).send('admin.yield@active');
+    expect(getStatus("protocol1")).toEqual("active");
+
+    // deny
+    await contracts.yield.eosio.actions.deny(["protocol1"]).send('admin.yield@active');
+    expect(getStatus("protocol1")).toEqual("denied");
+
+    // approve after denied
+    await contracts.yield.eosio.actions.regprotocol(["protocol1", category, metadata_yield]).send('protocol1@active');
+    expect(getStatus("protocol1")).toEqual("pending");
+
+    // unregister
+    await contracts.yield.eosio.actions.unregister(["protocol1"]).send('protocol1@active');
+    expect(getStatus("protocol1")).toEqual(null);
+  });
+
+  it("regprotocol::deny/setmetadata/setmetakey/setcategory", async () => {
+    // register
+    await contracts.yield.eosio.actions.regprotocol(["protocol1", category, metadata_yield]).send('protocol1@active');
+    await contracts.yield.eosio.actions.deny(["protocol1"]).send('admin.yield@active');
+    expect(getStatus("protocol1")).toEqual("denied");
+
+    // update metadata
+    await contracts.yield.eosio.actions.setmetadata(["protocol1", metadata_yield]).send('protocol1@active');
+    expect(getStatus("protocol1")).toEqual("pending");
+    await contracts.yield.eosio.actions.deny(["protocol1"]).send('admin.yield@active');
+
+    // update metakey
+    await contracts.yield.eosio.actions.setmetakey(["protocol1", metadata_yield[0].key, metadata_yield[0].value]).send('protocol1@active');
+    expect(getStatus("protocol1")).toEqual("pending");
+    await contracts.yield.eosio.actions.deny(["protocol1"]).send('admin.yield@active');
+
+    // update category
+    await contracts.yield.eosio.actions.setcategory(["protocol1", category1]).send('protocol1@active');
+    expect(getStatus("protocol1")).toEqual("pending");
   });
 
   it("setmetakey", async () => {

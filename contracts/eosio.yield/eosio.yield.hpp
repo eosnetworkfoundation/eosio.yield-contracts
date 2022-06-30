@@ -699,6 +699,7 @@ private :
     void add_active_protocol( const name protocol );
     void notify_admin();
     void require_auth_admin();
+    void require_auth_admin( const name protocol );
 
     // debug
     template <typename T>
