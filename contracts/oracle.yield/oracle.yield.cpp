@@ -444,7 +444,7 @@ void oracle::prune_protocol_periods( const name protocol )
     const time_point_sec last_period = get_last_period( PERIOD_INTERVAL * MAX_PERIODS_REPORT );
     auto itr = _periods.begin();
     while ( itr != _periods.end() ) {
-        if ( itr->period < last_period ) itr = _periods.erase( itr ); // erase
+        if ( itr->period <= last_period ) itr = _periods.erase( itr ); // erase
         if ( itr != _periods.end()) itr++; // continue
     }
 }

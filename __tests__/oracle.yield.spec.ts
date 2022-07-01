@@ -89,4 +89,14 @@ describe('oracle.yield', () => {
     const oracle = getters.getOracle("myoracle");
     expect(Asset.from(oracle.balance.quantity).value).toEqual(0.02);
   });
+
+  it("updateall::145 times", async () => {
+    let count = 145;
+    while (count > 0 ) {
+      blockchain.addTime(TimePointSec.from(600)); // push time by 10 minutes
+      await contracts.yield.oracle.actions.updateall(["myoracle", 20]).send("myoracle@active");
+      count -= 1;
+    }
+    expect(getters.getPeriods("myprotocol").length).toEqual(144);
+  });
 });

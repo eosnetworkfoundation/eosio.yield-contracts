@@ -13,6 +13,18 @@ export interface ExtendedSymbol {
     contract: string;
 }
 
+export interface Period {
+    period: Date;
+    protocol: string;
+    category: string;
+    contracts: string[];
+    evm: any[];
+    balances: any[];
+    prices: any[];
+    tvl: string;
+    usd: string;
+};
+
 export interface Metakey {
     key: string; //  "category"
     required: boolean; // true
