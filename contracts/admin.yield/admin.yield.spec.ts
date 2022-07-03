@@ -1,7 +1,7 @@
 import { Name } from "@greymass/eosio";
-import { Metakey, Category } from "./interfaces";
-import { contracts } from "./init";
-import { metakeys, categories } from "./constants"
+import { Metakey, Category } from "@tests/interfaces";
+import { contracts } from "@tests/init";
+import { metakeys, categories } from "@tests/constants"
 
 // get tables
 const getMetakeys = (key: string): Metakey => {

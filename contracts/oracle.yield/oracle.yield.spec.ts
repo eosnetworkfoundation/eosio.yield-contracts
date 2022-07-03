@@ -1,8 +1,8 @@
 import { Asset, TimePointSec } from "@greymass/eosio";
-import { expectToThrow } from "./helpers";
-import { blockchain, contracts } from "./init"
-import { metadata_oracle } from "./constants"
-import * as getters from "./getters"
+import { expectToThrow } from "@tests/helpers";
+import { blockchain, contracts } from "@tests/init"
+import { metadata_oracle } from "@tests/constants"
+import * as getters from "@tests/getters"
 
 beforeAll(async () => {
   // set eosio.yield

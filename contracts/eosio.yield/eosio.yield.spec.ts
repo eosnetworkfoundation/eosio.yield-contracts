@@ -1,8 +1,8 @@
 import { Name } from "@greymass/eosio";
-import { expectToThrow } from "./helpers";
-import { YieldConfig, Protocol } from "./interfaces"
-import { contracts } from "./init"
-import { category, category1, eos_contracts, evm_contracts, metadata_yield } from "./constants"
+import { expectToThrow } from "@tests/helpers";
+import { YieldConfig, Protocol } from "@tests/interfaces"
+import { contracts } from "@tests/init"
+import { category, category1, eos_contracts, evm_contracts, metadata_yield } from "@tests/constants"
 
 // get tables
 const getConfig = (): YieldConfig => {
