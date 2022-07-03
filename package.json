@@ -11,6 +11,7 @@
     "Guillaume 'Gnome' Babin-Tremblay - EOS Titan  <guillaume@eostitan.com>"
   ],
   "scripts": {
+    "build": "./tests/build.sh",
     "test": "jest --verbose"
   },
   "devDependencies": {
