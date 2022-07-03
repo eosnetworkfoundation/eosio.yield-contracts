@@ -1,5 +1,6 @@
 
-# EOS Yield+ [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/facebook/react/blob/main/LICENSE)
+# EOS Yield+ [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/facebook/react/blob/main/LICENSE) ![Vert EOSIO tests](https://github.com/eos-nation/eosio.yield-contracts/actions/workflows/testing.yml/badge.svg)
+
 
 ## Bluepaper
 

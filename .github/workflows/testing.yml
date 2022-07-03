@@ -1,4 +1,4 @@
-name: Vert EOSIO tests
+name: EOSIO Smart Contract
 
 on: [push]
 
