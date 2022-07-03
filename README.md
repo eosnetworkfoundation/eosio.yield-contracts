@@ -1,6 +1,5 @@
 
-# EOS Yield+ [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/facebook/react/blob/main/LICENSE) ![Vert EOSIO tests](https://github.com/eos-nation/eosio.yield-contracts/actions/workflows/testing.yml/badge.svg)
-
+# EOS Yield+ [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/facebook/react/blob/main/LICENSE) ![EOSIO Smart Contract](https://github.com/eos-nation/eosio.yield-contracts/actions/workflows/testing.yml/badge.svg)
 
 ## Bluepaper
 
@@ -18,6 +17,7 @@ https://eosnetwork.com/blog/eos-yield-blue-paper/
 |-------|-------------|
 | [eosio.yield](https://bloks.io/account/d.e.yield) | Rewards Contract |
 | [oracle.yield](https://bloks.io/account/d.o.yield) | Oracle Contract |
+| [admin.yield](https://bloks.io/account/d.a.yield) | Admin Contract |
 
 ## TLDR
 
