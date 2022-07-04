@@ -137,4 +137,19 @@ describe('oracle.yield', () => {
     const rewards = Number(BigInt(tvl.units.toNumber()) * BigInt(RATE) / 365n / 24n / 6n / 10000n);
     expect(Asset.from(after.balance.quantity).value * 10000).toEqual(balance.value * 10000 + rewards);
   });
+
+  it("update::overflow checks", async () => {
+    // 1B tokens EOS & USDT
+    await contracts.token.eos.actions.transfer(["eosio", "protocol3", "1000000000.0000 EOS", "init"]).send("eosio@active");
+    await contracts.token.usdt.actions.transfer(["tethertether", "protocol3", "1000000000.0000 USDT", "init"]).send("tethertether@active");
+
+    // register protocol
+    await contracts.yield.eosio.actions.regprotocol(["protocol3", "dexes", metadata_oracle]).send('protocol3@active');
+    await contracts.yield.eosio.actions.approve([ "protocol3" ]).send("admin.yield@active");
+
+    // update
+    await contracts.yield.oracle.actions.update(["myoracle", "protocol3"]).send("myoracle@active");
+    expect(getPeriods("protocol3").length).toEqual(1);
+  });
+
 });

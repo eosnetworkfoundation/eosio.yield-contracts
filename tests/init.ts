@@ -25,7 +25,7 @@ export const contracts = {
 }
 
 // accounts
-export const accounts = blockchain.createAccounts('myprotocol', 'myoracle', 'myvault', "protocol1", "protocol2", "myaccount", "foobar");
+export const accounts = blockchain.createAccounts('myprotocol', 'myoracle', 'myvault', "protocol1", "protocol2", "protocol3", "myaccount", "foobar");
 
 // one-time setup
 beforeAll(async () => {
@@ -36,16 +36,17 @@ beforeAll(async () => {
   await contracts.eosio.system.actions.abihash(["myprotocol", hash]).send();
   await contracts.eosio.system.actions.abihash(["protocol1", hash]).send();
   await contracts.eosio.system.actions.abihash(["protocol2", hash]).send();
+  await contracts.eosio.system.actions.abihash(["protocol3", hash]).send();
 
   // create EOS token
-  await contracts.token.eos.actions.create(["eosio", "1000000000.0000 EOS"]).send();
-  await contracts.token.eos.actions.issue(["eosio", "1000000000.0000 EOS", "init"]).send("eosio@active");
+  await contracts.token.eos.actions.create(["eosio", "10000000000.0000 EOS"]).send();
+  await contracts.token.eos.actions.issue(["eosio", "10000000000.0000 EOS", "init"]).send("eosio@active");
   await contracts.token.eos.actions.transfer(["eosio", "oracle.yield", "100000.0000 EOS", "init"]).send("eosio@active");
   await contracts.token.eos.actions.transfer(["eosio", "protocol1", "100000.0000 EOS", "init"]).send("eosio@active");
 
   // create USDT token
-  await contracts.token.usdt.actions.create(["tethertether", "1000000000.0000 USDT"]).send("tethertether@active");
-  await contracts.token.usdt.actions.issue(["tethertether", "1000000000.0000 USDT", "init"]).send("tethertether@active");
+  await contracts.token.usdt.actions.create(["tethertether", "10000000000.0000 USDT"]).send("tethertether@active");
+  await contracts.token.usdt.actions.issue(["tethertether", "10000000000.0000 USDT", "init"]).send("tethertether@active");
   await contracts.token.usdt.actions.transfer(["tethertether", "oracle.yield", "100000.0000 USDT", "init"]).send("tethertether@active");
   await contracts.token.usdt.actions.transfer(["tethertether", "myprotocol", "500000.0000 USDT", "init"]).send("tethertether@active");
   await contracts.token.usdt.actions.transfer(["tethertether", "protocol1", "100000.0000 USDT", "init"]).send("tethertether@active");
