@@ -5,6 +5,8 @@ import { metadata_oracle } from "@tests/constants";
 import { OracleConfig, Oracle, Period, Protocol } from '@tests/interfaces';
 
 const RATE = 500;
+const MIN_TVL = "200000.0000 EOS";
+const MAX_TVL = "6000000.0000 EOS";
 const PERIOD_INTERVAL = TimePointSec.from(600);
 
 const getConfig = (): OracleConfig => {
@@ -31,10 +33,15 @@ const getProtocol = ( protocol: string ): Protocol => {
   return contracts.yield.eosio.tables.protocols(scope).getTableRow(primary_key)
 }
 
+const calculateRewards = (tvl: string) => {
+  return Number(BigInt(Asset.from(tvl).units.toNumber()) * BigInt(RATE) / 365n / 24n / 6n / 10000n);
+}
+
+
 beforeAll(async () => {
   // set eosio.yield
   await contracts.yield.eosio.actions.init([{sym: "4,EOS", contract: "eosio.token"}, "oracle.yield", "admin.yield"]).send();
-  await contracts.yield.eosio.actions.setrate([RATE, "200000.0000 EOS", "6000000.0000 EOS"]).send();
+  await contracts.yield.eosio.actions.setrate([RATE, MIN_TVL, MAX_TVL]).send();
   await contracts.yield.eosio.actions.regprotocol(["myprotocol", "dexes", metadata_oracle]).send('myprotocol@active');
   await contracts.yield.eosio.actions.approve([ "myprotocol" ]).send("admin.yield@active");
 
@@ -130,11 +137,10 @@ describe('oracle.yield', () => {
   it("updateall::check protocol balance", async () => {
     const before = getProtocol("myprotocol");
     const balance = Asset.from(before.balance.quantity);
-    const tvl = Asset.from(before.tvl);
     blockchain.addTime(PERIOD_INTERVAL); // push time by 10 minutes
     await contracts.yield.oracle.actions.updateall(["myoracle", 20]).send("myoracle@active");
     const after = getProtocol("myprotocol");
-    const rewards = Number(BigInt(tvl.units.toNumber()) * BigInt(RATE) / 365n / 24n / 6n / 10000n);
+    const rewards = calculateRewards(before.tvl);
     expect(Asset.from(after.balance.quantity).value * 10000).toEqual(balance.value * 10000 + rewards);
   });
 
@@ -150,6 +156,8 @@ describe('oracle.yield', () => {
     // update
     await contracts.yield.oracle.actions.update(["myoracle", "protocol3"]).send("myoracle@active");
     expect(getPeriods("protocol3").length).toEqual(1);
+    const protocol = getProtocol("protocol3");
+    expect(Asset.from(protocol.balance.quantity).value).toEqual(0);
   });
 
 });
