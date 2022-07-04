@@ -3,7 +3,6 @@ import { Metakey, Category } from "@tests/interfaces";
 import { contracts } from "@tests/init";
 import { metakeys, categories } from "@tests/constants"
 
-// get tables
 const getMetakeys = (key: string): Metakey => {
   const scope = Name.from('admin.yield').value.value;
   return contracts.yield.admin.tables.metakeys(scope).getTableRow( Name.from(key).value.value );
@@ -15,7 +14,6 @@ const getCategory = (category: string): Category => {
 }
 
 describe('admin.yield', () => {
-
   it("config::setmetakey", async () => {
     for ( const metakey of metakeys ) {
       await contracts.yield.admin.actions.setmetakey(metakey).send();

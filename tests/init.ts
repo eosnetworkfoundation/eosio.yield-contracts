@@ -47,6 +47,7 @@ beforeAll(async () => {
   await contracts.token.usdt.actions.create(["tethertether", "1000000000.0000 USDT"]).send("tethertether@active");
   await contracts.token.usdt.actions.issue(["tethertether", "1000000000.0000 USDT", "init"]).send("tethertether@active");
   await contracts.token.usdt.actions.transfer(["tethertether", "oracle.yield", "100000.0000 USDT", "init"]).send("tethertether@active");
+  await contracts.token.usdt.actions.transfer(["tethertether", "myprotocol", "500000.0000 USDT", "init"]).send("tethertether@active");
   await contracts.token.usdt.actions.transfer(["tethertether", "protocol1", "100000.0000 USDT", "init"]).send("tethertether@active");
   await contracts.token.usdt.actions.transfer(["tethertether", "protocol2", "200000.0000 USDT", "init"]).send("tethertether@active");
 
