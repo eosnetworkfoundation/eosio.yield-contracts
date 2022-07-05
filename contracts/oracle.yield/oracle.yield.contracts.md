@@ -55,13 +55,13 @@ summary: 'Registers the {{oracle}} oracle with the Yield+ oracle contract'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 
-This action can only be called by the specific {{oracle}} oracle's account. It will register {{oracle}} with the following metadata: 
-{{#with metadata}} 
+This action can only be called by the specific {{oracle}} oracle's account. It will register {{oracle}} with its metadata. 
+<!--- {{#with metadata}} 
   {{#each key}}
     {{this.key}} : {{this.value}} </br>
   {{/each}}
 {{/with}}
-
+-->
 
 <h1 class="contract">unregister</h1>
 
@@ -84,12 +84,13 @@ summary: 'Set metadata for the {{oracle}} oracle'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 
-This action can be called by the specific {{oracle}} oracle's account or the Yield+ administrator account. It will set the {{oracle}} oracle with the following metadata: 
-{{#with metadata}} 
+This action can be called by the specific {{oracle}} oracle's account or the Yield+ administrator account. It will set the {{oracle}} oracle's metadata. 
+<!--- {{#with metadata}} 
   {{#each key}}
     {{this.key}} : {{this.value}} </br>
   {{/each}}
 {{/with}}
+-->
 
 
 <h1 class="contract">setmetakey</h1>
@@ -215,12 +216,13 @@ summary: 'Generates a log when an oracle is created in the Yield+ oracle contrac
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 
-This action can only be called by the Yield+ oracle contract self permission. It will record that {{oracle}} oracle has been registered with the Yield+ contract with the following metadata: 
-{{#with metadata}} 
+This action can only be called by the Yield+ oracle contract self permission. It will record that {{oracle}} oracle has been registered with the Yield+ contract with its metadata. 
+<!--- {{#with metadata}} 
   {{#each key}}
     {{this.key}} : {{this.value}} </br>
   {{/each}}
 {{/with}}
+-->
 
 <h1 class="contract">eraselog</h1>
 
@@ -255,12 +257,13 @@ summary: 'Generates a log when oracle metadata is modified.'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 
-This action can only be called by the Yield+ oracle contract self permission. It will record that {{oracle}} metadata has been modified to: 
-{{#with metadata}} 
+This action can only be called by the Yield+ oracle contract self permission. It will record that {{oracle}} metadata has been modified. 
+<!--- {{#with metadata}} 
   {{#each key}}
     {{this.key}} : {{this.value}} </br>
   {{/each}}
 {{/with}}
+-->
 
 
 <h1 class="contract">cleartable</h1>

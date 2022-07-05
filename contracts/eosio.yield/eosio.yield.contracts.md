@@ -46,7 +46,13 @@ summary: 'Register the {{protocol}} protocol.'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 
-This action can only be called by the {{protocol}} account or the administrator account. It will register the {{protocol}} protocol with the following metadata.
+This action can only be called by the {{protocol}} account or the administrator account. It will register the {{protocol}} protocol with its metadata.
+<!--- {{#with metadata}} 
+  {{#each key}}
+    {{this.key}} : {{this.value}} </br>
+  {{/each}}
+{{/with}}
+-->
 
 <h1 class="contract">setmetakey</h1>
 
@@ -208,7 +214,13 @@ summary: 'Generates a log when a protocol is created.'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 
-This action can only be called by the Yield+ contract self account. It generates a log when a protocol is created. It will report the {{protocol}} protocol as created with the following metadata: {{metadata}}.
+This action can only be called by the Yield+ contract self account. It generates a log when a protocol is created. It will report the {{protocol}} protocol as created with its metadata.
+<!--- {{#with metadata}} 
+  {{#each key}}
+    {{this.key}} : {{this.value}} </br>
+  {{/each}}
+{{/with}}
+-->.
 
 
 <h1 class="contract">eraselog</h1>
@@ -242,7 +254,14 @@ summary: 'Generates a log when a protocol's metadata is modified.'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 
-This action can only be called by the Yield+ contract self account. It generates a log when a protocol's metadata has been modified. It will record that the {{protocol}} protocol has the following metadata.
+This action can only be called by the Yield+ contract self account. It generates a log when a protocol's metadata has been modified. It will record that the {{protocol}} protocol has updated its metadata.
+
+<!--- {{#with metadata}} 
+  {{#each key}}
+    {{this.key}} : {{this.value}} </br>
+  {{/each}}
+{{/with}}
+-->
 
 <h1 class="contract">setmetadata</h1>
 
@@ -253,7 +272,14 @@ summary: 'Set the metadata for the {{oracle}} oracle.'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 
-This action can only be called by the {{oracle}} account or the Yield+ administrator account. It will set the following metadata for the {{protocol}} protocol.
+This action can only be called by the {{oracle}} account or the Yield+ administrator account. It will set the metadata for the {{protocol}} protocol.
+
+<!--- {{#with metadata}} 
+  {{#each key}}
+    {{this.key}} : {{this.value}} </br>
+  {{/each}}
+{{/with}}
+-->
 
 <h1 class="contract">cleartable</h1>
 
