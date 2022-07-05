@@ -265,6 +265,16 @@ This action can only be called by the Yield+ oracle contract self permission. It
 {{/with}}
 -->
 
+<h1 class="contract">rewardslog</h1>
+
+---
+spec_version: "0.2.0"
+title: Rewards Log
+summary: 'Generates a log when rewards are generated from update.'
+icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
+---
+
+This action can only be called by the Yield+ contract self account. It generates a log when rewards are allocated. It will record a reward of {{rewards}} for the {{oracle}} oracle. The oracle's claimable balance is now {{balance}}.
 
 <h1 class="contract">cleartable</h1>
 

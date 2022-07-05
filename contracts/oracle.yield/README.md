@@ -64,6 +64,7 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 - [ACTION `updatelog`](#action-updatelog)
 - [ACTION `claim`](#action-claim)
 - [ACTION `claimlog`](#action-claimlog)
+- [ACTION `rewardslog`](#action-rewardslog)
 
 ## TABLE `config`
 
@@ -507,5 +508,27 @@ $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
 {
     "oracle": "myoracle",
     "metadata": [{"key": "name", "value": "My oracle"}, {"key": "website", "value": "https://myoracle.com"}]
+}
+```
+
+## ACTION `rewardslog`
+
+> Generates a log when rewards are generated from update.
+
+- **authority**: `get_self()`
+
+### params
+
+- `{name} oracle` - oracle
+- `{asset} rewards` - Oracle push reward
+- `{asset} balance` - current claimable balance
+
+### Example
+
+```json
+{
+    "oracle": "myoracle",
+    "rewards": "2.5500 EOS",
+    "balance": "10.5500 EOS"
 }
 ```

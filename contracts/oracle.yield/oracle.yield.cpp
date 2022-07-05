@@ -25,7 +25,7 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
     const auto config = get_config();
 
     auto insert = [&]( auto& row ) {
-        // status => "pending" by default
+        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         row.oracle = oracle;
         row.metadata = metadata;
         row.balance.contract = config.reward_per_update.contract;
@@ -92,6 +92,7 @@ void oracle::setmetadata( const name oracle, const map<name, string> metadata )
 
     const name ram_payer = is_admin ? config.admin_contract : oracle;
     _oracles.modify( itr, ram_payer, [&]( auto& row ) {
+        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         row.metadata = metadata;
         row.updated_at = current_time_point();
     });
@@ -99,9 +100,6 @@ void oracle::setmetadata( const name oracle, const map<name, string> metadata )
     // logging
     oracle::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
     metadatalog.send( oracle, metadata );
-
-    // validate via admin contract
-    require_recipient( config.admin_contract );
 }
 
 // @oracle OR @admin
@@ -117,6 +115,7 @@ void oracle::setmetakey( const name oracle, const name key, const optional<strin
 
     const name ram_payer = is_admin ? config.admin_contract : oracle;
     _oracles.modify( itr, ram_payer, [&]( auto& row ) {
+        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         if ( value ) row.metadata[key] = *value;
         else row.metadata.erase(key);
         row.updated_at = current_time_point();
@@ -125,9 +124,6 @@ void oracle::setmetakey( const name oracle, const name key, const optional<strin
     // logging
     oracle::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
     metadatalog.send( oracle, itr.metadata );
-
-    // validate via admin contract
-    require_recipient( config.admin_contract );
 }
 
 
@@ -162,15 +158,9 @@ void oracle::claim( const name oracle, const optional<name> receiver )
         row.claimed_at = current_time_point();
     });
 
-    // logging
-    oracle::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
-    oracle::balancelog_action balancelog( get_self(), { get_self(), "active"_n });
-
-    claimlog.send( oracle, "oracle"_n, to, claimable.quantity );
-    balancelog.send( oracle, itr.balance.quantity );
-
-    // validate via admin contract
-    require_recipient( config.admin_contract );
+    // // logging
+    // oracle::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
+    // claimlog.send( oracle, "oracle"_n, to, claimable.quantity, itr.balance.quantity );
 }
 
 void oracle::set_status( const name oracle, const name status )
@@ -417,10 +407,6 @@ void oracle::update( const name oracle, const name protocol )
 
     // update rewards
     allocate_oracle_rewards( oracle );
-
-    // logging
-    oracle::balancelog_action balancelog( get_self(), { get_self(), "active"_n });
-    balancelog.send( oracle, oracle_itr.balance.quantity );
 }
 
 void oracle::allocate_oracle_rewards( const name oracle )
@@ -432,6 +418,10 @@ void oracle::allocate_oracle_rewards( const name oracle )
     _oracles.modify( itr, same_payer, [&]( auto& row ) {
         row.balance += config.reward_per_update;
     });
+
+    // logging
+    oracle::rewardslog_action rewardslog( get_self(), { get_self(), "active"_n });
+    rewardslog.send( oracle, config.reward_per_update.quantity, itr.balance.quantity );
 }
 
 void oracle::prune_protocol_periods( const name protocol )
@@ -625,8 +615,7 @@ int64_t oracle::normalize_price( const int64_t price, const uint8_t precision )
 oracle::config_row oracle::get_config()
 {
     oracle::config_table _config( get_self(), get_self().value );
-    check( _config.exists(), "oracle::get_config: contract is not initialized");
-    return _config.get();
+    return _config.get_or_default();
 }
 
 void oracle::transfer( const name from, const name to, const extended_asset value, const string& memo )
@@ -635,12 +624,13 @@ void oracle::transfer( const name from, const name to, const extended_asset valu
     transfer.send( from, to, value.quantity, memo );
 }
 
-void oracle::notify_admin()
-{
-    require_recipient( get_config().admin_contract );
-}
-
 void oracle::require_auth_admin()
 {
     require_auth( get_config().admin_contract );
+}
+
+void oracle::require_auth_admin( const name account )
+{
+    if ( has_auth( get_config().admin_contract ) ) return;
+    require_auth( account );
 }

@@ -77,7 +77,6 @@ cleos push action eosio.yield report '[protocol, "2022-05-13T00:00:00", 600, "20
 - [ACTION `categorylog`](#action-categorylog)
 - [ACTION `createlog`](#action-createlog)
 - [ACTION `eraselog`](#action-eraselog)
-- [ACTION `balancelog`](#action-balancelog)
 - [ACTION `metadatalog`](#action-metadatalog)
 
 ## TABLE `config`
@@ -536,26 +535,6 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ```json
 {
     "protocol": "myprotocol"
-}
-```
-
-## ACTION `balancelog`
-
-> When protocol's balance is updated
-
-- **authority**: `get_self()`
-
-### params
-
-- `{name} protocol` - primary protocol contract
-- `{asset} balance` - balance available to be claimed
-
-### example
-
-```json
-{
-    "protocol": "myprotocol",
-    "balance": "2.5000 EOS"
 }
 ```
 

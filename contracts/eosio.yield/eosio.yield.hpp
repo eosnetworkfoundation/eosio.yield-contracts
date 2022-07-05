@@ -60,8 +60,8 @@ public:
         asset                   min_tvl_report;
         asset                   max_tvl_report;
         extended_symbol         rewards;
-        name                    oracle_contract;
-        name                    admin_contract;
+        name                    oracle_contract = "oracle.yield"_n;
+        name                    admin_contract = "admin.yield"_n;
     };
     typedef eosio::singleton< "config"_n, config_row > config_table;
 
@@ -190,7 +190,7 @@ public:
      *
      * > Register the {{protocol}} protocol.
      *
-     * - **authority**: `protocol` OR `admin.yield`
+     * - **authority**: `protocol`
      *
      * ### params
      *
@@ -433,8 +433,9 @@ public:
      *
      * - `{name} protocol` - protocol
      * - `{name} category` - protocol category
-     * - `{name} receiver` - receiver of rewards
-     * - `{extended_asset} claimed` - claimed rewards
+     * - `{name} [receiver=""]` - (optional) receiver of rewards
+     * - `{asset} claimed` - claimed rewards
+     * - `{asset} balance` - balance available to be claimed
      *
      * ### Example
      *
@@ -443,12 +444,13 @@ public:
      *     "protocol": "myprotocol",
      *     "category": "dexes",
      *     "receiver": "myreceiver",
-     *     "claimed": "1.5500 EOS"
+     *     "claimed": "1.5500 EOS",
+     *     "balance": 0.0000 EOS"
      * }
      * ```
      */
     [[eosio::action]]
-    void claimlog( const name protocol, const name category, const name receiver, const asset claimed );
+    void claimlog( const name protocol, const name category, const name receiver, const asset claimed, const asset balance );
 
     /**
      * ## ACTION `rewardslog`
@@ -609,30 +611,6 @@ public:
     void eraselog( const name protocol );
 
     /**
-     * ## ACTION `balancelog`
-     *
-     * > Generates a log when a protocol's balance is updated.
-     *
-     * - **authority**: `get_self()`
-     *
-     * ### params
-     *
-     * - `{name} protocol` - primary protocol contract
-     * - `{asset} balance` - balance available to be claimed
-     *
-     * ### example
-     *
-     * ```json
-     * {
-     *     "protocol": "myprotocol",
-     *     "balance": "2.5000 EOS"
-     * }
-     * ```
-     */
-    [[eosio::action]]
-    void balancelog( const name protocol, const asset balance );
-
-    /**
      * ## ACTION `metadatalog`
      *
      * > Generates a log when a protocol's metadata is modified.
@@ -676,16 +654,14 @@ public:
     using deny_action = eosio::action_wrapper<"deny"_n, &yield::deny>;
     using setrate_action = eosio::action_wrapper<"setrate"_n, &yield::setrate>;
     using report_action = eosio::action_wrapper<"report"_n, &yield::report>;
-    using claimlog_action = eosio::action_wrapper<"claimlog"_n, &yield::claimlog>;
-    using rewardslog_action = eosio::action_wrapper<"rewardslog"_n, &yield::rewardslog>;
-    using cleartable_action = eosio::action_wrapper<"cleartable"_n, &yield::cleartable>;
 
+    using rewardslog_action = eosio::action_wrapper<"rewardslog"_n, &yield::rewardslog>;
+    using claimlog_action = eosio::action_wrapper<"claimlog"_n, &yield::claimlog>;
     using statuslog_action = eosio::action_wrapper<"statuslog"_n, &yield::statuslog>;
     using contractslog_action = eosio::action_wrapper<"contractslog"_n, &yield::contractslog>;
     using categorylog_action = eosio::action_wrapper<"categorylog"_n, &yield::categorylog>;
     using createlog_action = eosio::action_wrapper<"createlog"_n, &yield::createlog>;
     using eraselog_action = eosio::action_wrapper<"eraselog"_n, &yield::eraselog>;
-    using balancelog_action = eosio::action_wrapper<"balancelog"_n, &yield::balancelog>;
     using metadatalog_action = eosio::action_wrapper<"metadatalog"_n, &yield::metadatalog>;
 
 private :
@@ -699,7 +675,8 @@ private :
     void add_active_protocol( const name protocol );
     void notify_admin();
     void require_auth_admin();
-    void require_auth_admin( const name protocol );
+    void require_auth_admin( const name account );
+    bool is_contract( const name contract );
 
     // debug
     template <typename T>

@@ -1,3 +1,15 @@
+void yield::notify_admin()
+{
+    const name admin_contract = get_config().admin_contract;
+    if ( admin_contract ) require_recipient( admin_contract );
+}
+
+[[eosio::on_notify("*::transfer")]]
+void yield::on_transfer( const name from, const name to, const asset quantity, const std::string memo )
+{
+    notify_admin();
+}
+
 // @eosio.code
 [[eosio::action]]
 void yield::rewardslog( const name protocol, const name category, const time_point_sec period, const uint32_t period_interval, const asset tvl, const asset usd, const asset rewards, const asset balance )
@@ -8,7 +20,7 @@ void yield::rewardslog( const name protocol, const name category, const time_poi
 
 // @eosio.code
 [[eosio::action]]
-void yield::claimlog( const name protocol, const name category, const name receiver, const asset claimed )
+void yield::claimlog( const name protocol, const name category, const name receiver, const asset claimed, const asset balance )
 {
     require_auth( get_self() );
     notify_admin();
@@ -49,14 +61,6 @@ void yield::createlog( const name protocol, const name category, const map<name,
 // @eosio.code
 [[eosio::action]]
 void yield::eraselog( const name protocol )
-{
-    require_auth( get_self() );
-    notify_admin();
-}
-
-// @eosio.code
-[[eosio::action]]
-void yield::balancelog( const name protocol, const asset balance )
 {
     require_auth( get_self() );
     notify_admin();

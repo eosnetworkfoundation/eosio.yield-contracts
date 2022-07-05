@@ -11,7 +11,7 @@ void admin::on_categorylog( const name protocol, const name category )
 }
 
 [[eosio::on_notify("*::claimlog")]]
-void admin::on_claimlog( const name protocol, const name category, const name receiver, const asset claimed )
+void admin::on_claimlog( const name protocol, const name category, const name receiver, const asset claimed, const asset balance )
 {
     // no checks
 }

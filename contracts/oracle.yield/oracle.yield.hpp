@@ -56,8 +56,8 @@ public:
      */
     struct [[eosio::table("config")]] config_row {
         extended_asset          reward_per_update;
-        name                    yield_contract;
-        name                    admin_contract;
+        name                    yield_contract = "eosio.yield"_n;
+        name                    admin_contract = "admin.yield"_n;
     };
     typedef eosio::singleton< "config"_n, config_row > config_table;
 
@@ -510,7 +510,8 @@ public:
      * - `{name} oracle` - oracle
      * - `{name} [category=oracle]` - oracle category type
      * - `{name} receiver` - receiver of rewards
-     * - `{extended_asset} claimed` - claimed rewards
+     * - `{asset} claimed` - claimed rewards
+     * - `{asset} balance` - balance available to be claimed
      *
      * ### Example
      *
@@ -519,12 +520,13 @@ public:
      *     "oracle": "myoracle",
      *     "category": "oracle",
      *     "receiver": "myreceiver",
-     *     "claimed": "1.5500 EOS"
+     *     "claimed": "1.5500 EOS",
+     *     "balance": "0.0000 EOS"
      * }
      * ```
      */
     [[eosio::action]]
-    void claimlog( const name oracle, const name category, const name receiver, const asset claimed );
+    void claimlog( const name oracle, const name category, const name receiver, const asset claimed, const name balance );
 
     /**
      * ## ACTION `statuslog`
@@ -599,30 +601,6 @@ public:
     void eraselog( const name oracle );
 
     /**
-     * ## ACTION `balancelog`
-     *
-     * > Generates a log when an oracle balance is modified.
-     *
-     * - **authority**: `get_self()`
-     *
-     * ### params
-     *
-     * - `{name} oracle` - oracle account
-     * - `{asset} balance` - balance available to be claimed
-     *
-     * ### example
-     *
-     * ```json
-     * {
-     *     "oracle": "myoracle",
-     *     "balance": "2.5000 EOS"
-     * }
-     * ```
-     */
-    [[eosio::action]]
-    void balancelog( const name oracle, const asset balance );
-
-    /**
      * ## ACTION `metadatalog`
      *
      * > Generates a log when oracle metadata is modified.
@@ -646,6 +624,32 @@ public:
     [[eosio::action]]
     void metadatalog( const name oracle, const map<name, string> metadata );
 
+    /**
+     * ## ACTION `rewardslog`
+     *
+     * > Generates a log when rewards are generated from update.
+     *
+     * - **authority**: `get_self()`
+     *
+     * ### params
+     *
+     * - `{name} oracle` - oracle
+     * - `{asset} rewards` - Oracle push reward
+     * - `{asset} balance` - current claimable balance
+     *
+     * ### Example
+     *
+     * ```json
+     * {
+     *     "oracle": "myoracle",
+     *     "rewards": "2.5500 EOS",
+     *     "balance": "10.5500 EOS"
+     * }
+     * ```
+     */
+    [[eosio::action]]
+    void rewardslog( const name oracle, const asset rewards, const asset balance );
+
     // @debug
     [[eosio::action]]
     void addbalance( const name oracle, const asset quantity );
@@ -653,6 +657,9 @@ public:
     // @debug
     [[eosio::action]]
     void cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows );
+
+    [[eosio::on_notify("*::transfer")]]
+    void on_transfer( const name from, const name to, const asset quantity, const std::string memo );
 
     // action wrappers
     using update_action = eosio::action_wrapper<"update"_n, &oracle::update>;
@@ -665,13 +672,13 @@ public:
     using deltoken_action = eosio::action_wrapper<"deltoken"_n, &oracle::deltoken>;
     using setreward_action = eosio::action_wrapper<"setreward"_n, &oracle::setreward>;
     using claim_action = eosio::action_wrapper<"claim"_n, &oracle::claim>;
-    using cleartable_action = eosio::action_wrapper<"cleartable"_n, &oracle::cleartable>;
+
     using updatelog_action = eosio::action_wrapper<"updatelog"_n, &oracle::updatelog>;
     using claimlog_action = eosio::action_wrapper<"claimlog"_n, &oracle::claimlog>;
+    using rewardslog_action = eosio::action_wrapper<"rewardslog"_n, &oracle::rewardslog>;
     using statuslog_action = eosio::action_wrapper<"statuslog"_n, &oracle::statuslog>;
     using createlog_action = eosio::action_wrapper<"createlog"_n, &oracle::createlog>;
     using eraselog_action = eosio::action_wrapper<"eraselog"_n, &oracle::eraselog>;
-    using balancelog_action = eosio::action_wrapper<"balancelog"_n, &oracle::balancelog>;
     using metadatalog_action = eosio::action_wrapper<"metadatalog"_n, &oracle::metadatalog>;
 
 private:
@@ -687,6 +694,8 @@ private:
     void prune_protocol_periods( const name protocol );
     void notify_admin();
     void require_auth_admin();
+    void require_auth_admin( const name account );
+    bool is_contract( const name contract );
 
     // getters
     asset get_balance_quantity( const name token_contract_account, const name owner, const symbol sym );

@@ -46,7 +46,7 @@ summary: 'Register the {{protocol}} protocol.'
 icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
 ---
 
-This action can only be called by the {{protocol}} account or the administrator account. It will register the {{protocol}} protocol with its metadata.
+This action can only be called by the {{protocol}} account. It will register the {{protocol}} protocol with its metadata.
 <!--- {{#with metadata}}
   {{#each key}}
     {{this.key}} : {{this.value}} </br>
@@ -251,17 +251,6 @@ icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9L
 ---
 
 This action can only be called by the Yield+ contract self account. It generates a log when a protocol is erased. It will report that the {{protocol}} protocol has been erased.
-
-<h1 class="contract">balancelog</h1>
-
----
-spec_version: "0.2.0"
-title: Balance Log
-summary: 'Generates a log when a protocol's balance is updated.'
-icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
----
-
-This action can only be called by the Yield+ contract self account. It generates a log when a protocol's balance changes. It will record the available balance of the {{protocol}} protocol as {{balance}}.
 
 <h1 class="contract">metadatalog</h1>
 

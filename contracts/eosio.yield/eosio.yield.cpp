@@ -15,16 +15,14 @@
 [[eosio::action]]
 void yield::regprotocol( const name protocol, const name category, const map<name, string> metadata )
 {
-    const auto config = get_config();
-    const bool is_admin = has_auth( config.admin_contract );
-    if ( !is_admin ) require_auth( protocol );
+    require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
 
     // protocol must be smart contract that includes ABI
-    eosiosystem::abihash_table _abihash( "eosio"_n, "eosio"_n.value );
-    _abihash.get( protocol.value, "yield::regprotocol: [protocol] must be a smart contract");
+    check( is_contract( protocol ), "yield::regprotocol: [protocol] must be a smart contract");
 
+    const auto config = get_config();
     auto insert = [&]( auto& row ) {
         if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         row.protocol = protocol;
@@ -40,11 +38,10 @@ void yield::regprotocol( const name protocol, const name category, const map<nam
     };
 
     // modify or create
-    const name ram_payer = is_admin ? config.admin_contract : protocol;
     auto itr = _protocols.find( protocol.value );
     const bool is_exists = itr != _protocols.end();
-    if ( is_exists ) _protocols.modify( itr, ram_payer, insert );
-    else _protocols.emplace( ram_payer, insert );
+    if ( is_exists ) _protocols.modify( itr, protocol, insert );
+    else _protocols.emplace( protocol, insert );
 
     // logging
     yield::createlog_action createlog( get_self(), { get_self(), "active"_n });
@@ -62,14 +59,13 @@ void yield::regprotocol( const name protocol, const name category, const map<nam
 [[eosio::action]]
 void yield::setmetadata( const name protocol, const map<name, string> metadata )
 {
-    const auto config = get_config();
-    const bool is_admin = has_auth( config.admin_contract );
-    if ( !is_admin ) require_auth( protocol );
+    require_auth_admin( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get( protocol.value, "yield::setmetadata: [protocol] does not exists");
 
-    const name ram_payer = is_admin ? config.admin_contract : protocol;
+    const auto config = get_config();
+    const name ram_payer = has_auth( config.admin_contract ) ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
         if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         row.metadata = metadata;
@@ -138,10 +134,7 @@ void yield::claim( const name protocol, const optional<name> receiver )
 
     // logging
     yield::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
-    yield::balancelog_action balancelog( get_self(), { get_self(), "active"_n });
-
-    claimlog.send( protocol, itr.category, to, claimable.quantity );
-    balancelog.send( protocol, itr.balance.quantity );
+    claimlog.send( protocol, itr.category, to, claimable.quantity, itr.balance.quantity );
 }
 
 void yield::set_status( const name protocol, const name status )
@@ -331,10 +324,7 @@ void yield::report( const name protocol, const time_point_sec period, const uint
 
     // log report
     yield::rewardslog_action rewardslog( get_self(), { get_self(), "active"_n });
-    yield::balancelog_action balancelog( get_self(), { get_self(), "active"_n });
-
     rewardslog.send( protocol, itr.category, period, period_interval, tvl, usd, rewards, itr.balance.quantity );
-    balancelog.send( protocol, itr.balance.quantity );
 }
 
 // @protocol or @admin
@@ -408,12 +398,6 @@ void yield::setevm( const name protocol, const set<string> evm )
     statuslog.send( protocol, itr.status );
 }
 
-[[eosio::on_notify("*::transfer")]]
-void yield::on_transfer( const name from, const name to, const asset quantity, const std::string memo )
-{
-    notify_admin();
-}
-
 void yield::transfer( const name from, const name to, const extended_asset value, const string& memo )
 {
     eosio::token::transfer_action transfer( value.contract, { from, "active"_n });
@@ -439,8 +423,7 @@ void yield::remove_active_protocol( const name protocol )
 yield::config_row yield::get_config()
 {
     yield::config_table _config( get_self(), get_self().value );
-    check( _config.exists(), "yield::get_config: contract is not initialized");
-    return _config.get();
+    return _config.get_or_default();
 }
 
 time_point_sec yield::get_current_period( const uint32_t period_interval )
@@ -449,9 +432,10 @@ time_point_sec yield::get_current_period( const uint32_t period_interval )
     return time_point_sec((now / period_interval) * period_interval);
 }
 
-void yield::notify_admin()
+bool yield::is_contract( const name contract )
 {
-    require_recipient( get_config().admin_contract );
+    eosiosystem::abihash_table _abihash( "eosio"_n, "eosio"_n.value );
+    return _abihash.find( contract.value ) != _abihash.end();
 }
 
 void yield::require_auth_admin()
@@ -459,8 +443,8 @@ void yield::require_auth_admin()
     require_auth( get_config().admin_contract );
 }
 
-void yield::require_auth_admin( const name protocol )
+void yield::require_auth_admin( const name account )
 {
     if ( has_auth( get_config().admin_contract ) ) return;
-    require_auth( protocol );
+    require_auth( account );
 }

@@ -19,4 +19,4 @@ cleos -v push action oracle.yield updateall '[myoracle, null]' -p myoracle
 
 # add & claim
 cleos -v push action oracle.yield addbalance '[myoracle, "0.1000 EOS"]' -p myoracle
-cleos -v push action oracle.yield claim '[myoracle]' -p myoracle
+cleos -v push action oracle.yield claim '[myoracle, null]' -p myoracle
