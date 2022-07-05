@@ -20,7 +20,8 @@ void oracle::updatelog( const name oracle, const name protocol, const name categ
 
 // @eosio.code
 [[eosio::action]]
-void oracle::claimlog( const name oracle, const name category, const name receiver, const asset claimed, const name balance )
+void oracle::claimlog( const name oracle, const name category, const name receiver, const asset claimed, const asset balance )
+
 {
     require_auth( get_self() );
     notify_admin();

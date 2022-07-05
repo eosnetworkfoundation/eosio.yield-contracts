@@ -126,7 +126,6 @@ void oracle::setmetakey( const name oracle, const name key, const optional<strin
     metadatalog.send( oracle, itr.metadata );
 }
 
-
 // @oracle
 [[eosio::action]]
 void oracle::claim( const name oracle, const optional<name> receiver )
@@ -158,9 +157,9 @@ void oracle::claim( const name oracle, const optional<name> receiver )
         row.claimed_at = current_time_point();
     });
 
-    // // logging
-    // oracle::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
-    // claimlog.send( oracle, "oracle"_n, to, claimable.quantity, itr.balance.quantity );
+    // logging
+    oracle::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
+    claimlog.send( oracle, "oracle"_n, to, claimable.quantity, itr.balance.quantity );
 }
 
 void oracle::set_status( const name oracle, const name status )

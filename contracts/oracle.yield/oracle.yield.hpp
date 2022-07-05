@@ -526,7 +526,7 @@ public:
      * ```
      */
     [[eosio::action]]
-    void claimlog( const name oracle, const name category, const name receiver, const asset claimed, const name balance );
+    void claimlog( const name oracle, const name category, const name receiver, const asset claimed, const asset balance );
 
     /**
      * ## ACTION `statuslog`
