@@ -47,7 +47,25 @@ icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9L
 ---
 
 This action can only be called by the {{protocol}} account or the administrator account. It will register the {{protocol}} protocol with its metadata.
-<!--- {{#with metadata}} 
+<!--- {{#with metadata}}
+  {{#each key}}
+    {{this.key}} : {{this.value}} </br>
+  {{/each}}
+{{/with}}
+-->
+
+<h1 class="contract">setmetadata</h1>
+
+---
+spec_version: "0.2.0"
+title: Set Metadata
+summary: 'Set the metadata for the {{protocol}} protocol.'
+icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
+---
+
+This action can only be called by the {{protocol}} account or the Yield+ administrator account. It will set the metadata for the {{protocol}} protocol.
+
+<!--- {{#with metadata}}
   {{#each key}}
     {{this.key}} : {{this.value}} </br>
   {{/each}}
@@ -256,25 +274,7 @@ icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9L
 
 This action can only be called by the Yield+ contract self account. It generates a log when a protocol's metadata has been modified. It will record that the {{protocol}} protocol has updated its metadata.
 
-<!--- {{#with metadata}} 
-  {{#each key}}
-    {{this.key}} : {{this.value}} </br>
-  {{/each}}
-{{/with}}
--->
-
-<h1 class="contract">setmetadata</h1>
-
----
-spec_version: "0.2.0"
-title: Set Metadata
-summary: 'Set the metadata for the {{oracle}} oracle.'
-icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
----
-
-This action can only be called by the {{oracle}} account or the Yield+ administrator account. It will set the metadata for the {{protocol}} protocol.
-
-<!--- {{#with metadata}} 
+<!--- {{#with metadata}}
   {{#each key}}
     {{this.key}} : {{this.value}} </br>
   {{/each}}

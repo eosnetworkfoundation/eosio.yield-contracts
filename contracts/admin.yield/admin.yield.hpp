@@ -73,9 +73,9 @@ public:
     typedef eosio::multi_index< "categories"_n, categories_row > categories_table;
 
     /**
-     * ## ACTION `setmetakeys`
+     * ## ACTION `setmetakey`
      *
-     * > Set metakey
+     * > Set {{key}} metakey.
      *
      * - **authority**: `get_self()`
      *
@@ -98,7 +98,7 @@ public:
     /**
      * ## ACTION `setcategory`
      *
-     * > Set category
+     * > Set {{category}} category.
      *
      * - **authority**: `get_self()`
      *
@@ -119,7 +119,7 @@ public:
     /**
      * ## ACTION `delcategory`
      *
-     * > Delete category
+     * > Delete {{category}} category.
      *
      * - **authority**: `get_self()`
      *
@@ -139,7 +139,7 @@ public:
     /**
      * ## ACTION `delmetakeys`
      *
-     * > Delete metakey
+     * > Delete {{key}} metakey.
      *
      * - **authority**: `get_self()`
      *

@@ -185,7 +185,7 @@ public:
     /**
      * ## ACTION `init`
      *
-     * > Initialize Yield+ oracle contract
+     * > Initializes the Yield+ oracle contract
      *
      * - **authority**: `get_self()`
      *
@@ -209,7 +209,7 @@ public:
      *
      * - **authority**: `get_self()`
      *
-     * Add token as supported asset
+     * > Add {{symcode}} token as supported asset.
      *
      * ### params
      *
@@ -232,7 +232,7 @@ public:
      *
      * - **authority**: `get_self()`
      *
-     * Delete token as supported asset
+     * > Delete {{symcode}} token as supported asset
      *
      * ### params
      *
@@ -270,7 +270,7 @@ public:
     /**
      * ## ACTION `regoracle`
      *
-     * > Register oracle
+     * > Registers the {{oracle}} oracle with the Yield+ oracle contract
      *
      * - **authority**: `oracle`
      *
@@ -291,7 +291,7 @@ public:
     /**
      * ## ACTION `unregister`
      *
-     * > Un-register oracle
+     * > Unregisters the {{oracle}} oracle from the Yield+ oracle contract
      *
      * - **authority**: `oracle`
      *
@@ -311,7 +311,7 @@ public:
     /**
      * ## ACTION `setmetadata`
      *
-     * > Set oracle metadata
+     * > Set metadata for the {{oracle}} oracle
      *
      * - **authority**: `oracle` OR `admin.yield`
      *
@@ -332,7 +332,7 @@ public:
     /**
      * ## ACTION `setmetakey`
      *
-     * > Set oracle metakey
+     * > Set specific metadata key-value pairs
      *
      * - **authority**: `oracle` OR `admin.yield`
      *
@@ -354,7 +354,7 @@ public:
     /**
      * ## ACTION `approve`
      *
-     * > Approve oracle
+     * > Approve the {{oracle}} oracle for Yield+ rewards
      *
      * - **authority**: `admin.yield`
      *
@@ -374,7 +374,7 @@ public:
     /**
      * ## ACTION `deny`
      *
-     * > Deny oracle
+     * > Deny the {{oracle}} oracle for Yield+ rewards
      *
      * - **authority**: `admin.yield`
      *
@@ -394,7 +394,7 @@ public:
     /**
      * ## ACTION `update`
      *
-     * > Update TVL for single protocol
+     * > Update TVL for a specific protocol
      *
      * - **authority**: `oracle`
      *
@@ -415,7 +415,7 @@ public:
     /**
      * ## ACTION `updateall`
      *
-     * > Update TVL for all protocol(s)
+     * > Update the TVL for all protocols
      *
      * - **authority**: `oracle`
      *
@@ -436,7 +436,7 @@ public:
     /**
      * ## ACTION `updatelog`
      *
-     * > Update logging
+     * > Generates a log when an oracle updates its smart contracts
      *
      * - **authority**: `get_self()`
      *
@@ -476,7 +476,7 @@ public:
     /**
      * ## ACTION `claim`
      *
-     * > Claim oracle rewards
+     * > Claims Yield+ rewards for an oracle
      *
      * - **authority**: `oracle`
      *
@@ -501,7 +501,7 @@ public:
     /**
      * ## ACTION `claimlog`
      *
-     * > Claim logging
+     * > Generates a log when Yield+ rewards are claimed.
      *
      * - **authority**: `get_self()`
      *
@@ -529,7 +529,7 @@ public:
     /**
      * ## ACTION `statuslog`
      *
-     * > When oracle status is modified
+     * > Generates a log when oracle status is modified.
      *
      * - **authority**: `get_self()`
      *
@@ -553,7 +553,7 @@ public:
     /**
      * ## ACTION `createlog`
      *
-     * > When oracle is created
+     * > Generates a log when an oracle is created in the Yield+ oracle contract.
      *
      * - **authority**: `get_self()`
      *
@@ -579,7 +579,7 @@ public:
     /**
      * ## ACTION `eraselog`
      *
-     * > When oracle is erased
+     * > Generates a log when an oracle is erased from the Yield+ oracle contract.
      *
      * - **authority**: `get_self()`
      *
@@ -601,7 +601,7 @@ public:
     /**
      * ## ACTION `balancelog`
      *
-     * > When oracle's balance is updated
+     * > Generates a log when an oracle balance is modified.
      *
      * - **authority**: `get_self()`
      *
@@ -625,7 +625,7 @@ public:
     /**
      * ## ACTION `metadatalog`
      *
-     * > When oracle metadata is modified
+     * > Generates a log when oracle metadata is modified.
      *
      * - **authority**: `get_self()`
      *

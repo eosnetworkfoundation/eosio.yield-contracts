@@ -144,7 +144,7 @@ public:
     /**
      * ## ACTION `init`
      *
-     * > Initialize Yield+ rewards contract
+     * > Initialize the rewards contract
      *
      * - **authority**: `get_self()`
      *
@@ -166,7 +166,7 @@ public:
     /**
      * ## ACTION `setrate`
      *
-     * > Set rewards rate
+     * > Set TVL rewards rate at {{annual_rate}} basis points.
      *
      * - **authority**: `get_self()`
      *
@@ -188,7 +188,7 @@ public:
     /**
      * ## ACTION `regprotocol`
      *
-     * > Registry protocol
+     * > Register the {{protocol}} protocol.
      *
      * - **authority**: `protocol` OR `admin.yield`
      *
@@ -210,7 +210,7 @@ public:
     /**
      * ## ACTION `setmetadata`
      *
-     * > Set protocol metadata
+     * > Set the metadata for the {{protocol}} protocol.
      *
      * - **authority**: `protocol` OR `admin.yield`
      *
@@ -231,7 +231,7 @@ public:
     /**
      * ## ACTION `setmetakey`
      *
-     * > Set protocol metakey
+     * > Set the {{key}} metadata key to {{value}}.
      *
      * - **authority**: `protocol` OR `admin.yield`
      *
@@ -253,7 +253,7 @@ public:
     /**
      * ## ACTION `unregister`
      *
-     * > Un-registry protocol
+     * > Unregister the {{protocol}} protocol.
      *
      * - **authority**: `protocol`
      *
@@ -273,7 +273,7 @@ public:
     /**
      * ## ACTION `setcontracts`
      *
-     * > Set EOS contracts
+     * > Sets the smart contracts for the {{protocol}} protocol.
      *
      * - **authority**: (`protocol` AND `contracts`) OR `admin.yield`
      *
@@ -294,7 +294,7 @@ public:
     /**
      * ## ACTION `setevm`
      *
-     * > Set EVM contracts
+     * > Sets EVM contracts for the {{protocol}} protocol.
      *
      * - **authority**: (`protocol` AND `evm`) OR `admin.yield`
      *
@@ -315,7 +315,7 @@ public:
     /**
      * ## ACTION `approve`
      *
-     * > Approve protocol
+     * > Approves the {{protocol}} protocol for the Yield+ rewards program.
      *
      * - **authority**: `admin.yield`
      *
@@ -335,7 +335,7 @@ public:
     /**
      * ## ACTION `setcategory`
      *
-     * > Set protocol category
+     * > Sets the category of the {{protocol}} protocol.
      *
      * - **authority**: `admin.yield`
      *
@@ -356,7 +356,7 @@ public:
     /**
      * ## ACTION `deny`
      *
-     * > Deny protocol
+     * > Denies the {{protocol}} protocol for the Yield+ rewards program.
      *
      * - **authority**: `admin.yield`
      *
@@ -376,7 +376,7 @@ public:
     /**
      * ## ACTION `claim`
      *
-     * > Claim TVL rewards
+     * > Claims the Yield+ rewards for the {{protocol}} protocol.
      *
      * - **authority**: `protocol`
      *
@@ -403,7 +403,7 @@ public:
      *
      * - **authority**: `oracle.yield@eosio.code`
      *
-     * > Report TVL from oracle
+     * > Generates a report of the current TVL from the {{protocol}} protocol.
      *
      * ### params
      *
@@ -425,7 +425,7 @@ public:
     /**
      * ## ACTION `claimlog`
      *
-     * > Claim logging
+     * > Generates a log each time Yield+ rewards are claimed.
      *
      * - **authority**: `get_self()`
      *
@@ -453,7 +453,7 @@ public:
     /**
      * ## ACTION `rewardslog`
      *
-     * > When rewards are allocated from report generation
+     * > Generates a log when rewards are generated from reports.
      *
      * - **authority**: `get_self()`
      *
@@ -489,7 +489,7 @@ public:
     /**
      * ## ACTION `statuslog`
      *
-     * > When protocol status is modified
+     * > Generates a log when a protocol's status is modified.
      *
      * - **authority**: `get_self()`
      *
@@ -513,7 +513,7 @@ public:
     /**
      * ## ACTION `contractslog`
      *
-     * > When protocol contracts are modified
+     * > Generates a log when a protocol's contracts are modified.
      *
      * - **authority**: `get_self()`
      *
@@ -539,7 +539,7 @@ public:
     /**
      * ## ACTION `categorylog`
      *
-     * > When protocol category is modified
+     * > Generates a log when a protocol's category is modified.
      *
      * - **authority**: `get_self()`
      *
@@ -563,7 +563,7 @@ public:
     /**
      * ## ACTION `createlog`
      *
-     * > When protocol is created
+     * > Generates a log when a protocol is created.
      *
      * - **authority**: `get_self()`
      *
@@ -589,7 +589,7 @@ public:
     /**
      * ## ACTION `eraselog`
      *
-     * > When protocol is erased
+     * > Generates a log when a protocol is erased.
      *
      * - **authority**: `get_self()`
      *
@@ -611,7 +611,7 @@ public:
     /**
      * ## ACTION `balancelog`
      *
-     * > When protocol's balance is updated
+     * > Generates a log when a protocol's balance is updated.
      *
      * - **authority**: `get_self()`
      *
@@ -635,7 +635,7 @@ public:
     /**
      * ## ACTION `metadatalog`
      *
-     * > When protocol metadata is modified
+     * > Generates a log when a protocol's metadata is modified.
      *
      * - **authority**: `get_self()`
      *
