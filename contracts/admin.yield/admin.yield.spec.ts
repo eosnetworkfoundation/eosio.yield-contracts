@@ -10,21 +10,38 @@ const getMetakeys = (key: string): Metakey => {
 
 const getCategory = (category: string): Category => {
   const scope = Name.from('admin.yield').value.value;
-  return contracts.yield.admin.tables.categories(scope).getTableRow( Name.from(category).value.value );
+  const primaryKey = Name.from(category).value.value;
+  return contracts.yield.admin.tables.categories(scope).getTableRow(primaryKey);
 }
 
 describe('admin.yield', () => {
   it("config::setmetakey", async () => {
-    for ( const metakey of metakeys ) {
-      await contracts.yield.admin.actions.setmetakey(metakey).send();
-      expect(getMetakeys(metakey.key)).toEqual(metakey);
+    for ( const row of metakeys ) {
+      await contracts.yield.admin.actions.setmetakey(row).send();
+      expect(getMetakeys(row.key)).toEqual(row);
     }
   });
 
+  it("config::delmetakey", async () => {
+    const { key } = metakeys[0];
+    await contracts.yield.admin.actions.delmetakey([key]).send();
+    expect(getMetakeys(key)).toEqual(undefined);
+    await contracts.yield.admin.actions.setmetakey(metakeys[0]).send();
+    expect(getMetakeys(key).key).toEqual(key);
+  });
+
   it("config::setcategory", async () => {
-    for ( const metakey of categories ) {
-      await contracts.yield.admin.actions.setcategory(metakey).send();
-      expect(getCategory(metakey.category)).toEqual(metakey);
+    for ( const row of categories ) {
+      await contracts.yield.admin.actions.setcategory(row).send();
+      expect(getCategory(row.category)).toEqual(row);
     }
+  });
+
+  it("config::delcategory", async () => {
+    const { category } = categories[0];
+    await contracts.yield.admin.actions.delcategory([category]).send();
+    expect(getCategory(category)).toEqual(undefined);
+    await contracts.yield.admin.actions.setcategory(categories[0]).send();
+    expect(getCategory(category).category).toEqual(category);
   });
 });

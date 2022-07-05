@@ -12,16 +12,12 @@ const getConfig = (): YieldConfig => {
 
 const getProtocol = ( protocol: string ): Protocol => {
   const scope = Name.from('eosio.yield').value.value;
-  const primary_key = Name.from(protocol).value.value;
-  return contracts.yield.eosio.tables.protocols(scope).getTableRow(primary_key)
+  const primaryKey = Name.from(protocol).value.value;
+  return contracts.yield.eosio.tables.protocols(scope).getTableRow(primaryKey);
 }
 
-const getStatus = ( protocol: string ): string | null => {
-  try {
-    return getProtocol( protocol ).status;
-  } catch (e) {
-    return null;
-  }
+const getStatus = ( protocol: string ): string => {
+  return getProtocol( protocol )?.status;
 }
 
 describe('eosio.yield', () => {
@@ -75,7 +71,7 @@ describe('eosio.yield', () => {
 
     // unregister
     await contracts.yield.eosio.actions.unregister(["protocol1"]).send('protocol1@active');
-    expect(getStatus("protocol1")).toEqual(null);
+    expect(getStatus("protocol1")).toEqual(undefined);
   });
 
   it("regprotocol::deny/setmetadata/setmetakey/setcategory", async () => {
