@@ -411,8 +411,7 @@ void yield::setevm( const name protocol, const set<string> evm )
 [[eosio::on_notify("*::transfer")]]
 void yield::on_transfer( const name from, const name to, const asset quantity, const std::string memo )
 {
-    auto config = get_config();
-    require_recipient(config.admin_contract);
+    notify_admin();
 }
 
 void yield::transfer( const name from, const name to, const extended_asset value, const string& memo )

@@ -16,8 +16,8 @@ export const contracts = {
     defi: blockchain.createContract('oracle.defi', 'external/oracle.defi/oracle.defi'),
   },
   token: {
-    eos: blockchain.createContract('eosio.token', 'external/eosio.token/eosio.token'),
-    usdt: blockchain.createContract('tethertether', 'external/eosio.token/eosio.token'),
+    EOS: blockchain.createContract('eosio.token', 'external/eosio.token/eosio.token'),
+    USDT: blockchain.createContract('tethertether', 'external/eosio.token/eosio.token'),
   },
   eosio: {
     system: blockchain.createContract('eosio', 'external/eosio.system/eosio.system'),
@@ -39,18 +39,18 @@ beforeAll(async () => {
   await contracts.eosio.system.actions.abihash(["protocol3", hash]).send();
 
   // create EOS token
-  await contracts.token.eos.actions.create(["eosio", "10000000000.0000 EOS"]).send();
-  await contracts.token.eos.actions.issue(["eosio", "10000000000.0000 EOS", "init"]).send("eosio@active");
-  await contracts.token.eos.actions.transfer(["eosio", "oracle.yield", "100000.0000 EOS", "init"]).send("eosio@active");
-  await contracts.token.eos.actions.transfer(["eosio", "protocol1", "100000.0000 EOS", "init"]).send("eosio@active");
+  await contracts.token.EOS.actions.create(["eosio", "10000000000.0000 EOS"]).send();
+  await contracts.token.EOS.actions.issue(["eosio", "10000000000.0000 EOS", "init"]).send("eosio@active");
+  await contracts.token.EOS.actions.transfer(["eosio", "oracle.yield", "100000.0000 EOS", "init"]).send("eosio@active");
+  await contracts.token.EOS.actions.transfer(["eosio", "protocol1", "100000.0000 EOS", "init"]).send("eosio@active");
 
   // create USDT token
-  await contracts.token.usdt.actions.create(["tethertether", "10000000000.0000 USDT"]).send("tethertether@active");
-  await contracts.token.usdt.actions.issue(["tethertether", "10000000000.0000 USDT", "init"]).send("tethertether@active");
-  await contracts.token.usdt.actions.transfer(["tethertether", "oracle.yield", "100000.0000 USDT", "init"]).send("tethertether@active");
-  await contracts.token.usdt.actions.transfer(["tethertether", "myprotocol", "500000.0000 USDT", "init"]).send("tethertether@active");
-  await contracts.token.usdt.actions.transfer(["tethertether", "protocol1", "100000.0000 USDT", "init"]).send("tethertether@active");
-  await contracts.token.usdt.actions.transfer(["tethertether", "protocol2", "200000.0000 USDT", "init"]).send("tethertether@active");
+  await contracts.token.USDT.actions.create(["tethertether", "10000000000.0000 USDT"]).send("tethertether@active");
+  await contracts.token.USDT.actions.issue(["tethertether", "10000000000.0000 USDT", "init"]).send("tethertether@active");
+  await contracts.token.USDT.actions.transfer(["tethertether", "oracle.yield", "100000.0000 USDT", "init"]).send("tethertether@active");
+  await contracts.token.USDT.actions.transfer(["tethertether", "myprotocol", "500000.0000 USDT", "init"]).send("tethertether@active");
+  await contracts.token.USDT.actions.transfer(["tethertether", "protocol1", "100000.0000 USDT", "init"]).send("tethertether@active");
+  await contracts.token.USDT.actions.transfer(["tethertether", "protocol2", "200000.0000 USDT", "init"]).send("tethertether@active");
 
   // set oracles
   await contracts.oracle.defi.actions.setprice([1, "eosio.token", "4,EOS", 13869]).send();

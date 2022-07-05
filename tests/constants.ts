@@ -1,3 +1,10 @@
+import { TimePointSec } from "@greymass/eosio";
+
+export const RATE = 500;
+export const MIN_TVL = "200000.0000 EOS";
+export const MAX_TVL = "6000000.0000 EOS";
+export const PERIOD_INTERVAL = TimePointSec.from(600);
+
 // admin
 export const metakeys = [
   {required: true,  type: "url", key: "website", description: "Protocol website"},

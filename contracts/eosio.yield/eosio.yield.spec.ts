@@ -2,7 +2,7 @@ import { Name } from "@greymass/eosio";
 import { expectToThrow } from "@tests/helpers";
 import { YieldConfig, Protocol } from "@tests/interfaces"
 import { contracts } from "@tests/init"
-import { category, category1, eos_contracts, evm_contracts, metadata_yield } from "@tests/constants"
+import { category, category1, eos_contracts, evm_contracts, metadata_yield, RATE, MIN_TVL, MAX_TVL, PERIOD_INTERVAL } from "@tests/constants"
 
 // get tables
 const getConfig = (): YieldConfig => {
@@ -22,12 +22,21 @@ const getStatus = ( protocol: string ): string => {
 
 describe('eosio.yield', () => {
   it("config::init", async () => {
-    await contracts.yield.eosio.actions.init([{sym: "4,EOS", contract: "eosio.token"}, "oracle.yield", "admin.yield"]).send();
-    await contracts.yield.eosio.actions.setrate([500, "200000.0000 EOS", "6000000.0000 EOS"]).send();
+    const EOS = {sym: "4,EOS", contract: "eosio.token"};
+    await contracts.yield.eosio.actions.init([EOS, "oracle.yield", "admin.yield"]).send();
     const config = getConfig();
-    expect(config.annual_rate).toBe(500);
-    expect(config.min_tvl_report).toBe("200000.0000 EOS");
-    expect(config.max_tvl_report).toBe("6000000.0000 EOS");
+    expect(config.admin_contract).toBe("admin.yield");
+    expect(config.oracle_contract).toBe("oracle.yield");
+    expect(config.rewards).toEqual(EOS);
+  });
+
+  it("config::setrate", async () => {
+    await contracts.yield.eosio.actions.init([{sym: "4,EOS", contract: "eosio.token"}, "oracle.yield", "admin.yield"]).send();
+    await contracts.yield.eosio.actions.setrate([RATE, MIN_TVL, MAX_TVL]).send();
+    const config = getConfig();
+    expect(config.annual_rate).toBe(RATE);
+    expect(config.min_tvl_report).toBe(MIN_TVL);
+    expect(config.max_tvl_report).toBe(MAX_TVL);
   });
 
   it("regprotocol", async () => {

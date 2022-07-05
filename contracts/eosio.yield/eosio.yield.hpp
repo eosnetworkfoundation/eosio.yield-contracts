@@ -49,7 +49,7 @@ public:
      *     "annual_rate": 500,
      *     "min_tvl_report": "200000.0000 EOS",
      *     "max_tvl_report": "6000000.0000 EOS",
-     *     "rewards": {"symbol": "4,EOS", "contract": "eosio.token"},
+     *     "rewards": {"sym": "4,EOS", "contract": "eosio.token"},
      *     "oracle_contract": "oracle.yield",
      *     "admin_contract": "admin.yield"
      * }

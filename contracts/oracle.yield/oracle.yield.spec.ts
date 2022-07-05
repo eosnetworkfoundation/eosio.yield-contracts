@@ -1,13 +1,8 @@
-import { Name, Asset, TimePointSec, Int64 } from "@greymass/eosio";
+import { Name, Asset } from "@greymass/eosio";
 import { expectToThrow } from "@tests/helpers";
 import { blockchain, contracts } from "@tests/init";
-import { metadata_oracle } from "@tests/constants";
+import { metadata_oracle, RATE, MIN_TVL, MAX_TVL, PERIOD_INTERVAL } from "@tests/constants";
 import { OracleConfig, Oracle, Period, Protocol } from '@tests/interfaces';
-
-const RATE = 500;
-const MIN_TVL = "200000.0000 EOS";
-const MAX_TVL = "6000000.0000 EOS";
-const PERIOD_INTERVAL = TimePointSec.from(600);
 
 const getConfig = (): OracleConfig => {
   const scope = Name.from('oracle.yield').value.value;
@@ -20,11 +15,10 @@ const getOracle = ( oracle: string ): Oracle => {
   return contracts.yield.oracle.tables.oracles(scope).getTableRow(primary_key)
 }
 
-
 const getPeriods = ( protocol: string ): Period[] => {
-const scope = Name.from(protocol).value.value;
-const rows = contracts.yield.oracle.tables.periods(scope).getTableRows();
-return rows;
+  const scope = Name.from(protocol).value.value;
+  const rows = contracts.yield.oracle.tables.periods(scope).getTableRows();
+  return rows;
 }
 
 const getProtocol = ( protocol: string ): Protocol => {
@@ -33,10 +27,18 @@ const getProtocol = ( protocol: string ): Protocol => {
   return contracts.yield.eosio.tables.protocols(scope).getTableRow(primary_key)
 }
 
+const getBalance = ( account: string, symcode = "EOS" ): number => {
+  const contract = (contracts.token as any)[symcode];
+  const scope = Name.from(account).value.value;
+  const primaryKey = Asset.SymbolCode.from(symcode).value.value;
+  const result = contract.tables.accounts(scope).getTableRow(primaryKey);
+  if ( result?.balance ) return Asset.from( result.balance ).value;
+  return 0;
+}
+
 const calculateRewards = (tvl: string) => {
   return Number(BigInt(Asset.from(tvl).units.toNumber()) * BigInt(RATE) / 365n / 24n / 6n / 10000n);
 }
-
 
 beforeAll(async () => {
   // set eosio.yield
@@ -44,6 +46,7 @@ beforeAll(async () => {
   await contracts.yield.eosio.actions.setrate([RATE, MIN_TVL, MAX_TVL]).send();
   await contracts.yield.eosio.actions.regprotocol(["myprotocol", "dexes", metadata_oracle]).send('myprotocol@active');
   await contracts.yield.eosio.actions.approve([ "myprotocol" ]).send("admin.yield@active");
+  await contracts.token.EOS.actions.transfer(["eosio", "eosio.yield", "100000.0000 EOS", "init"]).send("eosio@active");
 
   // set oracles
   await contracts.oracle.defi.actions.setprice([1, "eosio.token", "4,EOS", 13869]).send();
@@ -111,10 +114,13 @@ describe('oracle.yield', () => {
     expect(Asset.from(after.balance.quantity).value).toEqual(0.02);
   });
 
-  it("claim", async () => {
-    await contracts.yield.oracle.actions.claim(["myoracle"]).send("myoracle@active");
-    const oracle = getOracle("myoracle");
-    expect(Asset.from(oracle.balance.quantity).value).toEqual(0.00);
+  it("oracle.yield::claim", async () => {
+    const balance = Asset.from(getOracle("myoracle").balance.quantity).value;
+    expect(getBalance("myoracle", "EOS")).toBe(0);
+    expect(balance).toBeGreaterThan(0);
+    await contracts.yield.oracle.actions.claim(["myoracle", null]).send('myoracle@active');
+    expect(Asset.from(getOracle("myoracle").balance.quantity).value).toBe(0);
+    expect(getBalance("myoracle", "EOS")).toBe(balance);
   });
 
   it("updateall", async () => {
@@ -146,8 +152,8 @@ describe('oracle.yield', () => {
 
   it("update::overflow checks", async () => {
     // 1B tokens EOS & USDT
-    await contracts.token.eos.actions.transfer(["eosio", "protocol3", "1000000000.0000 EOS", "init"]).send("eosio@active");
-    await contracts.token.usdt.actions.transfer(["tethertether", "protocol3", "1000000000.0000 USDT", "init"]).send("tethertether@active");
+    await contracts.token.EOS.actions.transfer(["eosio", "protocol3", "1000000000.0000 EOS", "init"]).send("eosio@active");
+    await contracts.token.USDT.actions.transfer(["tethertether", "protocol3", "1000000000.0000 USDT", "init"]).send("tethertether@active");
 
     // register protocol
     await contracts.yield.eosio.actions.regprotocol(["protocol3", "dexes", metadata_oracle]).send('protocol3@active');
@@ -158,6 +164,15 @@ describe('oracle.yield', () => {
     expect(getPeriods("protocol3").length).toEqual(1);
     const protocol = getProtocol("protocol3");
     expect(Asset.from(protocol.balance.quantity).value).toEqual(0);
+  });
+
+  it("eosio.yield::claim", async () => {
+    const balance = Asset.from(getProtocol("myprotocol").balance.quantity).value;
+    expect(getBalance("myprotocol", "EOS")).toBe(0);
+    expect(balance).toBeGreaterThan(0);
+    await contracts.yield.eosio.actions.claim(["myprotocol", null]).send('myprotocol@active');
+    expect(Asset.from(getProtocol("myprotocol").balance.quantity).value).toBe(0);
+    expect(getBalance("myprotocol", "EOS")).toBe(balance);
   });
 
 });
