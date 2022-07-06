@@ -40,6 +40,8 @@ public:
     /**
      * ## TABLE `config`
      *
+     * ### params
+     *
      * - `{extended_asset} reward_per_update` - reward per update (ex: "0.0200 EOS")
      * - `{name} yield_contract` - Yield+ core contract
      * - `{name} admin_contract` - Yield+ admin contract
@@ -323,7 +325,7 @@ public:
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield setmetadata '[myoracle, [{"key": "website", "value":"https://myoracle.com"}]]' -p myoracle
+     * $ cleos push action eosio.oracle setmetadata '[myoracle, [{"key": "website", "value":"https://myoracle.com"}]]' -p myoracle
      * ```
      */
     [[eosio::action]]
@@ -345,7 +347,7 @@ public:
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield setmetakey '[myoracle, website, "https://myoracle.com"]' -p myoracle
+     * $ cleos push action eosio.oracle setmetakey '[myoracle, website, "https://myoracle.com"]' -p myoracle
      * ```
      */
     [[eosio::action]]

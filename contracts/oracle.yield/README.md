@@ -57,6 +57,8 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 - [ACTION `setreward`](#action-setreward)
 - [ACTION `regoracle`](#action-regoracle)
 - [ACTION `unregister`](#action-unregister)
+- [ACTION `setmetadata`](#action-setmetadata)
+- [ACTION `setmetakey`](#action-setmetakey)
 - [ACTION `approve`](#action-approve)
 - [ACTION `deny`](#action-deny)
 - [ACTION `update`](#action-update)
@@ -67,6 +69,8 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 - [ACTION `rewardslog`](#action-rewardslog)
 
 ## TABLE `config`
+
+### params
 
 - `{extended_asset} reward_per_update` - reward per update (ex: "0.0200 EOS")
 - `{name} yield_contract` - Yield+ core contract
@@ -163,7 +167,7 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 
 ## ACTION `init`
 
-> Initialize Yield+ oracle contract
+> Initializes the Yield+ oracle contract
 
 - **authority**: `get_self()`
 
@@ -184,7 +188,7 @@ $ cleos push action oracle.yield init '[["4,EOS", "eosio.token"], rewards.yield,
 
 - **authority**: `get_self()`
 
-Add token as supported asset
+> Add {{symcode}} token as supported asset.
 
 ### params
 
@@ -203,7 +207,7 @@ $ cleos push action oracle.yield addtoken '["EOS", "eosio.token", 1, "eosusd"]' 
 
 - **authority**: `get_self()`
 
-Delete token as supported asset
+> Delete {{symcode}} token as supported asset
 
 ### params
 
@@ -233,7 +237,7 @@ $ cleos push action oracle.yield setreward '["0.0200 EOS"]' -p oracle.yield
 
 ## ACTION `regoracle`
 
-> Register oracle
+> Registers the {{oracle}} oracle with the Yield+ oracle contract
 
 - **authority**: `oracle`
 
@@ -250,7 +254,7 @@ $ cleos push action oracle.yield regoracle '[myoracle, [{"key": "url", "value": 
 
 ## ACTION `unregister`
 
-> Un-register oracle
+> Unregisters the {{oracle}} oracle from the Yield+ oracle contract
 
 - **authority**: `oracle`
 
@@ -264,9 +268,44 @@ $ cleos push action oracle.yield regoracle '[myoracle, [{"key": "url", "value": 
 $ cleos push action oracle.yield unregister '[myoracle]' -p myoracle
 ```
 
+## ACTION `setmetadata`
+
+> Set metadata for the {{oracle}} oracle
+
+- **authority**: `oracle` OR `admin.yield`
+
+### params
+
+- `{name} oracle` - oracle main contract
+- `{map<name, string>} metadata` - (optional) key/value
+
+### Example
+
+```bash
+$ cleos push action eosio.oracle setmetadata '[myoracle, [{"key": "website", "value":"https://myoracle.com"}]]' -p myoracle
+```
+
+## ACTION `setmetakey`
+
+> Set specific metadata key-value pairs
+
+- **authority**: `oracle` OR `admin.yield`
+
+### params
+
+- `{name} oracle` - oracle main contract
+- `{name} key` - metakey (ex: name/website/description)
+- `{string} [value=null]` - (optional) metakey value (if empty, will erase metakey)
+
+### Example
+
+```bash
+$ cleos push action eosio.oracle setmetakey '[myoracle, website, "https://myoracle.com"]' -p myoracle
+```
+
 ## ACTION `approve`
 
-> Approve oracle
+> Approve the {{oracle}} oracle for Yield+ rewards
 
 - **authority**: `admin.yield`
 
@@ -282,7 +321,7 @@ $ cleos push action oracle.yield approve '[myoracle]' -p admin.yield
 
 ## ACTION `deny`
 
-> Deny oracle
+> Deny the {{oracle}} oracle for Yield+ rewards
 
 - **authority**: `admin.yield`
 
@@ -298,7 +337,7 @@ $ cleos push action oracle.yield deny '[myoracle]' -p admin.yield
 
 ## ACTION `update`
 
-> Update TVL for single protocol
+> Update TVL for a specific protocol
 
 - **authority**: `oracle`
 
@@ -315,7 +354,7 @@ $ cleos push action oracle.yield update '[myoracle, myprotocol]' -p myoracle
 
 ## ACTION `updateall`
 
-> Update TVL for all protocol(s)
+> Update the TVL for all protocols
 
 - **authority**: `oracle`
 
@@ -332,7 +371,7 @@ $ cleos push action oracle.yield updateall '[myoracle, 20]' -p myoracle
 
 ## ACTION `updatelog`
 
-> Update logging
+> Generates a log when an oracle updates its smart contracts
 
 - **authority**: `get_self()`
 
@@ -368,7 +407,7 @@ $ cleos push action oracle.yield updateall '[myoracle, 20]' -p myoracle
 
 ## ACTION `claim`
 
-> Claim oracle rewards
+> Claims Yield+ rewards for an oracle
 
 - **authority**: `oracle`
 
@@ -389,7 +428,7 @@ $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
 
 ## ACTION `claimlog`
 
-> Claim logging
+> Generates a log when Yield+ rewards are claimed.
 
 - **authority**: `get_self()`
 
@@ -398,7 +437,7 @@ $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
 - `{name} oracle` - oracle
 - `{name} [category=oracle]` - oracle category type
 - `{name} receiver` - receiver of rewards
-- `{extended_asset} claimed` - claimed rewards
+- `{asset} claimed` - claimed rewards
 
 ### Example
 
@@ -413,7 +452,7 @@ $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
 
 ## ACTION `statuslog`
 
-> When oracle status is modified
+> Generates a log when oracle status is modified.
 
 - **authority**: `get_self()`
 
@@ -433,7 +472,7 @@ $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
 
 ## ACTION `createlog`
 
-> When oracle is created
+> Generates a log when an oracle is created in the Yield+ oracle contract.
 
 - **authority**: `get_self()`
 
@@ -455,7 +494,7 @@ $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
 
 ## ACTION `eraselog`
 
-> When oracle is erased
+> Generates a log when an oracle is erased from the Yield+ oracle contract.
 
 - **authority**: `get_self()`
 
@@ -471,29 +510,9 @@ $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
 }
 ```
 
-## ACTION `balancelog`
-
-> When oracle's balance is updated
-
-- **authority**: `get_self()`
-
-### params
-
-- `{name} oracle` - oracle account
-- `{asset} balance` - balance available to be claimed
-
-### example
-
-```json
-{
-    "oracle": "myoracle",
-    "balance": "2.5000 EOS"
-}
-```
-
 ## ACTION `metadatalog`
 
-> When oracle metadata is modified
+> Generates a log when oracle metadata is modified.
 
 - **authority**: `get_self()`
 

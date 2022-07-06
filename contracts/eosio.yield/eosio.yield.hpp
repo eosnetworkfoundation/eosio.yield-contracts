@@ -401,9 +401,9 @@ public:
     /**
      * ## ACTION `report`
      *
-     * - **authority**: `oracle.yield@eosio.code`
-     *
      * > Generates a report of the current TVL from the {{protocol}} protocol.
+     *
+     * - **authority**: `oracle.yield@eosio.code`
      *
      * ### params
      *

@@ -153,7 +153,7 @@ cleos push action eosio.yield report '[protocol, "2022-05-13T00:00:00", 600, "20
 
 ## ACTION `init`
 
-> Initialize Yield+ rewards contract
+> Initialize the rewards contract
 
 - **authority**: `get_self()`
 
@@ -171,7 +171,7 @@ $ cleos push action eosio.yield init '[["4,EOS", "eosio.token"], oracle.yield, a
 
 ## ACTION `setrate`
 
-> Set rewards rate
+> Set TVL rewards rate at {{annual_rate}} basis points.
 
 - **authority**: `get_self()`
 
@@ -189,9 +189,9 @@ $ cleos push action eosio.yield setrate '[500, "200000.0000 EOS", "6000000.0000 
 
 ## ACTION `regprotocol`
 
-> Registry protocol
+> Register the {{protocol}} protocol.
 
-- **authority**: `protocol` OR `admin.yield`
+- **authority**: `protocol`
 
 ### params
 
@@ -207,7 +207,7 @@ $ cleos push action eosio.yield regprotocol '[myprotocol, dexes, [{"key": "websi
 
 ## ACTION `setmetadata`
 
-> Set protocol metadata
+> Set the metadata for the {{protocol}} protocol.
 
 - **authority**: `protocol` OR `admin.yield`
 
@@ -224,7 +224,7 @@ $ cleos push action eosio.yield setmetadata '[myprotocol, [{"key": "website", "v
 
 ## ACTION `setmetakey`
 
-> Set protocol metakey
+> Set the {{key}} metadata key to {{value}}.
 
 - **authority**: `protocol` OR `admin.yield`
 
@@ -242,7 +242,7 @@ $ cleos push action eosio.yield setmetakey '[myprotocol, website, "https://mypro
 
 ## ACTION `unregister`
 
-> Un-registry protocol
+> Unregister the {{protocol}} protocol.
 
 - **authority**: `protocol`
 
@@ -258,7 +258,7 @@ $ cleos push action eosio.yield unregister '[myprotocol]' -p myprotocol
 
 ## ACTION `setcontracts`
 
-> Set EOS contracts
+> Sets the smart contracts for the {{protocol}} protocol.
 
 - **authority**: (`protocol` AND `contracts`) OR `admin.yield`
 
@@ -275,7 +275,7 @@ $ cleos push action eosio.yield setcontracts '[myprotocol, [myvault]]' -p myprot
 
 ## ACTION `setevm`
 
-> Set EVM contracts
+> Sets EVM contracts for the {{protocol}} protocol.
 
 - **authority**: (`protocol` AND `evm`) OR `admin.yield`
 
@@ -292,7 +292,7 @@ $ cleos push action eosio.yield setevm '[myprotocol, ["0x2f9ec37d6ccfff1cab21733
 
 ## ACTION `approve`
 
-> Approve protocol
+> Approves the {{protocol}} protocol for the Yield+ rewards program.
 
 - **authority**: `admin.yield`
 
@@ -308,7 +308,7 @@ $ cleos push action eosio.yield approve '[myprotocol]' -p admin.yield
 
 ## ACTION `setcategory`
 
-> Set protocol category
+> Sets the category of the {{protocol}} protocol.
 
 - **authority**: `admin.yield`
 
@@ -325,7 +325,7 @@ $ cleos push action eosio.yield setcategory '[myprotocol, dexes]' -p admin.yield
 
 ## ACTION `deny`
 
-> Deny protocol
+> Denies the {{protocol}} protocol for the Yield+ rewards program.
 
 - **authority**: `admin.yield`
 
@@ -341,7 +341,7 @@ $ cleos push action eosio.yield deny '[myprotocol]' -p admin.yield
 
 ## ACTION `claim`
 
-> Claim TVL rewards
+> Claims the Yield+ rewards for the {{protocol}} protocol.
 
 - **authority**: `protocol`
 
@@ -362,7 +362,7 @@ $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
 
 ## ACTION `claimlog`
 
-> Claim logging
+> Generates a log each time Yield+ rewards are claimed.
 
 - **authority**: `get_self()`
 
@@ -386,9 +386,9 @@ $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
 
 ## ACTION `report`
 
-- **authority**: `oracle.yield`
+> Generates a report of the current TVL from the {{protocol}} protocol.
 
-> Report TVL from oracle
+- **authority**: `oracle.yield`
 
 ### params
 
@@ -406,7 +406,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 
 ## ACTION `rewardslog`
 
-> When rewards are allocated from report generation
+> Generates a log when rewards are generated from reports.
 
 - **authority**: `get_self()`
 
@@ -438,7 +438,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 
 ## ACTION `statuslog`
 
-> When protocol status is modified
+> Generates a log when a protocol's status is modified.
 
 - **authority**: `get_self()`
 
@@ -458,7 +458,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 
 ## ACTION `contractslog`
 
-> When protocol contracts are modified
+> Generates a log when a protocol's contracts are modified.
 
 - **authority**: `get_self()`
 
@@ -480,7 +480,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 
 ## ACTION `categorylog`
 
-> When protocol category is modified
+> Generates a log when a protocol's category is modified.
 
 - **authority**: `get_self()`
 
@@ -500,7 +500,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 
 ## ACTION `createlog`
 
-> When protocol is created
+> Generates a log when a protocol is created.
 
 - **authority**: `get_self()`
 
@@ -522,7 +522,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 
 ## ACTION `eraselog`
 
-> When protocol is erased
+> Generates a log when a protocol is erased.
 
 - **authority**: `get_self()`
 
