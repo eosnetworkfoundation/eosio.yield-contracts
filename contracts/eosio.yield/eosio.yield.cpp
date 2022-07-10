@@ -434,8 +434,8 @@ time_point_sec yield::get_current_period( const uint32_t period_interval )
 
 bool yield::is_contract( const name contract )
 {
-    eosiosystem::abihash_table _abihash( "eosio"_n, "eosio"_n.value );
-    return _abihash.find( contract.value ) != _abihash.end();
+    // NOT IMPLEMENTED NATIVE TO EOS - feature get code hash
+    return true;
 }
 
 void yield::require_auth_admin()

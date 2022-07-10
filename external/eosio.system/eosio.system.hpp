@@ -65,24 +65,4 @@ namespace eosiosystem {
     */
    typedef eosio::multi_index< "voters"_n, voter_info > voters_table;
 
-   /**
-    * abi_hash is the structure underlying the abihash table and consists of:
-    * - `owner`: the account owner of the contract's abi
-    * - `hash`: is the sha256 hash of the abi/binary
-    */
-   struct [[eosio::table("abihash")]] abi_hash {
-      name              owner;
-      checksum256       hash;
-      uint64_t primary_key() const { return owner.value; }
-   };
-   typedef eosio::multi_index< "abihash"_n, abi_hash > abihash_table;
-
-   class [[eosio::contract("eosio.system")]] system_contract : public eosio::contract {
-   public:
-      using contract::contract;
-
-      [[eosio::action]]
-      void abihash( const name owner, const checksum256 hash );
-   };
-
 } /// eosiosystem

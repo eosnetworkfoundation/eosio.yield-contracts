@@ -19,24 +19,14 @@ export const contracts = {
     EOS: blockchain.createContract('eosio.token', 'external/eosio.token/eosio.token'),
     USDT: blockchain.createContract('tethertether', 'external/eosio.token/eosio.token'),
   },
-  eosio: {
-    system: blockchain.createContract('eosio', 'external/eosio.system/eosio.system'),
-  }
 }
 
 // accounts
-export const accounts = blockchain.createAccounts('myprotocol', 'myoracle', 'myvault', "protocol1", "protocol2", "protocol3", "myaccount", "foobar");
+export const accounts = blockchain.createAccounts('eosio', 'myprotocol', 'myoracle', 'myvault', "protocol1", "protocol2", "protocol3", "myaccount", "foobar");
 
 // one-time setup
 beforeAll(async () => {
   blockchain.setTime(TimePointSec.from(new Date()));
-
-  // set ABI hashes for protocols
-  const hash = "fead01c2fc2a294e9c3d1adb97511954315518d7f1b7eff4f53a042c20cd27d3";
-  await contracts.eosio.system.actions.abihash(["myprotocol", hash]).send();
-  await contracts.eosio.system.actions.abihash(["protocol1", hash]).send();
-  await contracts.eosio.system.actions.abihash(["protocol2", hash]).send();
-  await contracts.eosio.system.actions.abihash(["protocol3", hash]).send();
 
   // create EOS token
   await contracts.token.EOS.actions.create(["eosio", "10000000000.0000 EOS"]).send();
