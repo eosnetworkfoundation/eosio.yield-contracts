@@ -36,7 +36,7 @@ void yield::statuslog( const name protocol, const name status )
 
 // @eosio.code
 [[eosio::action]]
-void yield::contractslog( const name protocol, const set<name> contracts, const set<string> evm )
+void yield::contractslog( const name protocol, const name status, const set<name> contracts, const set<string> evm )
 {
     require_auth( get_self() );
     notify_admin();
@@ -44,7 +44,7 @@ void yield::contractslog( const name protocol, const set<name> contracts, const 
 
 // @eosio.code
 [[eosio::action]]
-void yield::categorylog( const name protocol, const name category )
+void yield::categorylog( const name protocol, const name status, const name category )
 {
     require_auth( get_self() );
     notify_admin();
@@ -52,7 +52,7 @@ void yield::categorylog( const name protocol, const name category )
 
 // @eosio.code
 [[eosio::action]]
-void yield::createlog( const name protocol, const name category, const map<name, string> metadata )
+void yield::createlog( const name protocol, const name status, const name category, const map<name, string> metadata )
 {
     require_auth( get_self() );
     notify_admin();
@@ -68,7 +68,7 @@ void yield::eraselog( const name protocol )
 
 // @eosio.code
 [[eosio::action]]
-void yield::metadatalog( const name protocol, const map<name, string> metadata )
+void yield::metadatalog( const name protocol, const name status, const map<name, string> metadata )
 {
     require_auth( get_self() );
     notify_admin();

@@ -1,11 +1,11 @@
 [[eosio::on_notify("*::metadatalog")]]
-void admin::on_metadatalog( const name protocol, const map<name, string> metadata )
+void admin::on_metadatalog( const name protocol, const name status, const map<name, string> metadata )
 {
     check_metadata_keys( metadata );
 }
 
 [[eosio::on_notify("*::categorylog")]]
-void admin::on_categorylog( const name protocol, const name category )
+void admin::on_categorylog( const name protocol, const name status, const name category )
 {
     check_category( category );
 }
@@ -17,7 +17,7 @@ void admin::on_claimlog( const name protocol, const name category, const name re
 }
 
 [[eosio::on_notify("*::createlog")]]
-void admin::on_createlog( const name protocol, const name category, const map<name, string> metadata )
+void admin::on_createlog( const name protocol, const name status, const name category, const map<name, string> metadata )
 {
     if ( category == "oracle"_n) return; // skip if oracle
     check_category( category );

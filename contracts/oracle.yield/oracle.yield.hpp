@@ -564,6 +564,7 @@ public:
      * ### params
      *
      * - `{name} oracle` - oracle account
+     * - `{name} status` - status (`pending/active/denied`)
      * - `{name} [category=oracle]` - oracle category type
      * - `{map<string, string>} metadata` - metadata
      *
@@ -572,13 +573,14 @@ public:
      * ```json
      * {
      *     "oracle": "myoracle",
+     *     "status": "pending",
      *     "category": "oracle",
      *     "metadata": [{"key": "name", "value": "My oracle"}, {"key": "website", "value": "https://myoracle.com"}]
      * }
      * ```
      */
     [[eosio::action]]
-    void createlog( const name oracle, const name category, const map<name, string> metadata );
+    void createlog( const name oracle, const name status, const name category, const map<name, string> metadata );
 
     /**
      * ## ACTION `eraselog`
@@ -612,6 +614,7 @@ public:
      * ### params
      *
      * - `{name} oracle` - oracle account
+     * - `{name} status` - status (`pending/active/denied`)
      * - `{map<string, string>} metadata` - metadata
      *
      * ### example
@@ -619,12 +622,13 @@ public:
      * ```json
      * {
      *     "oracle": "myoracle",
+     *     "status": "active",
      *     "metadata": [{"key": "name", "value": "My oracle"}, {"key": "website", "value": "https://myoracle.com"}]
      * }
      * ```
      */
     [[eosio::action]]
-    void metadatalog( const name oracle, const map<name, string> metadata );
+    void metadatalog( const name oracle, const name status, const map<name, string> metadata );
 
     /**
      * ## ACTION `rewardslog`

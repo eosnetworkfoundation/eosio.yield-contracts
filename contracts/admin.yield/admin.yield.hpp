@@ -161,13 +161,13 @@ public:
     void cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows );
 
     [[eosio::on_notify("*::createlog")]]
-    void on_createlog( const name protocol, const name category, const map<name, string> metadata );
+    void on_createlog( const name protocol, const name status, const name category, const map<name, string> metadata );
 
     [[eosio::on_notify("*::categorylog")]]
-    void on_categorylog( const name protocol, const name category );
+    void on_categorylog( const name protocol, const name status, const name category );
 
     [[eosio::on_notify("*::metadatalog")]]
-    void on_metadatalog( const name protocol, const map<name, string> metadata );
+    void on_metadatalog( const name protocol, const name status, const map<name, string> metadata );
 
     [[eosio::on_notify("*::claimlog")]]
     void on_claimlog( const name protocol, const name category, const name receiver, const asset claimed, const asset balance );

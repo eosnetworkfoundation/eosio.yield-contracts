@@ -479,6 +479,7 @@ $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
 ### params
 
 - `{name} oracle` - oracle account
+- `{name} status` - status (`pending/active/denied`)
 - `{name} [category=oracle]` - oracle category type
 - `{map<string, string>} metadata` - metadata
 
@@ -487,6 +488,7 @@ $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
 ```json
 {
     "oracle": "myoracle",
+    "status": "pending",
     "category": "oracle",
     "metadata": [{"key": "name", "value": "My oracle"}, {"key": "website", "value": "https://myoracle.com"}]
 }
@@ -519,6 +521,7 @@ $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
 ### params
 
 - `{name} oracle` - oracle account
+- `{name} status` - status (`pending/active/denied`)
 - `{map<string, string>} metadata` - metadata
 
 ### example
@@ -526,6 +529,7 @@ $ cleos push action oracle.yield claim '[myoracle, myreceiver]' -p myoracle
 ```json
 {
     "oracle": "myoracle",
+    "status": "active",
     "metadata": [{"key": "name", "value": "My oracle"}, {"key": "website", "value": "https://myoracle.com"}]
 }
 ```

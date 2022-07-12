@@ -465,6 +465,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ### params
 
 - `{name} protocol` - primary protocol contract
+- `{name} status` - status (`pending/active/denied`)
 - `{set<name>} contracts.eos` - additional supporting EOS contracts
 - `{set<string>} contracts.evm` - additional supporting EVM contracts
 
@@ -473,6 +474,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ```json
 {
     "protocol": "myprotocol",
+    "status": "pending",
     "contracts": ["myprotocol", "mytreasury"],
     "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
 }
@@ -487,6 +489,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ### params
 
 - `{name} protocol` - primary protocol contract
+- `{name} status` - status (`pending/active/denied`)
 - `{name} category` - protocol category (ex: `dexes/lending/staking`)
 
 ### example
@@ -494,6 +497,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ```json
 {
     "protocol": "myprotocol",
+    "status": "pending",
     "category": "dexes"
 }
 ```
@@ -507,6 +511,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ### params
 
 - `{name} protocol` - primary protocol contract
+- `{name} status` - status (`pending/active/denied`)
 - `{name} category` - protocol category (dexes/lending/yield)
 - `{map<string, string>} metadata` - metadata
 
@@ -515,6 +520,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ```json
 {
     "protocol": "myprotocol",
+    "status": "pending",
     "category": "dexes",
     "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}]
 }
@@ -547,6 +553,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ### params
 
 - `{name} protocol` - primary protocol contract
+- `{name} status` - status (`pending/active/denied`)
 - `{map<string, string>} metadata` - metadata
 
 ### example
@@ -554,6 +561,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 ```json
 {
     "protocol": "myprotocol",
+    "status": "pending",
     "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}]
 }
 ```

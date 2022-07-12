@@ -522,6 +522,7 @@ public:
      * ### params
      *
      * - `{name} protocol` - primary protocol contract
+     * - `{name} status` - status (`pending/active/denied`)
      * - `{set<name>} contracts.eos` - additional supporting EOS contracts
      * - `{set<string>} contracts.evm` - additional supporting EVM contracts
      *
@@ -530,13 +531,14 @@ public:
      * ```json
      * {
      *     "protocol": "myprotocol",
+     *     "status": "pending",
      *     "contracts": ["myprotocol", "mytreasury"],
      *     "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]
      * }
      * ```
      */
     [[eosio::action]]
-    void contractslog( const name protocol, const set<name> contracts, const set<string> evm );
+    void contractslog( const name protocol, const name status, const set<name> contracts, const set<string> evm );
 
     /**
      * ## ACTION `categorylog`
@@ -548,6 +550,7 @@ public:
      * ### params
      *
      * - `{name} protocol` - primary protocol contract
+     * - `{name} status` - status (`pending/active/denied`)
      * - `{name} category` - protocol category (ex: `dexes/lending/staking`)
      *
      * ### example
@@ -555,12 +558,13 @@ public:
      * ```json
      * {
      *     "protocol": "myprotocol",
-     *     "category": "dexes"
+     *     "category": "dexes",
+     *     "status": "active"
      * }
      * ```
      */
     [[eosio::action]]
-    void categorylog( const name protocol, const name category );
+    void categorylog( const name protocol, const name status, const name category );
 
     /**
      * ## ACTION `createlog`
@@ -572,6 +576,7 @@ public:
      * ### params
      *
      * - `{name} protocol` - primary protocol contract
+     * - `{name} status` - status (`pending/active/denied`)
      * - `{name} category` - protocol category (dexes/lending/yield)
      * - `{map<string, string>} metadata` - metadata
      *
@@ -580,13 +585,14 @@ public:
      * ```json
      * {
      *     "protocol": "myprotocol",
+     *     "status": "pending",
      *     "category": "dexes",
      *     "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}]
      * }
      * ```
      */
     [[eosio::action]]
-    void createlog( const name protocol, const name category, const map<name, string> metadata );
+    void createlog( const name protocol, const name status, const name category, const map<name, string> metadata );
 
     /**
      * ## ACTION `eraselog`
@@ -620,6 +626,7 @@ public:
      * ### params
      *
      * - `{name} protocol` - primary protocol contract
+     * - `{name} status` - status (`pending/active/denied`)
      * - `{map<string, string>} metadata` - metadata
      *
      * ### example
@@ -627,12 +634,13 @@ public:
      * ```json
      * {
      *     "protocol": "myprotocol",
+     *     "status": "pending",
      *     "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}]
      * }
      * ```
      */
     [[eosio::action]]
-    void metadatalog( const name protocol, const map<name, string> metadata );
+    void metadatalog( const name protocol, const name status, const map<name, string> metadata );
 
     // @debug
     [[eosio::action]]

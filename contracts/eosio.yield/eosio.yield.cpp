@@ -48,10 +48,10 @@ void yield::regprotocol( const name protocol, const name category, const map<nam
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
     yield::categorylog_action categorylog( get_self(), { get_self(), "active"_n });
 
-    if ( !is_exists ) createlog.send( protocol, category, metadata );
+    if ( !is_exists ) createlog.send( protocol, itr->status, category, metadata );
     else  {
-        metadatalog.send( protocol, metadata );
-        categorylog.send( protocol, category );
+        metadatalog.send( protocol, itr->status, metadata );
+        categorylog.send( protocol, itr->status, category );
     }
 }
 
@@ -74,7 +74,7 @@ void yield::setmetadata( const name protocol, const map<name, string> metadata )
 
     // logging
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
-    metadatalog.send( protocol, metadata );
+    metadatalog.send( protocol, itr.status, metadata );
 }
 
 // @protocol OR @admin
@@ -98,7 +98,7 @@ void yield::setmetakey( const name protocol, const name key, const optional<stri
 
     // logging
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
-    metadatalog.send( protocol, itr.metadata );
+    metadatalog.send( protocol, itr.status, itr.metadata );
 }
 
 // @protocol
@@ -168,7 +168,7 @@ void yield::set_category( const name protocol, const name category )
 
     // logging
     yield::categorylog_action categorylog( get_self(), { get_self(), "active"_n });
-    categorylog.send( protocol, category );
+    categorylog.send( protocol, itr.status, category );
 }
 
 // @admin
@@ -358,10 +358,7 @@ void yield::setcontracts( const name protocol, const set<name> contracts )
 
     // logging
     yield::contractslog_action contractslog( get_self(), { get_self(), "active"_n });
-    yield::statuslog_action statuslog( get_self(), { get_self(), "active"_n });
-
-    contractslog.send( protocol, itr.contracts, itr.evm );
-    statuslog.send( protocol, itr.status );
+    contractslog.send( protocol, itr.status, itr.contracts, itr.evm );
 }
 
 // @protocol or @admin
@@ -392,10 +389,7 @@ void yield::setevm( const name protocol, const set<string> evm )
 
     // logging
     yield::contractslog_action contractslog( get_self(), { get_self(), "active"_n });
-    yield::statuslog_action statuslog( get_self(), { get_self(), "active"_n });
-
-    contractslog.send( protocol, itr.contracts, itr.evm );
-    statuslog.send( protocol, itr.status );
+    contractslog.send( protocol, itr.status, itr.contracts, itr.evm );
 }
 
 void yield::transfer( const name from, const name to, const extended_asset value, const string& memo )
