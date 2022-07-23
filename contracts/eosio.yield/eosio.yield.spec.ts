@@ -43,6 +43,7 @@ describe('eosio.yield', () => {
     await contracts.yield.eosio.actions.regprotocol(["myprotocol", category, metadata_yield]).send('myprotocol@active');
     const protocol = getProtocol("myprotocol");
     expect(protocol.metadata).toEqual(metadata_yield);
+    expect(protocol.status).toEqual("pending");
   });
 
   it("regprotocol::error::missing required authority", async () => {
