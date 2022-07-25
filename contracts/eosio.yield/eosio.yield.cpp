@@ -48,7 +48,7 @@ void yield::regprotocol( const name protocol, const name category, const map<nam
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
     yield::categorylog_action categorylog( get_self(), { get_self(), "active"_n });
 
-    if ( !is_exists ) createlog.send( protocol, itr->status, category, metadata );
+    if ( !is_exists ) createlog.send( protocol, "pending"_n, category, metadata );
     else  {
         metadatalog.send( protocol, itr->status, metadata );
         categorylog.send( protocol, itr->status, category );
