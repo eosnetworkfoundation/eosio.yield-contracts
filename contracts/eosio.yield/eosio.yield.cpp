@@ -9,7 +9,9 @@
 #include "src/logs.cpp"
 
 // DEBUG (used to help testing)
+#ifdef DEBUG
 #include "src/debug.cpp"
+#endif
 
 // @protocol OR @admin
 [[eosio::action]]

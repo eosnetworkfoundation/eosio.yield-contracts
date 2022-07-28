@@ -156,10 +156,6 @@ public:
     [[eosio::action]]
     void delmetakey( const name key );
 
-    // @debug
-    [[eosio::action]]
-    void cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows );
-
     [[eosio::on_notify("*::createlog")]]
     void on_createlog( const name protocol, const name status, const name category, const map<name, string> metadata );
 
@@ -171,6 +167,12 @@ public:
 
     [[eosio::on_notify("*::claimlog")]]
     void on_claimlog( const name protocol, const name category, const name receiver, const asset claimed, const asset balance );
+
+    // DEBUG (used to help testing)
+    #ifdef DEBUG
+    [[eosio::action]]
+    void cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows );
+    #endif
 
     // action wrappers
     using setmetakey_action = eosio::action_wrapper<"setmetakey"_n, &admin::setmetakey>;
@@ -186,7 +188,9 @@ private :
     void check_value( const name key, const name type, const string value );
     name parse_name( const string& str );
 
-    // debug
+    // DEBUG (used to help testing)
+    #ifdef DEBUG
     template <typename T>
     void clear_table( T& table, uint64_t rows_to_clear );
+    #endif
 };

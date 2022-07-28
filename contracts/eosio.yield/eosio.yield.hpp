@@ -642,16 +642,17 @@ public:
     [[eosio::action]]
     void metadatalog( const name protocol, const name status, const map<name, string> metadata );
 
-    // @debug
+    [[eosio::on_notify("*::transfer")]]
+    void on_transfer( const name from, const name to, const asset quantity, const std::string memo );
+
+    // DEBUG (used to help testing)
+    #ifdef DEBUG
     [[eosio::action]]
     void cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows );
 
-    // @debug
     [[eosio::action]]
     void addbalance( const name protocol, const asset quantity );
-
-    [[eosio::on_notify("*::transfer")]]
-    void on_transfer( const name from, const name to, const asset quantity, const std::string memo );
+    #endif
 
     // action wrappers
     using regprotocol_action = eosio::action_wrapper<"regprotocol"_n, &yield::regprotocol>;
@@ -686,7 +687,9 @@ private :
     void require_auth_admin( const name account );
     bool is_contract( const name contract );
 
-    // debug
+    // DEBUG (used to help testing)
+    #ifdef DEBUG
     template <typename T>
     void clear_table( T& table, uint64_t rows_to_clear );
+    #endif
 };

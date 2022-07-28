@@ -656,16 +656,19 @@ public:
     [[eosio::action]]
     void rewardslog( const name oracle, const asset rewards, const asset balance );
 
-    // @debug
+
+    [[eosio::on_notify("*::transfer")]]
+    void on_transfer( const name from, const name to, const asset quantity, const std::string memo );
+
+    // DEBUG (used to help testing)
+    #ifdef DEBUG
     [[eosio::action]]
     void addbalance( const name oracle, const asset quantity );
 
     // @debug
     [[eosio::action]]
     void cleartable( const name table_name, const optional<name> scope, const optional<uint64_t> max_rows );
-
-    [[eosio::on_notify("*::transfer")]]
-    void on_transfer( const name from, const name to, const asset quantity, const std::string memo );
+    #endif
 
     // action wrappers
     using update_action = eosio::action_wrapper<"update"_n, &oracle::update>;
@@ -716,7 +719,9 @@ private:
     int64_t get_delphi_price( const name delphi_oracle_id );
     int64_t get_defibox_price( const uint64_t defibox_oracle_id );
 
-    // debug
+    // DEBUG (used to help testing)
+    #ifdef DEBUG
     template <typename T>
     void clear_table( T& table, uint64_t rows_to_clear );
+    #endif
 };
