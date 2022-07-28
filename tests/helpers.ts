@@ -1,5 +1,3 @@
-import { expect } from "chai"
-
 /**
  * Expect a promise to throw an error with a specific message.
  * @param promise - The promise to await.
@@ -8,11 +6,19 @@ import { expect } from "chai"
 export const expectToThrow = async (promise: Promise<any>, errorMsg?: string) => {
     try {
         await promise
-        throw new Error(`Was expecting to fail with ${errorMsg}`)
+        expect(true).toBeFalsy();
     } catch (e: any) {
-        if ( errorMsg ) expect(e.message)?.to?.include(errorMsg)
-        else expect(!!e.message).to.be.true;
+        if ( errorMsg ) expect(e.message).toMatch(errorMsg)
+        else expect(false).toBeFalsy()
     }
+}
+
+export const mapToObject = (array: Array<{key: string, value: string}>) => {
+    const obj: {[key: string]: string} = {};
+    for ( const { key, value } of array ) {
+        obj[key] = value;
+    }
+    return obj;
 }
 
 /**

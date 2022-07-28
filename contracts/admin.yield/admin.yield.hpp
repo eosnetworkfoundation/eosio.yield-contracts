@@ -187,6 +187,7 @@ private :
     void check_metakey( const name key, const string value );
     void check_value( const name key, const name type, const string value );
     name parse_name( const string& str );
+    int64_t parse_integer(const string& str);
 
     // DEBUG (used to help testing)
     #ifdef DEBUG

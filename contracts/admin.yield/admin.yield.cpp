@@ -96,6 +96,7 @@ void admin::check_value( const name key, const name type, const string value )
     // validate length of value
     int maxsize = 256;
     if ( type == "text"_n || type == "urls"_n ) maxsize = 10240;
+    if ( type == "integer"_n ) check( parse_integer( value ) >= 0, "admin.yield::check_metadata_keys: invalid integer value [metadata_key=" + key.to_string() + "]");
     check( value.size() <= maxsize, "admin.yield::check_metadata_keys: value exceeds " + std::to_string(maxsize) + " bytes [metadata_key=" + key.to_string() + "]");
 }
 
@@ -130,4 +131,14 @@ name admin::parse_name(const string& str)
         i++;
     }
     return name{str};
+}
+
+int64_t admin::parse_integer(const string& str)
+{
+    if (str.length() == 0) return {};
+    for (const auto c: str) {
+        if ( c >= '0' && c <= '9' ) {}
+        else return -1;
+    }
+    return std::stoi( str );
 }

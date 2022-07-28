@@ -10,6 +10,7 @@ export const metakeys = [
   {required: true,  type: "url", key: "website", description: "Protocol website"},
   {required: true,  type: "string", key: "name", description: "Protocol name"},
   {required: false, type: "string", key: "dappradar", description: "DappRadar identifier"},
+  {required: false, type: "integer", key: "recover", description: "Recover+ identifier"},
 ]
 
 export const categories = [

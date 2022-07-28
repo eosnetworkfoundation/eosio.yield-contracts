@@ -1,5 +1,5 @@
 import { Name } from "@greymass/eosio";
-import { expectToThrow } from "@tests/helpers";
+import { expectToThrow, mapToObject } from "@tests/helpers";
 import { YieldConfig, Protocol } from "@tests/interfaces"
 import { contracts } from "@tests/init"
 import { category, category1, eos_contracts, evm_contracts, metadata_yield, RATE, MIN_TVL, MAX_TVL, PERIOD_INTERVAL } from "@tests/constants"
@@ -109,6 +109,15 @@ describe('eosio.yield', () => {
     await contracts.yield.eosio.actions.setmetakey(["myprotocol", metadata_yield[0].key, metadata_yield[0].value]).send('myprotocol@active');
     const protocol = getProtocol("myprotocol");
     expect(protocol.metadata).toEqual(metadata_yield);
+  });
+
+  it("setmetakey:: Recover+ as integer", async () => {
+    await contracts.yield.eosio.actions.setmetakey(["myprotocol", "recover", 123]).send('myprotocol@active');
+    const protocol = getProtocol("myprotocol");
+    expect(mapToObject(protocol.metadata).recover).toEqual("123");
+
+    const action = contracts.yield.eosio.actions.setmetakey(["myprotocol", "recover", "not a number"]).send('myprotocol@active');
+    await expectToThrow(action, "invalid integer value");
   });
 
   it("setcontracts", async () => {
