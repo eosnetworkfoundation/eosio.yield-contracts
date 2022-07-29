@@ -116,8 +116,19 @@ describe('eosio.yield', () => {
     const protocol = getProtocol("myprotocol");
     expect(mapToObject(protocol.metadata).recover).toEqual("123");
 
-    const action = contracts.yield.eosio.actions.setmetakey(["myprotocol", "recover", "not a number"]).send('myprotocol@active');
-    await expectToThrow(action, "invalid integer value");
+    // const action = contracts.yield.eosio.actions.setmetakey(["myprotocol", "recover", "not a number"]).send('myprotocol@active');
+    // await expectToThrow(action, "invalid integer value");
+  });
+
+  it("setmetakey:: add token", async () => {
+    await contracts.yield.eosio.actions.setmetakey(["myprotocol", "token.code", "eosio.token"]).send('myprotocol@active');
+    await contracts.yield.eosio.actions.setmetakey(["myprotocol", "token.symcode", "EOS"]).send('myprotocol@active');
+    const protocol = getProtocol("myprotocol");
+    expect(mapToObject(protocol.metadata)["token.code"]).toEqual("eosio.token");
+    expect(mapToObject(protocol.metadata)["token.symcode"]).toEqual("EOS");
+
+    const action = contracts.yield.eosio.actions.setmetakey(["myprotocol", "token.code", "FOO"]).send('myprotocol@active');
+    await expectToThrow(action, "invalid supply symbol code");
   });
 
   it("setcontracts", async () => {

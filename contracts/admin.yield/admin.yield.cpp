@@ -1,3 +1,7 @@
+// eosio
+#include <eosio.token/eosio.token.hpp>
+
+// core
 #include <admin.yield/admin.yield.hpp>
 
 // used to assert checks based on logging events
@@ -71,7 +75,7 @@ void admin::delcategory( const name category )
     _categories.erase( itr );
 }
 
-void admin::check_metadata_keys( const map<name, string> metadata )
+void admin::check_metadata_keys( map<name, string> metadata )
 {
     admin::metakeys_table _metakeys( get_self(), get_self().value );
 
@@ -83,6 +87,10 @@ void admin::check_metadata_keys( const map<name, string> metadata )
         // validate key/value
         check_metakey( key, value );
     }
+    // validate token
+    const string code = metadata["token.code"_n];
+    const string symcode = metadata["token.symcode"_n];
+    check_token(code, symcode);
 
     // check for missing required keys
     for ( const auto row : _metakeys ) {
@@ -98,6 +106,13 @@ void admin::check_value( const name key, const name type, const string value )
     if ( type == "text"_n || type == "urls"_n ) maxsize = 10240;
     if ( type == "integer"_n ) check( parse_integer( value ) >= 0, "admin.yield::check_metadata_keys: invalid integer value [metadata_key=" + key.to_string() + "]");
     check( value.size() <= maxsize, "admin.yield::check_metadata_keys: value exceeds " + std::to_string(maxsize) + " bytes [metadata_key=" + key.to_string() + "]");
+}
+
+void admin::check_token( const string code, const string symcode )
+{
+    if ( !code.size() || !symcode.size() ) return; // skip if no values provided
+    const asset supply = eosio::token::get_supply( parse_name( code ), parse_symbol_code( symcode ) );
+    check( supply.amount > 0, "admin.yield::check_token: token has no supply");
 }
 
 void admin::check_metakey( const name key, const string value )
@@ -123,7 +138,7 @@ name admin::parse_name(const string& str)
     if (str.length() == 0 || str.length() > 12) return {};
     int i=0;
     for (const auto c: str) {
-        if((c >= 'a' && c <= 'z') || ( c >= '0' && c <= '5') || c == '.') {
+        if ((c >= 'a' && c <= 'z') || ( c >= '0' && c <= '5') || c == '.') {
             if(i == 0 && ( c >= '0' && c <= '5') ) return {};   //can't start with a digit
             if(i == 11 && c == '.') return {};                  //can't end with a .
         }
@@ -141,4 +156,15 @@ int64_t admin::parse_integer(const string& str)
         else return -1;
     }
     return std::stoi( str );
+}
+
+symbol_code admin::parse_symbol_code(const string& str)
+{
+    if (str.size() > 7) return {};
+    for (const auto c: str ) {
+        if( c < 'A' || c > 'Z') return {};
+    }
+    const symbol_code sym_code = symbol_code{ str };
+
+    return sym_code.is_valid() ? sym_code : symbol_code{};
 }

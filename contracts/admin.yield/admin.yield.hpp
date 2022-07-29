@@ -18,7 +18,7 @@ public:
     using contract::contract;
 
     // CONSTANTS
-    const set<name> VALUE_TYPES = set<name>{"string"_n, "text"_n, "integer"_n, "boolean"_n, "ipfs"_n, "url"_n, "urls"_n};
+    const set<name> VALUE_TYPES = set<name>{"name"_n, "symcode"_n, "string"_n, "text"_n, "integer"_n, "boolean"_n, "ipfs"_n, "url"_n, "urls"_n};
 
     /**
      * ## TABLE `metakeys`
@@ -182,12 +182,14 @@ public:
 
 private :
     // admin
-    void check_metadata_keys(const map<name, string> metadata );
+    void check_metadata_keys( map<name, string> metadata );
     void check_category( const name category );
     void check_metakey( const name key, const string value );
     void check_value( const name key, const name type, const string value );
+    void check_token( const string code, const string symcode );
     name parse_name( const string& str );
     int64_t parse_integer(const string& str);
+    symbol_code parse_symbol_code(const string& str);
 
     // DEBUG (used to help testing)
     #ifdef DEBUG

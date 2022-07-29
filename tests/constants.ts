@@ -11,6 +11,8 @@ export const metakeys = [
   {required: true,  type: "string", key: "name", description: "Protocol name"},
   {required: false, type: "string", key: "dappradar", description: "DappRadar identifier"},
   {required: false, type: "integer", key: "recover", description: "Recover+ identifier"},
+  {required: false, type: "string", key: "token.symcode", description: "Token symbol code"},
+  {required: false, type: "string", key: "token.code", description: "Token code"},
 ]
 
 export const categories = [
@@ -25,7 +27,7 @@ export const eos_contracts = ["myprotocol", "myvault"];
 export const evm_contracts = ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"];
 export const metadata_yield = [
   {key: "name", value: "My Protocol"},
-  {key: "website", value: "https://myprotocol.com"}
+  {key: "website", value: "https://myprotocol.com"},
 ];
 
 
