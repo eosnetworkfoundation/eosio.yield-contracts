@@ -212,17 +212,6 @@ icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9L
 
 This action can only be called by the Yield+ contract self account. It generates a log when a protocol's contracts have been modified. It will report the {{protocol}} protocol contracts as using the EOS contract(s) {{contracts.eos}} and the EVM contract(s) {{contracts.evm}}.
 
-<h1 class="contract">categorylog</h1>
-
----
-spec_version: "0.2.0"
-title: Category Log
-summary: 'Generates a log when a protocol's category is modified.'
-icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk#88016c23a1ed3af668f50353523ba29d086a8d3a460340b6e53add24588e5c5c
----
-
-This action can only be called by the Yield+ contract self account. It generates a log when a protocol's category is modified. It will report the {{protocol}} protocol as affiliated with the {{category}} category.
-
 <h1 class="contract">createlog</h1>
 
 ---
@@ -233,7 +222,7 @@ icon: https://gateway.pinata.cloud/ipfs/QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9L
 ---
 
 This action can only be called by the Yield+ contract self account. It generates a log when a protocol is created. It will report the {{protocol}} protocol as created with its metadata.
-<!--- {{#with metadata}} 
+<!--- {{#with metadata}}
   {{#each key}}
     {{this.key}} : {{this.value}} </br>
   {{/each}}
