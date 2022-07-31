@@ -48,13 +48,9 @@ void yield::regprotocol( const name protocol, const name category, const map<nam
     // logging
     yield::createlog_action createlog( get_self(), { get_self(), "active"_n });
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
-    yield::categorylog_action categorylog( get_self(), { get_self(), "active"_n });
 
     if ( !is_exists ) createlog.send( protocol, "pending"_n, category, metadata );
-    else  {
-        metadatalog.send( protocol, itr->status, metadata );
-        categorylog.send( protocol, itr->status, category );
-    }
+    else  metadatalog.send( protocol, itr->status, category, metadata );
 }
 
 // @protocol OR @admin
@@ -76,7 +72,7 @@ void yield::setmetadata( const name protocol, const map<name, string> metadata )
 
     // logging
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
-    metadatalog.send( protocol, itr.status, metadata );
+    metadatalog.send( protocol, itr.status, itr.category, metadata );
 }
 
 // @protocol OR @admin
@@ -100,7 +96,7 @@ void yield::setmetakey( const name protocol, const name key, const optional<stri
 
     // logging
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
-    metadatalog.send( protocol, itr.status, itr.metadata );
+    metadatalog.send( protocol, itr.status, itr.category, itr.metadata );
 }
 
 // @protocol
@@ -169,8 +165,8 @@ void yield::set_category( const name protocol, const name category )
     });
 
     // logging
-    yield::categorylog_action categorylog( get_self(), { get_self(), "active"_n });
-    categorylog.send( protocol, itr.status, category );
+    yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
+    metadatalog.send( protocol, itr.status, category, itr.metadata );
 }
 
 // @admin

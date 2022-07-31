@@ -53,7 +53,7 @@ void oracle::eraselog( const name oracle )
 
 // @eosio.code
 [[eosio::action]]
-void oracle::metadatalog( const name oracle, const name status, const map<name, string> metadata )
+void oracle::metadatalog( const name oracle, const name status, const name category, const map<name, string> metadata )
 {
     require_auth( get_self() );
     notify_admin();

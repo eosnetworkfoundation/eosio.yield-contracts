@@ -615,7 +615,8 @@ public:
      *
      * - `{name} oracle` - oracle account
      * - `{name} status` - status (`pending/active/denied`)
-     * - `{map<string, string>} metadata` - metadata
+     * - `{name} [category=oracle]` - oracle category type
+     * - `{map<name, string>} metadata` - metadata
      *
      * ### example
      *
@@ -623,12 +624,13 @@ public:
      * {
      *     "oracle": "myoracle",
      *     "status": "active",
+     *     "category": "oracle",
      *     "metadata": [{"key": "name", "value": "My oracle"}, {"key": "website", "value": "https://myoracle.com"}]
      * }
      * ```
      */
     [[eosio::action]]
-    void metadatalog( const name oracle, const name status, const map<name, string> metadata );
+    void metadatalog( const name oracle, const name status, const name category, const map<name, string> metadata );
 
     /**
      * ## ACTION `rewardslog`
@@ -655,7 +657,6 @@ public:
      */
     [[eosio::action]]
     void rewardslog( const name oracle, const asset rewards, const asset balance );
-
 
     [[eosio::on_notify("*::transfer")]]
     void on_transfer( const name from, const name to, const asset quantity, const std::string memo );

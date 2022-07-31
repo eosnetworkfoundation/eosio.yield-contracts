@@ -46,8 +46,8 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
     oracle::createlog_action createlog( get_self(), { get_self(), "active"_n });
     oracle::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
 
-    if ( !is_exists ) createlog.send( oracle, itr->status, "oracle"_n, metadata );
-    else metadatalog.send( oracle, itr->status, metadata );
+    if ( !is_exists ) createlog.send( oracle, "pending"_n, "oracle"_n, metadata );
+    else metadatalog.send( oracle, itr->status, "oracle"_n, metadata );
 }
 
 // @protocol
@@ -101,7 +101,7 @@ void oracle::setmetadata( const name oracle, const map<name, string> metadata )
 
     // logging
     oracle::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
-    metadatalog.send( oracle, itr.status, metadata );
+    metadatalog.send( oracle, itr.status, "oracle"_n, metadata );
 }
 
 // @oracle OR @admin
@@ -125,7 +125,7 @@ void oracle::setmetakey( const name oracle, const name key, const optional<strin
 
     // logging
     oracle::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
-    metadatalog.send( oracle, itr.status, itr.metadata );
+    metadatalog.send( oracle, itr.status, "oracle"_n, itr.metadata );
 }
 
 // @oracle

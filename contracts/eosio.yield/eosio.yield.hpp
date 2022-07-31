@@ -541,32 +541,6 @@ public:
     void contractslog( const name protocol, const name status, const set<name> contracts, const set<string> evm );
 
     /**
-     * ## ACTION `categorylog`
-     *
-     * > Generates a log when a protocol's category is modified.
-     *
-     * - **authority**: `get_self()`
-     *
-     * ### params
-     *
-     * - `{name} protocol` - primary protocol contract
-     * - `{name} status` - status (`pending/active/denied`)
-     * - `{name} category` - protocol category (ex: `dexes/lending/staking`)
-     *
-     * ### example
-     *
-     * ```json
-     * {
-     *     "protocol": "myprotocol",
-     *     "category": "dexes",
-     *     "status": "active"
-     * }
-     * ```
-     */
-    [[eosio::action]]
-    void categorylog( const name protocol, const name status, const name category );
-
-    /**
      * ## ACTION `createlog`
      *
      * > Generates a log when a protocol is created.
@@ -627,7 +601,8 @@ public:
      *
      * - `{name} protocol` - primary protocol contract
      * - `{name} status` - status (`pending/active/denied`)
-     * - `{map<string, string>} metadata` - metadata
+     * - `{name} category` - protocol category (ex: `dexes/lending/staking`)
+     * - `{map<name, string>} metadata` - metadata
      *
      * ### example
      *
@@ -635,12 +610,13 @@ public:
      * {
      *     "protocol": "myprotocol",
      *     "status": "pending",
+     *     "category": "dexes",
      *     "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}]
      * }
      * ```
      */
     [[eosio::action]]
-    void metadatalog( const name protocol, const name status, const map<name, string> metadata );
+    void metadatalog( const name protocol, const name status, const name category, const map<name, string> metadata );
 
     [[eosio::on_notify("*::transfer")]]
     void on_transfer( const name from, const name to, const asset quantity, const std::string memo );
@@ -668,7 +644,6 @@ public:
     using claimlog_action = eosio::action_wrapper<"claimlog"_n, &yield::claimlog>;
     using statuslog_action = eosio::action_wrapper<"statuslog"_n, &yield::statuslog>;
     using contractslog_action = eosio::action_wrapper<"contractslog"_n, &yield::contractslog>;
-    using categorylog_action = eosio::action_wrapper<"categorylog"_n, &yield::categorylog>;
     using createlog_action = eosio::action_wrapper<"createlog"_n, &yield::createlog>;
     using eraselog_action = eosio::action_wrapper<"eraselog"_n, &yield::eraselog>;
     using metadatalog_action = eosio::action_wrapper<"metadatalog"_n, &yield::metadatalog>;

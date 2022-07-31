@@ -74,7 +74,6 @@ cleos push action eosio.yield report '[protocol, "2022-05-13T00:00:00", 600, "20
 - [ACTION `claimlog`](#action-claimlog)
 - [ACTION `statuslog`](#action-statuslog)
 - [ACTION `contractslog`](#action-contractslog)
-- [ACTION `categorylog`](#action-categorylog)
 - [ACTION `createlog`](#action-createlog)
 - [ACTION `eraselog`](#action-eraselog)
 - [ACTION `metadatalog`](#action-metadatalog)
@@ -480,28 +479,6 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 }
 ```
 
-## ACTION `categorylog`
-
-> Generates a log when a protocol's category is modified.
-
-- **authority**: `get_self()`
-
-### params
-
-- `{name} protocol` - primary protocol contract
-- `{name} status` - status (`pending/active/denied`)
-- `{name} category` - protocol category (ex: `dexes/lending/staking`)
-
-### example
-
-```json
-{
-    "protocol": "myprotocol",
-    "status": "pending",
-    "category": "dexes"
-}
-```
-
 ## ACTION `createlog`
 
 > Generates a log when a protocol is created.
@@ -554,7 +531,8 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 
 - `{name} protocol` - primary protocol contract
 - `{name} status` - status (`pending/active/denied`)
-- `{map<string, string>} metadata` - metadata
+- `{name} category` - protocol category (ex: `dexes/lending/staking`)
+- `{map<name, string>} metadata` - metadata
 
 ### example
 
@@ -562,6 +540,7 @@ $ cleos push action eosio.yield report '[myprotocol, "2022-05-13T00:00:00", 600,
 {
     "protocol": "myprotocol",
     "status": "pending",
+    "category": "dexes",
     "metadata": [{"key": "name", "value": "My Protocol"}, {"key": "website", "value": "https://myprotocol.com"}]
 }
 ```
