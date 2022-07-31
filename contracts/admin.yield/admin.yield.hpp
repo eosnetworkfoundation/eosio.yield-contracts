@@ -159,11 +159,8 @@ public:
     [[eosio::on_notify("*::createlog")]]
     void on_createlog( const name protocol, const name status, const name category, const map<name, string> metadata );
 
-    [[eosio::on_notify("*::categorylog")]]
-    void on_categorylog( const name protocol, const name status, const name category );
-
     [[eosio::on_notify("*::metadatalog")]]
-    void on_metadatalog( const name protocol, const name status, const map<name, string> metadata );
+    void on_metadatalog( const name protocol, const name status, const name category, const map<name, string> metadata );
 
     [[eosio::on_notify("*::claimlog")]]
     void on_claimlog( const name protocol, const name category, const name receiver, const asset claimed, const asset balance );
@@ -182,7 +179,7 @@ public:
 
 private :
     // admin
-    void check_metadata_keys( map<name, string> metadata );
+    void check_metadata_keys( const name category, map<name, string> metadata );
     void check_category( const name category );
     void check_metakey( const name key, const string value );
     void check_value( const name key, const name type, const string value );

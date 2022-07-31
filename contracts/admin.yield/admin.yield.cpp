@@ -75,7 +75,7 @@ void admin::delcategory( const name category )
     _categories.erase( itr );
 }
 
-void admin::check_metadata_keys( map<name, string> metadata )
+void admin::check_metadata_keys( const name category, map<name, string> metadata )
 {
     admin::metakeys_table _metakeys( get_self(), get_self().value );
 
@@ -91,6 +91,9 @@ void admin::check_metadata_keys( map<name, string> metadata )
     const string code = metadata["token.code"_n];
     const string symcode = metadata["token.symcode"_n];
     check_token(code, symcode);
+
+    // ignore remaining validation for oracle
+    if ( category == "oracle"_n) return;
 
     // check for missing required keys
     for ( const auto row : _metakeys ) {
@@ -130,6 +133,7 @@ void admin::check_category( const name category )
     check( category.value, "admin.yield::check_category: [category] must not be empty");
 
     auto itr = _categories.find( category.value );
+    if ( category == "oracle"_n) return; // skip if oracle
     check( itr != _categories.end(), "admin.yield::check_category: [category=" + category.to_string() + "] is not valid (ex: `dexes`)");
 }
 
