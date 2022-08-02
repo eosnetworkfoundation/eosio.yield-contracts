@@ -104,11 +104,15 @@ void admin::check_metadata_keys( const name category, map<name, string> metadata
 
 void admin::check_value( const name key, const name type, const string value )
 {
+    // validate value based on types
+    if ( type == "symcode"_n ) check( parse_symbol_code( value ).raw(), "admin.yield::check_value: invalid symcode value [metadata_key=" + key.to_string() + "]");
+    else if ( type == "name"_n ) check( parse_name( value ).value, "admin.yield::check_value: invalid name value [metadata_key=" + key.to_string() + "]");
+    else if ( type == "integer"_n ) check( parse_integer( value ) >= 0, "admin.yield::check_value: invalid integer value [metadata_key=" + key.to_string() + "]");
+
     // validate length of value
     int maxsize = 256;
     if ( type == "text"_n || type == "urls"_n ) maxsize = 10240;
-    if ( type == "integer"_n ) check( parse_integer( value ) >= 0, "admin.yield::check_metadata_keys: invalid integer value [metadata_key=" + key.to_string() + "]");
-    check( value.size() <= maxsize, "admin.yield::check_metadata_keys: value exceeds " + std::to_string(maxsize) + " bytes [metadata_key=" + key.to_string() + "]");
+    check( value.size() <= maxsize, "admin.yield::check_value: value exceeds " + std::to_string(maxsize) + " bytes [metadata_key=" + key.to_string() + "]");
 }
 
 void admin::check_token( const string code, const string symcode )
