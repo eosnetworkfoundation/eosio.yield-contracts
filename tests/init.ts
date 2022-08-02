@@ -7,9 +7,9 @@ export const blockchain = new Blockchain()
 // contracts
 export const contracts = {
   yield: {
-    oracle: blockchain.createContract('oracle.yield', 'contracts/oracle.yield/oracle.yield'),
-    eosio: blockchain.createContract('eosio.yield', 'contracts/eosio.yield/eosio.yield'),
-    admin: blockchain.createContract('admin.yield', 'contracts/admin.yield/admin.yield'),
+    oracle: blockchain.createContract('oracle.yield', 'contracts/oracle.yield/oracle.yield', true),
+    eosio: blockchain.createContract('eosio.yield', 'contracts/eosio.yield/eosio.yield', true),
+    admin: blockchain.createContract('admin.yield', 'contracts/admin.yield/admin.yield', true),
   },
   oracle: {
     delphi: blockchain.createContract('delphioracle', 'external/delphioracle/delphioracle'),
