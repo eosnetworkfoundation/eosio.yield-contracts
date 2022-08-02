@@ -318,11 +318,11 @@ void yield::report( const name protocol, const time_point_sec period, const uint
         _protocols.modify( itr, same_payer, [&]( auto& row ) {
             row.balance.quantity += rewards;
         });
-    }
 
-    // log report
-    yield::rewardslog_action rewardslog( get_self(), { get_self(), "active"_n });
-    rewardslog.send( protocol, itr.category, period, period_interval, tvl, usd, rewards, itr.balance.quantity );
+        // log report
+        yield::rewardslog_action rewardslog( get_self(), { get_self(), "active"_n });
+        rewardslog.send( protocol, itr.category, period, period_interval, tvl, usd, rewards, itr.balance.quantity );
+    }
 }
 
 // @protocol or @admin
