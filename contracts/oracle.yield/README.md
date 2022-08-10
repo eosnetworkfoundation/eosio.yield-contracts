@@ -6,7 +6,7 @@ Yield+ Oracle system will be supporting Yield+ Rewards to provide reliable TVL d
 
 # Audits
 
-- <a href=""><img style="height: 30px; vertical-align: middle" src="https://user-images.githubusercontent.com/550895/132641907-6425e632-1b1b-4015-9b84-b7f26a25ec58.png" /> Sentnl Audit</a> (2022-??)
+- <a href="https://s3.eu-central-1.wasabisys.com/audit-certificates/Smart%20Contract%20Audit%20Certificate%20-%20%20EOS%20Yield+.pdf"><img height=30px src="https://user-images.githubusercontent.com/550895/132641907-6425e632-1b1b-4015-9b84-b7f26a25ec58.png" /> Sentnl Audit</a> (2022-08)
 
 ## Actions
 
