@@ -347,7 +347,6 @@ void yield::setcontracts( const name protocol, const set<name> contracts )
     const name ram_payer = is_admin ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
         row.contracts = contracts;
-        row.contracts.insert(protocol); // always include EOS protocol account
         if ( contracts.size() > 1 ) row.status = "pending"_n; // must be re-approved if contracts changed
         row.updated_at = current_time_point();
         check( row.contracts != before_contracts, "yield::setcontracts: [contracts] was not modified");
