@@ -21,6 +21,12 @@ const getStatus = ( protocol: string ): string => {
 }
 
 describe('eosio.yield', () => {
+
+  it("error::regprotocol before init", async () => {
+    const action = contracts.yield.eosio.actions.regprotocol(["myprotocol", category, metadata_yield]).send('myprotocol@active');
+    await expectToThrow(action, "is not initialized");
+  });
+
   it("config::init", async () => {
     const EOS = {sym: "4,EOS", contract: "eosio.token"};
     await contracts.yield.eosio.actions.init([EOS, "oracle.yield", "admin.yield"]).send();
