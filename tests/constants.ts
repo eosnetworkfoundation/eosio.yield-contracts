@@ -13,6 +13,7 @@ export const metakeys = [
   {required: false, type: "integer", key: "recover", description: "Recover+ identifier"},
   {required: false, type: "string", key: "token.symcode", description: "Token symbol code"},
   {required: false, type: "string", key: "token.code", description: "Token code"},
+  {required: false, type: "ipfs", key: "logo", description: "Protocol logo"},
 ]
 
 export const categories = [

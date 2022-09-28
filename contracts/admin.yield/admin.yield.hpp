@@ -7,6 +7,7 @@
 
 #include <optional>
 #include <string>
+#include <regex>
 
 using namespace eosio;
 using namespace std;
@@ -184,6 +185,7 @@ private :
     void check_metakey( const name key, const string value );
     void check_value( const name key, const name type, const string value );
     void check_token( const string code, const string symcode );
+    bool valid_ipfs( const string ipfs );
     name parse_name( const string& str );
     int64_t parse_integer(const string& str);
     symbol_code parse_symbol_code(const string& str);
