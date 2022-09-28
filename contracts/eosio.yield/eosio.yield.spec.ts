@@ -162,4 +162,24 @@ describe('eosio.yield', () => {
     const protocol = getProtocol("myprotocol");
     expect(protocol.contracts).toEqual(["vault"]);
   });
+
+  it("setmetakey - valid IPFS", async () => {
+    const ipfs = "QmSPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk"
+    await contracts.yield.eosio.actions.setmetakey(["myprotocol", "logo", ipfs]).send('myprotocol@active');
+    const protocol = getProtocol("myprotocol");
+    for ( const row of protocol.metadata ) {
+      if ( row.key == "logo") expect(row.value).toEqual(ipfs);
+    }
+  });
+
+  it("setmetakey - invalid IPFS", async () => {
+    const action1 = contracts.yield.eosio.actions.setmetakey(["myprotocol", "logo", "invalid"]).send('myprotocol@active');
+    await expectToThrow(action1, "invalid IPFS value");
+
+    const action2 = contracts.yield.eosio.actions.setmetakey(["myprotocol", "logo", "QmSPLWbp...fns9LXoUjdk"]).send('myprotocol@active');
+    await expectToThrow(action2, "invalid IPFS value");
+
+    const action3 = contracts.yield.eosio.actions.setmetakey(["myprotocol", "logo", "SPLWbpUttHQqd4gPnPKBGE6XWy6PricPgfns9LXoUjdk"]).send('myprotocol@active');
+    await expectToThrow(action3, "invalid IPFS value");
+  });
 });

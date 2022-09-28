@@ -108,11 +108,18 @@ void admin::check_value( const name key, const name type, const string value )
     if ( type == "symcode"_n ) check( parse_symbol_code( value ).raw(), "admin.yield::check_value: invalid symcode value [metadata_key=" + key.to_string() + "]");
     else if ( type == "name"_n ) check( parse_name( value ).value, "admin.yield::check_value: invalid name value [metadata_key=" + key.to_string() + "]");
     else if ( type == "integer"_n ) check( parse_integer( value ) >= 0, "admin.yield::check_value: invalid integer value [metadata_key=" + key.to_string() + "]");
+    else if ( type == "ipfs"_n ) check( valid_ipfs( value ), "admin.yield::check_value: invalid IPFS value [metadata_key=" + key.to_string() + "]");
 
     // validate length of value
     int maxsize = 256;
     if ( type == "text"_n || type == "urls"_n ) maxsize = 10240;
     check( value.size() <= maxsize, "admin.yield::check_value: value exceeds " + std::to_string(maxsize) + " bytes [metadata_key=" + key.to_string() + "]");
+}
+
+bool admin::valid_ipfs( const string ipfs )
+{
+    const std::regex pattern("^Qm[1-9A-Za-z]{44}$");
+    return std::regex_match(ipfs, pattern);
 }
 
 void admin::check_token( const string code, const string symcode )
