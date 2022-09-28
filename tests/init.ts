@@ -22,7 +22,7 @@ export const contracts = {
 }
 
 // accounts
-export const accounts = blockchain.createAccounts('eosio', 'myprotocol', 'myoracle', 'myvault', "protocol1", "protocol2", "protocol3", "myaccount", "foobar");
+export const accounts = blockchain.createAccounts('eosio', 'myprotocol', 'myoracle', 'myvault', "protocol1", "protocol2", "protocol3", "myaccount", "vault", "foobar");
 
 // one-time setup
 beforeAll(async () => {

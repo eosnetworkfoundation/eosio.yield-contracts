@@ -156,4 +156,10 @@ describe('eosio.yield', () => {
     const after = getProtocol("myprotocol");
     expect(after.status).toEqual("active");
   });
+
+  it("setcontracts - protocol not included by default", async () => {
+    await contracts.yield.eosio.actions.setcontracts([ "myprotocol", ["vault"] ]).send("admin.yield");
+    const protocol = getProtocol("myprotocol");
+    expect(protocol.contracts).toEqual(["vault"]);
+  });
 });
