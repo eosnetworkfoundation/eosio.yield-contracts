@@ -414,7 +414,8 @@ void yield::remove_active_protocol( const name protocol )
 yield::config_row yield::get_config()
 {
     yield::config_table _config( get_self(), get_self().value );
-    return _config.get_or_default();
+    check( _config.exists(), "yield::get_config: [config] is not initialized");
+    return _config.get();
 }
 
 time_point_sec yield::get_current_period( const uint32_t period_interval )
