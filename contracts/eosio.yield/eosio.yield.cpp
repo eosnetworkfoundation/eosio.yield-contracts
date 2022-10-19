@@ -142,8 +142,8 @@ void yield::set_status( const name protocol, const name status )
     auto & itr = _protocols.get(protocol.value, "yield::set_status: [protocol] does not exists");
     check( PROTOCOL_STATUS_TYPES.find( status ) != PROTOCOL_STATUS_TYPES.end(), "yield::set_status: [status] is invalid");
 
+    if ( itr.status == status ) return; // no status change
     _protocols.modify( itr, same_payer, [&]( auto& row ) {
-        check( row.status != status, "yield::set_status: [status] not modified");
         row.status = status;
     });
 
