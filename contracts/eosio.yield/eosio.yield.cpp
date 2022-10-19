@@ -330,8 +330,10 @@ void yield::report( const name protocol, const time_point_sec period, const uint
 void yield::setcontracts( const name protocol, const set<name> contracts )
 {
     const auto config = get_config();
-    const bool is_admin = has_auth( config.admin_contract );
-    if ( !is_admin ) require_auth( protocol );
+
+    // override permission is required to allow certain protocols with nulled permission to be added to Yield+
+    const bool is_override = has_auth( get_self() );
+    if ( !is_override ) require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get(protocol.value, "yield::setcontracts: [protocol] does not exists");
@@ -339,18 +341,21 @@ void yield::setcontracts( const name protocol, const set<name> contracts )
     // require authority of all EOS contracts linked to protocol
     for ( const name contract : contracts ) {
         check( is_account( contract ), "yield::setcontracts: [contract=" + contract.to_string() + "] account does not exists");
-        if ( !is_admin ) require_auth( contract );
+
+        // override permission does not need to validate contract permission
+        if ( !is_override ) require_auth( contract );
     }
 
     // modify contracts
-    const set<name> before_contracts = itr.contracts;
-    const name ram_payer = is_admin ? config.admin_contract : protocol;
+    const name ram_payer = is_override ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
+        check( row.contracts != contracts, "yield::setcontracts: [contracts] was not modified");
         row.contracts = contracts;
-        if ( contracts.size() > 1 ) row.status = "pending"_n; // must be re-approved if contracts changed
         row.updated_at = current_time_point();
-        check( row.contracts != before_contracts, "yield::setcontracts: [contracts] was not modified");
     });
+
+    // protocol must be re-approved if `setcontracts` action is called
+    set_status( protocol, "pending"_n );
     remove_active_protocol( protocol );
 
     // logging
