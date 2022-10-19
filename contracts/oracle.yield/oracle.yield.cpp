@@ -27,7 +27,6 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
     const auto config = get_config();
 
     auto insert = [&]( auto& row ) {
-        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         row.oracle = oracle;
         row.metadata = metadata;
         row.balance.contract = config.reward_per_update.contract;
@@ -36,11 +35,15 @@ void oracle::regoracle( const name oracle, const map<name, string> metadata )
         row.updated_at = current_time_point();
     };
 
+
     // modify or create
     auto itr = _oracles.find( oracle.value );
     const bool is_exists = itr != _oracles.end();
     if ( is_exists ) _oracles.modify( itr, oracle, insert );
     else _oracles.emplace( oracle, insert );
+
+    // if denied revert back to pending
+    if ( itr->status == "denied"_n ) set_status(oracle, "pending"_n);
 
     // logging
     oracle::createlog_action createlog( get_self(), { get_self(), "active"_n });
@@ -94,10 +97,12 @@ void oracle::setmetadata( const name oracle, const map<name, string> metadata )
 
     const name ram_payer = is_admin ? config.admin_contract : oracle;
     _oracles.modify( itr, ram_payer, [&]( auto& row ) {
-        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         row.metadata = metadata;
         row.updated_at = current_time_point();
     });
+
+    // if denied revert back to pending
+    if ( itr.status == "denied"_n ) set_status(oracle, "pending"_n);
 
     // logging
     oracle::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
@@ -117,11 +122,13 @@ void oracle::setmetakey( const name oracle, const name key, const optional<strin
 
     const name ram_payer = is_admin ? config.admin_contract : oracle;
     _oracles.modify( itr, ram_payer, [&]( auto& row ) {
-        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         if ( value ) row.metadata[key] = *value;
         else row.metadata.erase(key);
         row.updated_at = current_time_point();
     });
+
+    // if denied revert back to pending
+    if ( itr.status == "denied"_n ) set_status(oracle, "pending"_n);
 
     // logging
     oracle::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
@@ -171,8 +178,8 @@ void oracle::set_status( const name oracle, const name status )
     auto & itr = _oracles.get(oracle.value, "oracle::set_status: [oracle] does not exists");
     check( ORACLE_STATUS_TYPES.find( status ) != ORACLE_STATUS_TYPES.end(), "oracle::set_status: [status] is invalid");
 
+    if ( itr.status == status ) return; // no status change
     _oracles.modify( itr, same_payer, [&]( auto& row ) {
-        check( row.status != status, "oracle::set_status: [status] not modified");
         row.status = status;
     });
 
