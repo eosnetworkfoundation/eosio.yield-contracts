@@ -26,7 +26,6 @@ void yield::regprotocol( const name protocol, const name category, const map<nam
 
     const auto config = get_config();
     auto insert = [&]( auto& row ) {
-        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         row.protocol = protocol;
         row.category = category;
         row.tvl.symbol = EOS;
@@ -44,6 +43,9 @@ void yield::regprotocol( const name protocol, const name category, const map<nam
     const bool is_exists = itr != _protocols.end();
     if ( is_exists ) _protocols.modify( itr, protocol, insert );
     else _protocols.emplace( protocol, insert );
+
+    // if denied revert back to pending
+    if ( itr->status == "denied"_n ) set_status(protocol, "pending"_n);
 
     // logging
     yield::createlog_action createlog( get_self(), { get_self(), "active"_n });
@@ -65,10 +67,12 @@ void yield::setmetadata( const name protocol, const map<name, string> metadata )
     const auto config = get_config();
     const name ram_payer = has_auth( config.admin_contract ) ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
-        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         row.metadata = metadata;
         row.updated_at = current_time_point();
     });
+
+    // if denied revert back to pending
+    if ( itr.status == "denied"_n ) set_status(protocol, "pending"_n);
 
     // logging
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
@@ -88,11 +92,13 @@ void yield::setmetakey( const name protocol, const name key, const optional<stri
 
     const name ram_payer = is_admin ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
-        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         if ( value ) row.metadata[key] = *value;
         else row.metadata.erase(key);
         row.updated_at = current_time_point();
     });
+
+    // if denied revert back to pending
+    if ( itr.status == "denied"_n ) set_status(protocol, "pending"_n);
 
     // logging
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
@@ -159,10 +165,12 @@ void yield::set_category( const name protocol, const name category )
     auto & itr = _protocols.get(protocol.value, "yield::set_category: [protocol] does not exists");
 
     _protocols.modify( itr, same_payer, [&]( auto& row ) {
-        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         check( row.category != category, "yield::set_category: [category] not modified");
         row.category = category;
     });
+
+    // if denied revert back to pending
+    if ( itr.status == "denied"_n ) set_status(protocol, "pending"_n);
 
     // logging
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
@@ -382,12 +390,14 @@ void yield::setevm( const name protocol, const set<string> evm )
     // modify contracts
     const set<string> before_evm = itr.evm;
     _protocols.modify( itr, protocol, [&]( auto& row ) {
-        row.status = "pending"_n; // must be re-approved if contracts changed
         row.evm = evm;
         row.contracts.insert(protocol); // always include EOS protocol account
         row.updated_at = current_time_point();
         check( row.evm != before_evm, "yield::setevm: [evm] was not modified");
     });
+
+    // must be re-approved if contracts changed
+    set_status(protocol, "pending"_n);
 
     // logging
     yield::contractslog_action contractslog( get_self(), { get_self(), "active"_n });
