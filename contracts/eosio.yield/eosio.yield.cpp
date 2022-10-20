@@ -26,7 +26,6 @@ void yield::regprotocol( const name protocol, const name category, const map<nam
 
     const auto config = get_config();
     auto insert = [&]( auto& row ) {
-        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         row.protocol = protocol;
         row.category = category;
         row.tvl.symbol = EOS;
@@ -44,6 +43,9 @@ void yield::regprotocol( const name protocol, const name category, const map<nam
     const bool is_exists = itr != _protocols.end();
     if ( is_exists ) _protocols.modify( itr, protocol, insert );
     else _protocols.emplace( protocol, insert );
+
+    // if denied revert back to pending
+    if ( itr->status == "denied"_n ) set_status(protocol, "pending"_n);
 
     // logging
     yield::createlog_action createlog( get_self(), { get_self(), "active"_n });
@@ -65,10 +67,12 @@ void yield::setmetadata( const name protocol, const map<name, string> metadata )
     const auto config = get_config();
     const name ram_payer = has_auth( config.admin_contract ) ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
-        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         row.metadata = metadata;
         row.updated_at = current_time_point();
     });
+
+    // if denied revert back to pending
+    if ( itr.status == "denied"_n ) set_status(protocol, "pending"_n);
 
     // logging
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
@@ -88,11 +92,13 @@ void yield::setmetakey( const name protocol, const name key, const optional<stri
 
     const name ram_payer = is_admin ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
-        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         if ( value ) row.metadata[key] = *value;
         else row.metadata.erase(key);
         row.updated_at = current_time_point();
     });
+
+    // if denied revert back to pending
+    if ( itr.status == "denied"_n ) set_status(protocol, "pending"_n);
 
     // logging
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
@@ -142,8 +148,8 @@ void yield::set_status( const name protocol, const name status )
     auto & itr = _protocols.get(protocol.value, "yield::set_status: [protocol] does not exists");
     check( PROTOCOL_STATUS_TYPES.find( status ) != PROTOCOL_STATUS_TYPES.end(), "yield::set_status: [status] is invalid");
 
+    if ( itr.status == status ) return; // no status change
     _protocols.modify( itr, same_payer, [&]( auto& row ) {
-        check( row.status != status, "yield::set_status: [status] not modified");
         row.status = status;
     });
 
@@ -159,10 +165,12 @@ void yield::set_category( const name protocol, const name category )
     auto & itr = _protocols.get(protocol.value, "yield::set_category: [protocol] does not exists");
 
     _protocols.modify( itr, same_payer, [&]( auto& row ) {
-        if ( row.status == "denied"_n ) row.status = "pending"_n; // if denied revert back to pending
         check( row.category != category, "yield::set_category: [category] not modified");
         row.category = category;
     });
+
+    // if denied revert back to pending
+    if ( itr.status == "denied"_n ) set_status(protocol, "pending"_n);
 
     // logging
     yield::metadatalog_action metadatalog( get_self(), { get_self(), "active"_n });
@@ -330,8 +338,10 @@ void yield::report( const name protocol, const time_point_sec period, const uint
 void yield::setcontracts( const name protocol, const set<name> contracts )
 {
     const auto config = get_config();
-    const bool is_admin = has_auth( config.admin_contract );
-    if ( !is_admin ) require_auth( protocol );
+
+    // override permission is required to allow certain protocols with nulled permission to be added to Yield+
+    const bool is_override = has_auth( get_self() );
+    if ( !is_override ) require_auth( protocol );
 
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get(protocol.value, "yield::setcontracts: [protocol] does not exists");
@@ -339,18 +349,21 @@ void yield::setcontracts( const name protocol, const set<name> contracts )
     // require authority of all EOS contracts linked to protocol
     for ( const name contract : contracts ) {
         check( is_account( contract ), "yield::setcontracts: [contract=" + contract.to_string() + "] account does not exists");
-        if ( !is_admin ) require_auth( contract );
+
+        // override permission does not need to validate contract permission
+        if ( !is_override ) require_auth( contract );
     }
 
     // modify contracts
-    const set<name> before_contracts = itr.contracts;
-    const name ram_payer = is_admin ? config.admin_contract : protocol;
+    const name ram_payer = is_override ? config.admin_contract : protocol;
     _protocols.modify( itr, ram_payer, [&]( auto& row ) {
+        check( row.contracts != contracts, "yield::setcontracts: [contracts] was not modified");
         row.contracts = contracts;
-        if ( contracts.size() > 1 ) row.status = "pending"_n; // must be re-approved if contracts changed
         row.updated_at = current_time_point();
-        check( row.contracts != before_contracts, "yield::setcontracts: [contracts] was not modified");
     });
+
+    // protocol must be re-approved if `setcontracts` action is called
+    set_status( protocol, "pending"_n );
     remove_active_protocol( protocol );
 
     // logging
@@ -377,12 +390,14 @@ void yield::setevm( const name protocol, const set<string> evm )
     // modify contracts
     const set<string> before_evm = itr.evm;
     _protocols.modify( itr, protocol, [&]( auto& row ) {
-        row.status = "pending"_n; // must be re-approved if contracts changed
         row.evm = evm;
         row.contracts.insert(protocol); // always include EOS protocol account
         row.updated_at = current_time_point();
         check( row.evm != before_evm, "yield::setevm: [evm] was not modified");
     });
+
+    // must be re-approved if contracts changed
+    set_status(protocol, "pending"_n);
 
     // logging
     yield::contractslog_action contractslog( get_self(), { get_self(), "active"_n });

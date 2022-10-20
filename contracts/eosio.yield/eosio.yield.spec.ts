@@ -145,7 +145,7 @@ describe('eosio.yield', () => {
     const protocol = getProtocol("myprotocol");
     expect(protocol.contracts).toEqual(eos_contracts);
 
-    const action = contracts.yield.eosio.actions.setcontracts([ "not.exists", eos_contracts ]).send("admin.yield");
+    const action = contracts.yield.eosio.actions.setcontracts([ "not.exists", eos_contracts ]).send();
     await expectToThrow(action, "does not exists");
   });
 
@@ -164,7 +164,7 @@ describe('eosio.yield', () => {
   });
 
   it("setcontracts - protocol not included by default", async () => {
-    await contracts.yield.eosio.actions.setcontracts([ "myprotocol", ["vault"] ]).send("admin.yield");
+    await contracts.yield.eosio.actions.setcontracts([ "myprotocol", ["vault"] ]).send();
     const protocol = getProtocol("myprotocol");
     expect(protocol.contracts).toEqual(["vault"]);
   });
