@@ -158,7 +158,7 @@ void oracle::claim( const name oracle, const optional<name> receiver )
 
     // transfer funds to receiver
     const name to = receiver ? *receiver : oracle;
-    transfer( get_self(), to, claimable, "Yield+ TVL reward");
+    transfer( get_self(), to, claimable, "Yield+ Oracle reward");
 
     // modify balances
     _oracles.modify( itr, same_payer, [&]( auto& row ) {
