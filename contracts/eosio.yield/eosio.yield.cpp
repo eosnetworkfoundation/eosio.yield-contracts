@@ -119,7 +119,6 @@ void yield::claim( const name protocol, const optional<name> receiver )
     // validate
     auto & itr = _protocols.get(protocol.value, "yield::claim: [protocol] does not exists");
     const extended_asset claimable = itr.balance;
-    check( itr.status == "active"_n, "yield::claim: [status] must be `active`");
     check( claimable.quantity.amount > 0, "yield::claim: nothing to claim");
 
     // check eosio.yield balance

@@ -175,4 +175,11 @@ describe('oracle.yield', () => {
     expect(getBalance("myprotocol", "EOS")).toBe(balance);
   });
 
+  it("allow claim when not active", async () => {
+    blockchain.addTime(PERIOD_INTERVAL); // push time by 10 minutes
+    await contracts.yield.oracle.actions.updateall(["myoracle", 20]).send("myoracle@active");
+    await contracts.yield.eosio.actions.deny([ "myprotocol" ]).send("admin.yield@active");
+    await contracts.yield.eosio.actions.claim(["myprotocol", null]).send('myprotocol@active');
+  });
+
 });
