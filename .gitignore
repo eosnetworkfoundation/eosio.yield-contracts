@@ -8,3 +8,4 @@ stderr
 nodeos
 !external/**/*.wasm
 !external/**/*.abi
+.DS_Store
