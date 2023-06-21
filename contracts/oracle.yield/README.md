@@ -230,8 +230,8 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 ### example
 
 ```bash
-$ cleos push action oracle.yield addevmtoken '["0xfa9343c3897324496a05fc75abed6bac29f8a40f", 6, "USDT"]' -p oracle.yield
-$ cleos push action oracle.yield addevmtoken '["0xc00592aA41D32D137dC480d9f6d0Df19b860104F", 18, "EOS"]' -p oracle.yield
+$ cleos push action oracle.yield addevmtoken '["fa9343c3897324496a05fc75abed6bac29f8a40f", 6, "USDT"]' -p oracle.yield
+$ cleos push action oracle.yield addevmtoken '["c00592aA41D32D137dC480d9f6d0Df19b860104F", 18, "EOS"]' -p oracle.yield
 ```
 
 ## ACTION `delevmtoken`

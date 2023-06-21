@@ -132,7 +132,7 @@ public:
         uint8_t                 decimals;
         symbol                  sym;
 
-        uint64_t primary_key() const { return sym.code().raw(); }
+        uint64_t primary_key() const { return token_id; }
     };
     typedef eosio::multi_index< "evm.tokens"_n, evm_tokens_row> evm_tokens_table;
 
@@ -314,8 +314,8 @@ public:
      * ### example
      *
      * ```bash
-     * $ cleos push action oracle.yield addevmtoken '["0xfa9343c3897324496a05fc75abed6bac29f8a40f", 6, "USDT"]' -p oracle.yield
-     * $ cleos push action oracle.yield addevmtoken '["0xc00592aA41D32D137dC480d9f6d0Df19b860104F", 18, "EOS"]' -p oracle.yield
+     * $ cleos push action oracle.yield addevmtoken '["fa9343c3897324496a05fc75abed6bac29f8a40f", 6, "USDT"]' -p oracle.yield
+     * $ cleos push action oracle.yield addevmtoken '["c00592aA41D32D137dC480d9f6d0Df19b860104F", 18, "EOS"]' -p oracle.yield
      * ```
      */
     [[eosio::action]]
@@ -774,10 +774,10 @@ public:
     void callback( const int32_t status, bytes data, const std::optional<bytes> context );
 
     [[eosio::action]]
-    void balanceof( const string contract, const string address );
+    void balanceof( const bytes contract, const bytes address );
 
     [[eosio::action]]
-    void test( const string contract, const string address, const int64_t amount );
+    void test( const bytes contract, const bytes address, const asset quantity );
     using test_action = eosio::action_wrapper<"test"_n, &oracle::test>;
 
     [[eosio::on_notify("*::transfer")]]

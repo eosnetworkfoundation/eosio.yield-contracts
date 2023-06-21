@@ -13,44 +13,45 @@ void oracle::callback( const int32_t status, const bytes data, const std::option
 
     check(get_first_receiver() == get_self(), "callback must initially be called by this contract");
     const string context_str = silkworm::to_hex(*context, false);
-    const string contract = context_str.substr(0, 40);
-    const string address = context_str.substr(40, 40);
+    const bytes contract = *silkworm::from_hex(context_str.substr(0, 40));
+    const bytes address = *silkworm::from_hex(context_str.substr(40, 40));
 
     // token amount from `balanceof` call
-    const uint64_t token_id = get_account_id( *silkworm::from_hex(contract) );
-    const uint64_t address_id = get_account_id( *silkworm::from_hex(address) );
-    const auto token = _evm_tokens.get( token_id, "oracle::callback: [token_id] token not found" );
-    const uint8_t decimals = token.decimals - token.sym.precision(); // TO-DO: change decimals to dynamic value
+    const uint64_t token_id = get_account_id( contract );
+    const uint64_t address_id = get_account_id( address );
+    const auto token = _evm_tokens.find( token_id);
+    check(token != _evm_tokens.end(), "oracle::callback: [token_id=" + to_string(token_id) + " & contract=" + silkworm::to_hex(contract, true) + "] token not found" );
+
+    // token amount from `balanceof` call
+    const uint8_t decimals = token->decimals - token->sym.precision();
     const int64_t amount = bytes_to_int64(data, decimals);
 
-    // Push transaction
+    // send inline action to update current balance
     test_action test{ get_self(), { get_self(), "active"_n } };
-    test.send( contract, address, amount );
+    test.send( contract, address, asset{amount, token->sym} );
 }
 
 [[eosio::action]]
-void oracle::balanceof( const string contract, const string address )
+void oracle::balanceof( const bytes contract, const bytes address )
 {
-    // Convert to Bytes
-    bytes contract_bytes = *silkworm::from_hex(contract);
-    bytes address_bytes = *silkworm::from_hex(address);
-    bytes address_bytes_left_padding = *silkworm::from_hex("000000000000000000000000" + address);
+    bytes padding = *silkworm::from_hex("000000000000000000000000");
 
     // balanceOf address
     bytes data;
-    bytes balance_of = *silkworm::from_hex("70a08231"); // sha3(balanceOf(address))[:4]
-    data.insert(data.end(), balance_of.begin(), balance_of.end());
-    data.insert(data.end(), address_bytes_left_padding.begin(), address_bytes_left_padding.end());
+    bytes method = *silkworm::from_hex("70a08231"); // sha3(balanceOf(address))[:4]
+    data.insert(data.end(), method.begin(), method.end());
+    data.insert(data.end(), padding.begin(), padding.end());
+    data.insert(data.end(), address.begin(), address.end());
 
     // Inputs
     evm_contract::exec_input input;
     input.data = data;
-    input.to = contract_bytes;
+    input.to = contract;
 
     // Context
     bytes context; // contract + address
-    context.insert(context.end(), contract_bytes.begin(), contract_bytes.end());
-    context.insert(context.end(), address_bytes.begin(), address_bytes.end());
+    context.insert(context.end(), contract.begin(), contract.end());
+    context.insert(context.end(), address.begin(), address.end());
     input.context = context;
 
     // Callback
@@ -64,7 +65,7 @@ void oracle::balanceof( const string contract, const string address )
 }
 
 [[eosio::action]]
-void oracle::test( const string contract, const string address, const int64_t amount )
+void oracle::test( const bytes contract, const bytes address, const asset quantity )
 {
     require_auth( get_self() );
 }
