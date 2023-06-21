@@ -10,7 +10,7 @@ void oracle::addevmtoken( const bytes address, const uint8_t decimals, const sym
 
     // validate
     const auto token = _tokens.get( symcode.raw(), "oracle::addevmtoken: [symcode] token not found" );
-    const uint64_t account_id = get_account_id(address);
+    const uint64_t account_id = evm_contract::get_account_id(address);
 
     // add supported token
     auto insert = [&]( auto& row ) {
@@ -32,20 +32,37 @@ void oracle::delevmtoken( const bytes address )
 {
     require_auth( get_self() );
 
-    const uint64_t token_id = get_account_id( address );
+    const uint64_t token_id = evm_contract::get_account_id( address );
     oracle::evm_tokens_table _evm_tokens( get_self(), get_self().value );
     auto & itr = _evm_tokens.get( token_id, "oracle::delevmtoken: [address] does not exists" );
     _evm_tokens.erase( itr );
 }
 
-uint64_t oracle::get_account_id( const bytes address )
-{
-    evm_contract::account_table _account( "eosio.evm"_n, "eosio.evm"_n.value );
 
-    // bytes address_bytes = *silkworm::from_hex(address);
-    auto idx = _account.get_index<"by.address"_n>();
-    auto it = idx.find(make_key(address));
-    auto itr = _account.find( it->id );
-    check( it != idx.end(), "evm_contract::get_account_id: [address=" + silkworm::to_hex(address, true) + "] account not found" );
-    return itr->id;
+// @callback
+[[eosio::action]]
+void oracle::setbalance( const bytes contract, const bytes address, const asset balance )
+{
+    require_auth( get_self() );
+
+    oracle::tokens_table _tokens( get_self(), get_self().value );
+    oracle::evm_tokens_table _evm_tokens( get_self(), get_self().value );
+
+    // validate
+    _tokens.get( balance.symbol.code().raw(), "oracle::setbalance: [balance.symbol.code] token not found" );
+    const uint64_t token_id = evm_contract::get_account_id(contract);
+    const uint64_t address_id = evm_contract::get_account_id(address);
+
+    // add supported token
+    auto insert = [&]( auto& row ) {
+        row.address_id = address_id;
+        row.address = address;
+        row.balance = balance;
+    };
+
+    // modify or create
+    oracle::evm_balances_table _evm_balances( get_self(), token_id );
+    auto itr = _evm_balances.find( address_id );
+    if ( itr == _evm_balances.end() ) _evm_balances.emplace( get_self(), insert );
+    else _evm_balances.modify( itr, get_self(), insert );
 }

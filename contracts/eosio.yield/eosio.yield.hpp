@@ -255,7 +255,7 @@ public:
      *
      * > Unregister the {{protocol}} protocol.
      *
-     * - **authority**: `protocol`
+     * - **authority**: `protocol` or `admin.yield`
      *
      * ### params
      *

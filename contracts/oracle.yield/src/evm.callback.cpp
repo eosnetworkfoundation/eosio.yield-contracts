@@ -19,8 +19,8 @@ void oracle::callback( const int32_t status, const bytes data, const std::option
     const bytes address = *silkworm::from_hex(context_str.substr(40, 40));
 
     // token amount from `balanceof` call
-    const uint64_t token_id = get_account_id( contract );
-    const uint64_t address_id = get_account_id( address );
+    const uint64_t token_id = evm_contract::get_account_id( contract );
+    const uint64_t address_id = evm_contract::get_account_id( address );
     const auto token = _evm_tokens.find( token_id);
     check(token != _evm_tokens.end(), "oracle::callback: [token_id=" + to_string(token_id) + " & contract=" + silkworm::to_hex(contract, true) + "] token not found" );
 
@@ -67,32 +67,4 @@ void oracle::balanceof( const bytes contract, const bytes address )
     // Push transaction
     evm_contract::exec_action exec{ "eosio.evm"_n, { get_self(), "active"_n } };
     exec.send( input, callback );
-}
-
-// @callback
-[[eosio::action]]
-void oracle::setbalance( const bytes contract, const bytes address, const asset balance )
-{
-    require_auth( get_self() );
-
-    oracle::tokens_table _tokens( get_self(), get_self().value );
-    oracle::evm_tokens_table _evm_tokens( get_self(), get_self().value );
-
-    // validate
-    _tokens.get( balance.symbol.code().raw(), "oracle::setbalance: [balance.symbol.code] token not found" );
-    const uint64_t token_id = get_account_id(contract);
-    const uint64_t address_id = get_account_id(address);
-
-    // add supported token
-    auto insert = [&]( auto& row ) {
-        row.address_id = address_id;
-        row.address = address;
-        row.balance = balance;
-    };
-
-    // modify or create
-    oracle::evm_balances_table _evm_balances( get_self(), token_id );
-    auto itr = _evm_balances.find( address_id );
-    if ( itr == _evm_balances.end() ) _evm_balances.emplace( get_self(), insert );
-    else _evm_balances.modify( itr, get_self(), insert );
 }

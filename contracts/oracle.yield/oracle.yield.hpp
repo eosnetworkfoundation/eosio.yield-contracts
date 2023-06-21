@@ -844,7 +844,6 @@ private:
 
     // EVM
     int64_t bytes_to_int64( const bytes data, const uint8_t decimals );
-    uint64_t get_account_id( const bytes address );
 
     // DEBUG (used to help testing)
     #ifdef DEBUG
