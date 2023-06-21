@@ -73,10 +73,10 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 
 ### params
 
-- `{uint64_t} account_id` - (primary key) EOS EVM account ID
-- `{symbol} sym` - token symbol
+- `{uint64_t} token_id` - (primary key) EOS EVM token account ID
 - `{string} address` - EOS EVM token address
 - `{uint8_t} decimals` - EOS EVM token decimals
+- `{symbol} sym` - token symbol
 
 ### example
 
@@ -84,17 +84,37 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 [
     {
         "token_id": 2,
-        "sym": "4,EOS",
-        "address": "0xc00592aA41D32D137dC480d9f6d0Df19b860104F",
-        "decimals": "18"
+        "address": "c00592aA41D32D137dC480d9f6d0Df19b860104F",
+        "decimals": "18",
+        "sym": "4,EOS"
     }
     {
-        "token_id": 1,
+        "token_id": 201,
         "sym": "4,USDT",
-        "address": "0xfa9343c3897324496a05fc75abed6bac29f8a40f",
+        "address": "fa9343c3897324496a05fc75abed6bac29f8a40f",
         "decimals": "6"
     },
 ]
+```
+
+## TABLE `evm.balances`
+
+**Scope**: `<uint64_t> token_id`
+
+### params
+
+- `{uint64_t} address_id` - (primary key) EOS EVM address account ID
+- `{string} address` - EOS EVM address
+- `{asset} balance` - current token balance
+
+### example
+
+```json
+{
+    "address_id": 663,
+    "address": "671A5e209A5496256ee21386EC3EaB9054d658A2",
+    "balance": "173151.7110 USDT"
+}
 ```
 
 ## TABLE `config`

@@ -14,7 +14,7 @@ void oracle::addevmtoken( const symbol_code symcode, const string address, const
 
     // add supported token
     auto insert = [&]( auto& row ) {
-        row.account_id = account_id;
+        row.token_id = account_id;
         row.sym = token.sym;
         row.address = address;
         row.decimals = decimals;
