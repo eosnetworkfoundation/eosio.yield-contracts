@@ -98,6 +98,45 @@ public:
     typedef eosio::multi_index< "tokens"_n, tokens_row> tokens_table;
 
     /**
+     * ## TABLE `evm.tokens`
+     *
+     * ### params
+     *
+     * - `{uint64_t} account_id` - (primary key) EOS EVM account ID
+     * - `{symbol} sym` - token symbol
+     * - `{string} address` - EOS EVM token address
+     * - `{uint8_t} decimals` - EOS EVM token decimals
+     *
+     * ### example
+     *
+     * ```json
+     * [
+     *     {
+     *         "account_id": 2,
+     *         "sym": "4,EOS",
+     *         "address": "0xc00592aA41D32D137dC480d9f6d0Df19b860104F",
+     *         "decimals": "18"
+     *     }
+     *     {
+     *         "account_id": 201,
+     *         "sym": "4,USDT",
+     *         "address": "0xfa9343c3897324496a05fc75abed6bac29f8a40f",
+     *         "decimals": "6"
+     *     },
+     * ]
+     * ```
+     */
+    struct [[eosio::table("evm.tokens")]] evm_tokens_row {
+        uint64_t                account_id;
+        symbol                  sym;
+        string                  address;
+        uint8_t                 precision;
+
+        uint64_t primary_key() const { return sym.code().raw(); }
+    };
+    typedef eosio::multi_index< "evm.tokens"_n, evm_tokens_row> evm_tokens_table;
+
+    /**
      * ## TABLE `periods`
      *
      * - scope: `{name} protocol`
@@ -228,6 +267,29 @@ public:
      */
     [[eosio::action]]
     void addtoken( const symbol_code symcode, const name contract, const optional<uint64_t> defibox_oracle_id, const optional<name> delphi_oracle_id );
+
+    /**
+     * ## ACTION `addevmtoken`
+     *
+     * - **authority**: `get_self()`
+     *
+     * > Add {{sym}} token using {{address}} EOS EVM address.
+     *
+     * ### params
+     *
+     * - `{symbol_code} symcode` - token symbol code
+     * - `{string} address` - token EOS EVM address
+     * - `{uint8_t} decimals` - token decimals
+     *
+     * ### example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield addevmtoken '["USDT", "0xfa9343c3897324496a05fc75abed6bac29f8a40f", 6]' -p oracle.yield
+     * $ cleos push action oracle.yield addevmtoken '["EOS", "0xc00592aA41D32D137dC480d9f6d0Df19b860104F", 18]' -p oracle.yield
+     * ```
+     */
+    [[eosio::action]]
+    void addevmtoken( const symbol_code symcode, const string address, const uint8_t decimals );
 
     /**
      * ## ACTION `deltoken`

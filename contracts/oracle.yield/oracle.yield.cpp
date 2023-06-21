@@ -12,6 +12,9 @@
 // logging (used for backend syncing)
 #include "src/logs.cpp"
 
+// EOS EVM support
+#include "src/evm.cpp"
+
 // DEBUG (used to help testing)
 #ifdef DEBUG
 #include "src/debug.cpp"

@@ -44,13 +44,14 @@ $ cleos push action oracle.yield addtoken '["4,EOS", "eosio.token", 1, "eosusd"]
 # delete token
 cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 ```
-
 ## Table of Content
 
+- [TABLE `evm.tokens`](#table-evm.tokens)
 - [TABLE `config`](#table-config)
 - [TABLE `tokens`](#table-tokens)
 - [TABLE `periods`](#table-periods)
 - [TABLE `oracles`](#table-oracles)
+- [ACTION `addevmtoken`](#action-addevmtoken)
 - [ACTION `init`](#action-init)
 - [ACTION `addtoken`](#action-addtoken)
 - [ACTION `deltoken`](#action-deltoken)
@@ -67,6 +68,34 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 - [ACTION `claim`](#action-claim)
 - [ACTION `claimlog`](#action-claimlog)
 - [ACTION `rewardslog`](#action-rewardslog)
+
+## TABLE `evm.tokens`
+
+### params
+
+- `{uint64_t} account_id` - (primary key) EOS EVM account ID
+- `{symbol} sym` - token symbol
+- `{string} address` - EOS EVM token address
+- `{uint8_t} decimals` - EOS EVM token decimals
+
+### example
+
+```json
+[
+    {
+        "token_id": 2,
+        "sym": "4,EOS",
+        "address": "0xc00592aA41D32D137dC480d9f6d0Df19b860104F",
+        "decimals": "18"
+    }
+    {
+        "token_id": 1,
+        "sym": "4,USDT",
+        "address": "0xfa9343c3897324496a05fc75abed6bac29f8a40f",
+        "decimals": "6"
+    },
+]
+```
 
 ## TABLE `config`
 

@@ -9,15 +9,13 @@
 
 using namespace eosio;
 
-constexpr name code = "eosio.evm"_n;
-
 typedef std::vector<uint8_t> bytes;
-
-namespace evm_runtime {
 
 class [[eosio::contract("eosio.evm")]] evm_contract : public eosio::contract {
 public:
     using contract::contract;
+
+    const name code = "eosio.evm"_n;
 
     struct [[eosio::table("account")]] account {
         uint64_t                        id;
@@ -43,8 +41,18 @@ public:
         return sha256(address.c_str(), address.length());
     }
 
+    static uint64_t get_account_id( const string address, const name code )
+    {
+        evm_contract::account_table _account( code, code.value );
+
+        auto idx = _account.get_index<"by.address"_n>();
+        auto it = idx.find(evm_contract::to_checksum(address));
+        auto itr = _ratelimit.find( it->id );
+        check( it != idx.end(), "evm_contract::get_account_id: [address=" + address + "] account not found" );
+        return itr->id;
+    }
+
     [[eosio::action]]
     void exec(const exec_input& input, const std::optional<exec_callback>& callback);
     using exec_action = eosio::action_wrapper<"exec"_n, &evm::exec>;
 };
-} // namespace evm_runtime
