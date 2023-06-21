@@ -340,6 +340,7 @@ void oracle::update( const name oracle, const name protocol )
     // tables
     auto config = get_config();
     oracle::tokens_table _tokens( get_self(), get_self().value );
+    oracle::evm_tokens_table _evm_tokens( get_self(), get_self().value );
     oracle::oracles_table _oracles( get_self(), get_self().value );
     oracle::periods_table _periods( get_self(), protocol.value );
     yield::protocols_table _protocols( config.yield_contract, config.yield_contract.value );
@@ -359,12 +360,14 @@ void oracle::update( const name oracle, const name protocol )
 
     // contracts
     const set<name> contracts = protocol_itr.contracts;
-    const set<string> evm = protocol_itr.evm;
+    const set<string> evm_contracts = protocol_itr.evm_contracts;
     const name category = protocol_itr.category;
 
     // get all balances from protocol EOS contracts
     vector<asset> balances;
     vector<asset> prices;
+
+    // EOS smart contracts TVL
     for ( const name contract : contracts ) {
         // liquid balance
         for ( const auto token : _tokens ) {
@@ -384,8 +387,16 @@ void oracle::update( const name oracle, const name protocol )
         prices.push_back( asset{ get_oracle_price( EOS.code() ), USD } );
     }
 
-    for ( const string contract : evm ) {
-        check(false, "NOT IMPLEMENTED");
+    // EVM smart contracts TVL
+    for ( const string evm_contract : evm_contracts ) {
+        for ( const auto evm_token : _evm_tokens ) {
+            const asset balance = get_evm_balance_quantity( evm_token.token_id, evm_contract, evm_token.sym );
+            if ( balance.amount <= 0 ) continue;
+            balances.push_back( balance );
+
+            // price only used for logging purposes
+            prices.push_back( asset{ get_oracle_price( balance.symbol.code() ), USD } );
+        }
     }
 
     // calculate USD valuation
@@ -405,7 +416,7 @@ void oracle::update( const name oracle, const name protocol )
         row.protocol = protocol;
         row.category = category;
         row.contracts = contracts;
-        row.evm = evm;
+        row.evm_contracts = evm_contracts;
         row.balances = balances;
         row.prices = prices;
         row.tvl = tvl;
@@ -414,7 +425,7 @@ void oracle::update( const name oracle, const name protocol )
 
     // log update
     oracle::updatelog_action updatelog( get_self(), { get_self(), "active"_n });
-    updatelog.send( oracle, protocol, category, contracts, evm, period, balances, prices, tvl, usd );
+    updatelog.send( oracle, protocol, category, contracts, evm_contracts, period, balances, prices, tvl, usd );
 
     // prune last 24 hours
     prune_protocol_periods( protocol );
@@ -551,7 +562,7 @@ asset oracle::get_balance_quantity( const name token_contract_account, const nam
     const auto itr = _accounts.find( sym.code().raw() );
     if ( itr == _accounts.end() ) return { 0, sym };
     check( itr->balance.symbol == sym, "oracle::get_balance_amount: [sym] does not match");
-    return { itr->balance.amount, sym };
+    return itr->balance;
 }
 
 asset oracle::get_eos_staked( const name owner )

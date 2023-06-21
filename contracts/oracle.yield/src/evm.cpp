@@ -66,3 +66,14 @@ void oracle::setbalance( const bytes contract, const bytes address, const asset 
     if ( itr == _evm_balances.end() ) _evm_balances.emplace( get_self(), insert );
     else _evm_balances.modify( itr, get_self(), insert );
 }
+
+asset oracle::get_evm_balance_quantity(const uint64_t token_id, const string evm_contract, const symbol sym )
+{
+    oracle::evm_balances_table _evm_balances( get_self(), token_id );
+    const uint64_t address_id = evm_contract::get_account_id( *silkworm::from_hex(evm_contract) );
+
+    const auto itr = _evm_balances.find( address_id );
+    if ( itr == _evm_balances.end() ) return { 0, sym };
+    check( itr->balance.symbol == sym, "oracle::get_balance_amount: [sym] does not match");
+    return itr->balance;
+}

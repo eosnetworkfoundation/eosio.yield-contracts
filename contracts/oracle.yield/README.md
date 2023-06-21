@@ -167,8 +167,8 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 - `{time_point_sec} period` - (primary key) period at time
 - `{name} protocol` - protocol contract
 - `{name} category` - protocol category
-- `{set<name>} contracts.eos` - additional supporting EOS contracts
-- `{set<string>} contracts.evm` - additional supporting EVM contracts
+- `{set<name>} contracts` - EOS contracts
+- `{set<string>} evm_contracts` - EOS EVM contracts
 - `{vector<asset>} balances` - asset balances
 - `{vector<asset>} prices` - currency prices
 - `{asset} tvl` - reported TVL averaged value in EOS
@@ -181,7 +181,7 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
     "period": "2022-05-13T00:00:00",
     "protocol": "myprotocol",
     "contracts": ["myprotocol", "mytreasury"],
-    "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"],
+    "evm_contracts": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"],
     "balances": ["1000.0000 EOS", "1500.0000 USDT"],
     "prices": ["1.5000 USD", "1.0000 USD"],
     "tvl": "200000.0000 EOS",
