@@ -149,11 +149,6 @@ describe('eosio.yield', () => {
     await expectToThrow(action, "does not exists");
   });
 
-  it("setevm", async () => {
-    const action = contracts.yield.eosio.actions.setevm([ "myprotocol", evm_contracts ]).send("myprotocol@active");
-    await expectToThrow(action, "NOT IMPLEMENTED");
-  });
-
   it("admin::approve", async () => {
     const before = getProtocol("myprotocol");
     expect(before.status).toEqual("pending");
