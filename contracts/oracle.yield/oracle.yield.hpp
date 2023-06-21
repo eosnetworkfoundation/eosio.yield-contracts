@@ -103,7 +103,7 @@ public:
      * ### params
      *
      * - `{uint64_t} token_id` - (primary key) EOS EVM token account ID
-     * - `{string} address` - EOS EVM token address
+     * - `{bytes} address` - EOS EVM token address
      * - `{uint8_t} decimals` - EOS EVM token decimals
      * - `{symbol} sym` - token symbol
      *
@@ -128,9 +128,9 @@ public:
      */
     struct [[eosio::table("evm.tokens")]] evm_tokens_row {
         uint64_t                token_id;
-        string                  address;
-        symbol                  sym;
+        bytes                   address;
         uint8_t                 decimals;
+        symbol                  sym;
 
         uint64_t primary_key() const { return sym.code().raw(); }
     };
@@ -144,7 +144,7 @@ public:
      * ### params
      *
      * - `{uint64_t} address_id` - (primary key) EOS EVM address account ID
-     * - `{string} address` - EOS EVM address
+     * - `{bytes} address` - EOS EVM address
      * - `{asset} balance` - current token balance
      *
      * ### example
@@ -159,7 +159,7 @@ public:
      */
     struct [[eosio::table("evm.balances")]] evm_balances_row {
         uint64_t                address_id;
-        string                  address;
+        bytes                   address;
         asset                   balance;
 
         uint64_t primary_key() const { return address_id; }
@@ -308,7 +308,7 @@ public:
      * ### params
      *
      * - `{symbol_code} symcode` - token symbol code
-     * - `{string} address` - token EOS EVM address
+     * - `{bytes} address` - token EOS EVM address
      * - `{uint8_t} decimals` - token decimals
      *
      * ### example
@@ -319,7 +319,7 @@ public:
      * ```
      */
     [[eosio::action]]
-    void addevmtoken( const symbol_code symcode, const string address, const uint8_t decimals );
+    void addevmtoken( const symbol_code symcode, const bytes address, const uint8_t decimals );
 
     /**
      * ## ACTION `deltoken`
@@ -824,6 +824,7 @@ private:
 
     // EVM
     int64_t bytes_to_int64( const bytes data, const uint8_t decimals );
+    uint64_t get_account_id( const bytes address );
 
     // DEBUG (used to help testing)
     #ifdef DEBUG

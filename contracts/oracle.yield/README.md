@@ -74,7 +74,7 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 ### params
 
 - `{uint64_t} token_id` - (primary key) EOS EVM token account ID
-- `{string} address` - EOS EVM token address
+- `{bytes} address` - EOS EVM token address
 - `{uint8_t} decimals` - EOS EVM token decimals
 - `{symbol} sym` - token symbol
 
@@ -104,7 +104,7 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 ### params
 
 - `{uint64_t} address_id` - (primary key) EOS EVM address account ID
-- `{string} address` - EOS EVM address
+- `{bytes} address` - EOS EVM address
 - `{asset} balance` - current token balance
 
 ### example

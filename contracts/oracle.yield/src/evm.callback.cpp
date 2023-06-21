@@ -9,11 +9,19 @@ int64_t oracle::bytes_to_int64( const bytes data, const uint8_t decimals )
 [[eosio::action]]
 void oracle::callback( const int32_t status, const bytes data, const std::optional<bytes> context )
 {
+    oracle::evm_tokens_table _evm_tokens( get_self(), get_self().value );
+
     check(get_first_receiver() == get_self(), "callback must initially be called by this contract");
-    const int64_t amount = bytes_to_int64(data, 14); // TO-DO: change decimals to dynamic value
     const string context_str = silkworm::to_hex(*context, false);
     const string contract = context_str.substr(0, 40);
     const string address = context_str.substr(40, 40);
+
+    // token amount from `balanceof` call
+    const uint64_t token_id = get_account_id( *silkworm::from_hex(contract) );
+    const uint64_t address_id = get_account_id( *silkworm::from_hex(address) );
+    const auto token = _evm_tokens.get( token_id, "oracle::callback: [token_id] token not found" );
+    const uint8_t decimals = token.decimals - token.sym.precision(); // TO-DO: change decimals to dynamic value
+    const int64_t amount = bytes_to_int64(data, decimals);
 
     // Push transaction
     test_action test{ get_self(), { get_self(), "active"_n } };
