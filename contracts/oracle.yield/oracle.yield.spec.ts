@@ -109,7 +109,7 @@ describe('oracle.yield', () => {
     const before = getOracle("myoracle");
     expect(Asset.from(before.balance.quantity).value).toEqual(0.00);
 
-    await contracts.yield.oracle.actions.update(["myoracle", "myprotocol"]).send("myoracle@active");
+    await contracts.yield.oracle.actions.update(["myoracle", "myprotocol"]).send();
     const after = getOracle("myoracle");
     expect(Asset.from(after.balance.quantity).value).toEqual(0.02);
   });
@@ -160,7 +160,7 @@ describe('oracle.yield', () => {
     await contracts.yield.eosio.actions.approve([ "protocol3" ]).send("admin.yield@active");
 
     // update
-    await contracts.yield.oracle.actions.update(["myoracle", "protocol3"]).send("myoracle@active");
+    await contracts.yield.oracle.actions.update(["myoracle", "protocol3"]).send();
     expect(getPeriods("protocol3").length).toEqual(1);
     const protocol = getProtocol("protocol3");
     expect(Asset.from(protocol.balance.quantity).value).toEqual(0);
