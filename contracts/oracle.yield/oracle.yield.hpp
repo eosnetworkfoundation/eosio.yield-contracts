@@ -307,19 +307,19 @@ public:
      *
      * ### params
      *
-     * - `{symbol_code} symcode` - token symbol code
      * - `{bytes} address` - token EOS EVM address
      * - `{uint8_t} decimals` - token decimals
+     * - `{symbol_code} symcode` - token symbol code
      *
      * ### example
      *
      * ```bash
-     * $ cleos push action oracle.yield addevmtoken '["USDT", "0xfa9343c3897324496a05fc75abed6bac29f8a40f", 6]' -p oracle.yield
-     * $ cleos push action oracle.yield addevmtoken '["EOS", "0xc00592aA41D32D137dC480d9f6d0Df19b860104F", 18]' -p oracle.yield
+     * $ cleos push action oracle.yield addevmtoken '["0xfa9343c3897324496a05fc75abed6bac29f8a40f", 6, "USDT"]' -p oracle.yield
+     * $ cleos push action oracle.yield addevmtoken '["0xc00592aA41D32D137dC480d9f6d0Df19b860104F", 18, "EOS"]' -p oracle.yield
      * ```
      */
     [[eosio::action]]
-    void addevmtoken( const symbol_code symcode, const bytes address, const uint8_t decimals );
+    void addevmtoken( const bytes address, const uint8_t decimals, const symbol_code symcode );
 
     /**
      * ## ACTION `deltoken`
@@ -340,6 +340,26 @@ public:
      */
     [[eosio::action]]
     void deltoken( const symbol_code symcode );
+
+    /**
+     * ## ACTION `delevmtoken`
+     *
+     * - **authority**: `get_self()`
+     *
+     * > Delete {{address}} EOS EVM token as supported asset
+     *
+     * ### params
+     *
+     * - `{bytes} address` - EOS EVM token address
+     *
+     * ### example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield deltoken '["fa9343c3897324496a05fc75abed6bac29f8a40f"]' -p oracle.yield
+     * ```
+     */
+    [[eosio::action]]
+    void delevmtoken( const bytes address );
 
     /**
      * ## ACTION `setreward`

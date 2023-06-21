@@ -1,6 +1,6 @@
 // @system
 [[eosio::action]]
-void oracle::addevmtoken( const symbol_code symcode, const bytes address, const uint8_t decimals )
+void oracle::addevmtoken( const bytes address, const uint8_t decimals, const symbol_code symcode )
 {
     require_auth( get_self() );
 
@@ -15,15 +15,27 @@ void oracle::addevmtoken( const symbol_code symcode, const bytes address, const 
     // add supported token
     auto insert = [&]( auto& row ) {
         row.token_id = account_id;
-        row.sym = token.sym;
         row.address = address;
         row.decimals = decimals;
+        row.sym = token.sym;
     };
 
     // modify or create
     auto itr = _evm_tokens.find( account_id );
     if ( itr == _evm_tokens.end() ) _evm_tokens.emplace( get_self(), insert );
     else _evm_tokens.modify( itr, get_self(), insert );
+}
+
+// @system
+[[eosio::action]]
+void oracle::delevmtoken( const bytes address )
+{
+    require_auth( get_self() );
+
+    const uint64_t token_id = get_account_id( address );
+    oracle::evm_tokens_table _evm_tokens( get_self(), get_self().value );
+    auto & itr = _evm_tokens.get( token_id, "oracle::delevmtoken: [address] does not exists" );
+    _evm_tokens.erase( itr );
 }
 
 uint64_t oracle::get_account_id( const bytes address )

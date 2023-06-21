@@ -52,6 +52,7 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 - [TABLE `periods`](#table-periods)
 - [TABLE `oracles`](#table-oracles)
 - [ACTION `addevmtoken`](#action-addevmtoken)
+- [ACTION `delevmtoken`](#action-delevmtoken)
 - [ACTION `init`](#action-init)
 - [ACTION `addtoken`](#action-addtoken)
 - [ACTION `deltoken`](#action-deltoken)
@@ -212,6 +213,41 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
     "updated_at": "2022-05-13T00:00:00",
     "claimed_at": "1970-01-01T00:00:00"
 }
+```
+
+## ACTION `addevmtoken`
+
+- **authority**: `get_self()`
+
+> Add {{sym}} token using {{address}} EOS EVM address.
+
+### params
+
+- `{bytes} address` - token EOS EVM address
+- `{uint8_t} decimals` - token decimals
+- `{symbol_code} symcode` - token symbol code
+
+### example
+
+```bash
+$ cleos push action oracle.yield addevmtoken '["0xfa9343c3897324496a05fc75abed6bac29f8a40f", 6, "USDT"]' -p oracle.yield
+$ cleos push action oracle.yield addevmtoken '["0xc00592aA41D32D137dC480d9f6d0Df19b860104F", 18, "EOS"]' -p oracle.yield
+```
+
+## ACTION `delevmtoken`
+
+- **authority**: `get_self()`
+
+> Delete {{address}} EOS EVM token as supported asset
+
+### params
+
+- `{bytes} address` - EOS EVM token address
+
+### example
+
+```bash
+$ cleos push action oracle.yield deltoken '["fa9343c3897324496a05fc75abed6bac29f8a40f"]' -p oracle.yield
 ```
 
 ## ACTION `init`
