@@ -6,12 +6,14 @@ int64_t oracle::bytes_to_int64( const bytes data, const uint8_t decimals )
     return int64_t(v);
 }
 
+// @callback
 [[eosio::action]]
 void oracle::callback( const int32_t status, const bytes data, const std::optional<bytes> context )
 {
+    check(get_first_receiver() == get_self(), "callback must initially be called by this contract");
+
     oracle::evm_tokens_table _evm_tokens( get_self(), get_self().value );
 
-    check(get_first_receiver() == get_self(), "callback must initially be called by this contract");
     const string context_str = silkworm::to_hex(*context, false);
     const bytes contract = *silkworm::from_hex(context_str.substr(0, 40));
     const bytes address = *silkworm::from_hex(context_str.substr(40, 40));
@@ -27,13 +29,16 @@ void oracle::callback( const int32_t status, const bytes data, const std::option
     const int64_t amount = bytes_to_int64(data, decimals);
 
     // send inline action to update current balance
-    test_action test{ get_self(), { get_self(), "active"_n } };
-    test.send( contract, address, asset{amount, token->sym} );
+    setbalance_action setbalance{ get_self(), { get_self(), "active"_n } };
+    setbalance.send( contract, address, asset{amount, token->sym} );
 }
 
+// @system update
 [[eosio::action]]
 void oracle::balanceof( const bytes contract, const bytes address )
 {
+    require_auth( get_self() );
+
     bytes padding = *silkworm::from_hex("000000000000000000000000");
 
     // balanceOf address
@@ -64,8 +69,30 @@ void oracle::balanceof( const bytes contract, const bytes address )
     exec.send( input, callback );
 }
 
+// @callback
 [[eosio::action]]
-void oracle::test( const bytes contract, const bytes address, const asset quantity )
+void oracle::setbalance( const bytes contract, const bytes address, const asset balance )
 {
     require_auth( get_self() );
+
+    oracle::tokens_table _tokens( get_self(), get_self().value );
+    oracle::evm_tokens_table _evm_tokens( get_self(), get_self().value );
+
+    // validate
+    _tokens.get( balance.symbol.code().raw(), "oracle::setbalance: [balance.symbol.code] token not found" );
+    const uint64_t token_id = get_account_id(contract);
+    const uint64_t address_id = get_account_id(address);
+
+    // add supported token
+    auto insert = [&]( auto& row ) {
+        row.address_id = address_id;
+        row.address = address;
+        row.balance = balance;
+    };
+
+    // modify or create
+    oracle::evm_balances_table _evm_balances( get_self(), token_id );
+    auto itr = _evm_balances.find( address_id );
+    if ( itr == _evm_balances.end() ) _evm_balances.emplace( get_self(), insert );
+    else _evm_balances.modify( itr, get_self(), insert );
 }

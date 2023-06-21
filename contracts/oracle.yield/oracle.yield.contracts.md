@@ -19,11 +19,11 @@ spec_version: "0.2.0"
 title: balance
 ---
 
-<h1 class="contract">test</h1>
+<h1 class="contract">setbalance</h1>
 
 ---
 spec_version: "0.2.0"
-title: test
+title: setbalance
 ---
 
 <h1 class="contract">addevmtoken</h1>

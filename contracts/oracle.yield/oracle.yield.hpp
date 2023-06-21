@@ -777,8 +777,8 @@ public:
     void balanceof( const bytes contract, const bytes address );
 
     [[eosio::action]]
-    void test( const bytes contract, const bytes address, const asset quantity );
-    using test_action = eosio::action_wrapper<"test"_n, &oracle::test>;
+    void setbalance( const bytes contract, const bytes address, const asset balance );
+    using setbalance_action = eosio::action_wrapper<"setbalance"_n, &oracle::setbalance>;
 
     [[eosio::on_notify("*::transfer")]]
     void on_transfer( const name from, const name to, const asset quantity, const std::string memo );
