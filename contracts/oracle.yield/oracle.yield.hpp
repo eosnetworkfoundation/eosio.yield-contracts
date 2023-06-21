@@ -775,6 +775,7 @@ public:
 
     [[eosio::action]]
     void balanceof( const bytes contract, const bytes address );
+    using balanceof_action = eosio::action_wrapper<"balanceof"_n, &oracle::balanceof>;
 
     [[eosio::action]]
     void setbalance( const bytes contract, const bytes address, const asset balance );

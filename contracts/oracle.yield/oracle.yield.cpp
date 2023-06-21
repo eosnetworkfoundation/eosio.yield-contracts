@@ -305,6 +305,10 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
     auto config = get_config();
     yield::protocols_table _protocols( config.yield_contract, config.yield_contract.value );
     yield::state_table _state( config.yield_contract, config.yield_contract.value );
+    oracle::evm_tokens_table _evm_tokens( get_self(), get_self().value );
+    oracle::balanceof_action balanceof( get_self(), { get_self(), "active"_n });
+    oracle::update_action update( get_self(), { get_self(), "active"_n });
+
     const time_point_sec period = get_current_period( PERIOD_INTERVAL );
     check( _state.exists(), "oracle::updateall: [yield_contract.state] does not exists");
     auto state = _state.get();
@@ -313,28 +317,37 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
     int count = 0;
     check( limit, "oracle::updateall: [max_rows] must be above 0");
 
-    for ( const name protocol : state.active_protocols ) {
-        // skip based on oracle
-        auto itr = _protocols.get( protocol.value, "oracle::updateall: [yield_contract.protocols] does not exists");
-        oracle::periods_table _periods( get_self(), protocol.value );
+    for ( const name active_protocol : state.active_protocols ) {
+        // TVL periods
+        oracle::periods_table _periods( get_self(), active_protocol.value );
         auto period_itr = _periods.find( period.sec_since_epoch()  ); // inverse multi-index
-        if ( period_itr != _periods.end() ) continue; // period already updated
+        if ( period_itr != _periods.end() ) continue; // skip, period already updated
 
-        // skip based on protocol
-        if ( itr.period_at == period ) continue; // protocol period already updated
-        if ( itr.status != "active"_n ) continue; // protocol not active
-        update( oracle, protocol );
+        // skip based on protocol details
+        auto protocol = _protocols.get( active_protocol.value, "oracle::updateall: [yield_contract.protocols] does not exists");
+        if ( protocol.period_at == period ) continue; // protocol period already updated
+        if ( protocol.status != "active"_n ) continue; // protocol not active
+
+        // trigger EOS EVM callback `balanceof`
+        // must be used prior to `update` action to ensure balances are up to date
+        for ( const string evm_contract : protocol.evm_contracts ) {
+            for ( const auto evm_token : _evm_tokens ) {
+                balanceof.send( evm_token.address, *silkworm::from_hex(evm_contract) );
+            }
+        }
+
+        update.send( oracle, active_protocol );
         count += 1;
         if ( count >= limit ) break;
     }
     check( count, "oracle::updateall: nothing to update");
 }
 
-// @oracle
+// @system side effect action called from `updateall`
 [[eosio::action]]
 void oracle::update( const name oracle, const name protocol )
 {
-    require_auth( oracle );
+    require_auth( get_self() );
     check_oracle_active( oracle );
 
     // tables

@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # compile
-blanc++ eosio.yield.cpp -I ../ -I ../../external
-# cdt-cpp eosio.yield.cpp -I ../ -I ../../external
+# blanc++ eosio.yield.cpp -I ../ -I ../../external
+cdt-cpp eosio.yield.cpp -I ../ -I ../../external
 
 # # external contracts
 # if [ ! -f "./include/eosio.token/eosio.token.wasm" ]; then
