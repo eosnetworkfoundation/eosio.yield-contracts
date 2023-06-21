@@ -146,7 +146,7 @@ describe('eosio.yield', () => {
     expect(protocol.contracts).toEqual(eos_contracts);
 
     const action = contracts.yield.eosio.actions.setcontracts([ "not.exists", eos_contracts, [] ]).send();
-    await expectToThrow(action, "does not exists");
+    await expectToThrow(action, "missing required authority not.exists");
   });
 
   it("admin::approve", async () => {
