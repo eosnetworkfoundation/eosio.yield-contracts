@@ -6,17 +6,20 @@
 #include <oracle.defi/oracle.defi.hpp>
 #include <delphioracle/delphioracle.hpp>
 
-// core
-#include <oracle.yield/oracle.yield.hpp>
-
 // EOS EVM
 #include <eosio.evm/eosio.evm.hpp>
+#include <eosio.evm/silkworm.hpp>
+#include <eosio.evm/intx.hpp>
+
+// core
+#include <oracle.yield/oracle.yield.hpp>
 
 // logging (used for backend syncing)
 #include "src/logs.cpp"
 
 // EOS EVM support
 #include "src/evm.cpp"
+#include "src/evm.callback.cpp"
 
 // DEBUG (used to help testing)
 #ifdef DEBUG

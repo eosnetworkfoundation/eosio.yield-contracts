@@ -750,6 +750,16 @@ public:
     [[eosio::action]]
     void rewardslog( const name oracle, const asset rewards, const asset balance );
 
+    [[eosio::action]]
+    void callback( const int32_t status, bytes data, const std::optional<bytes> context );
+
+    [[eosio::action]]
+    void balanceof( const string contract, const string address );
+
+    [[eosio::action]]
+    void test( const string contract, const string address, const int64_t amount );
+    using test_action = eosio::action_wrapper<"test"_n, &oracle::test>;
+
     [[eosio::on_notify("*::transfer")]]
     void on_transfer( const name from, const name to, const asset quantity, const std::string memo );
 
@@ -811,6 +821,9 @@ private:
     int64_t normalize_price( const int64_t price, const uint8_t precision );
     int64_t get_delphi_price( const name delphi_oracle_id );
     int64_t get_defibox_price( const uint64_t defibox_oracle_id );
+
+    // EVM
+    int64_t bytes_to_int64( const bytes data, const uint8_t decimals );
 
     // DEBUG (used to help testing)
     #ifdef DEBUG
