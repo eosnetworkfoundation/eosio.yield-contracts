@@ -47,6 +47,7 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 ## Table of Content
 
 - [TABLE `evm.tokens`](#table-evm.tokens)
+- [TABLE `evm.balances`](#table-evm.balances)
 - [TABLE `config`](#table-config)
 - [TABLE `tokens`](#table-tokens)
 - [TABLE `periods`](#table-periods)

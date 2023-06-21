@@ -141,11 +141,11 @@ describe('eosio.yield', () => {
 
   it("setcontracts", async () => {
     const auth = eos_contracts.map(contract => { return { actor: contract, permission: "active"} });
-    await contracts.yield.eosio.actions.setcontracts([ "myprotocol", eos_contracts ]).send(auth);
+    await contracts.yield.eosio.actions.setcontracts([ "myprotocol", eos_contracts, [] ]).send(auth);
     const protocol = getProtocol("myprotocol");
     expect(protocol.contracts).toEqual(eos_contracts);
 
-    const action = contracts.yield.eosio.actions.setcontracts([ "not.exists", eos_contracts ]).send();
+    const action = contracts.yield.eosio.actions.setcontracts([ "not.exists", eos_contracts, [] ]).send();
     await expectToThrow(action, "does not exists");
   });
 
@@ -164,7 +164,7 @@ describe('eosio.yield', () => {
   });
 
   it("setcontracts - protocol not included by default", async () => {
-    await contracts.yield.eosio.actions.setcontracts([ "myprotocol", ["vault"] ]).send();
+    await contracts.yield.eosio.actions.setcontracts([ "myprotocol", ["vault"], [] ]).send();
     const protocol = getProtocol("myprotocol");
     expect(protocol.contracts).toEqual(["vault"]);
   });
