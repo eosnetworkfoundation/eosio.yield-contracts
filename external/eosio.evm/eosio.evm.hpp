@@ -11,11 +11,35 @@ using namespace eosio;
 
 typedef std::vector<uint8_t> bytes;
 
+checksum256 make_key(const uint8_t* ptr, size_t len) {
+    uint8_t buffer[32]={0};
+    check(len <= sizeof(buffer), "invalida size");
+    memcpy(buffer, ptr, len);
+    return checksum256(buffer);
+}
+
+checksum256 make_key(bytes data){
+    return make_key((const uint8_t*)data.data(), data.size());
+}
+
 class [[eosio::contract("eosio.evm")]] evm_contract : public eosio::contract {
 public:
     using contract::contract;
 
     const name code = "eosio.evm"_n;
+
+    struct exec_callback {
+        eosio::name contract;
+        eosio::name action;
+    };
+
+   struct exec_input {
+        std::optional<bytes> context;
+        std::optional<bytes> from;
+        bytes                to;
+        bytes                data;
+        std::optional<bytes> value;
+   };
 
     struct [[eosio::table("account")]] account {
         uint64_t                        id;
@@ -41,18 +65,18 @@ public:
         return sha256(address.c_str(), address.length());
     }
 
-    static uint64_t get_account_id( const string address, const name code )
+    static uint64_t get_account_id( const string address )
     {
-        evm_contract::account_table _account( code, code.value );
+        evm_contract::account_table _account( "eosio.evm"_n, "eosio.evm"_n.value );
 
         auto idx = _account.get_index<"by.address"_n>();
         auto it = idx.find(evm_contract::to_checksum(address));
-        auto itr = _ratelimit.find( it->id );
+        auto itr = _account.find( it->id );
         check( it != idx.end(), "evm_contract::get_account_id: [address=" + address + "] account not found" );
         return itr->id;
     }
 
     [[eosio::action]]
     void exec(const exec_input& input, const std::optional<exec_callback>& callback);
-    using exec_action = eosio::action_wrapper<"exec"_n, &evm::exec>;
+    using exec_action = eosio::action_wrapper<"exec"_n, &evm_contract::exec>;
 };

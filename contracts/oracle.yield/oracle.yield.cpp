@@ -9,6 +9,9 @@
 // core
 #include <oracle.yield/oracle.yield.hpp>
 
+// EOS EVM
+#include <eosio.evm/eosio.evm.hpp>
+
 // logging (used for backend syncing)
 #include "src/logs.cpp"
 

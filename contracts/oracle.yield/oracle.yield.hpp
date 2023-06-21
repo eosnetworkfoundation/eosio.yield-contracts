@@ -130,7 +130,7 @@ public:
         uint64_t                account_id;
         symbol                  sym;
         string                  address;
-        uint8_t                 precision;
+        uint8_t                 decimals;
 
         uint64_t primary_key() const { return sym.code().raw(); }
     };
