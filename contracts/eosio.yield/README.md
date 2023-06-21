@@ -243,7 +243,7 @@ $ cleos push action eosio.yield setmetakey '[myprotocol, website, "https://mypro
 
 > Unregister the {{protocol}} protocol.
 
-- **authority**: `protocol`
+- **authority**: `protocol` or `admin.yield`
 
 ### params
 
@@ -264,29 +264,14 @@ $ cleos push action eosio.yield unregister '[myprotocol]' -p myprotocol
 ### params
 
 - `{name} protocol` - protocol (will be included in EOS contracts)
-- `{set<name>} contracts` - additional EOS contracts
+- `{set<name>} contracts` - EOS smart contracts
+- `{set<string>} evm_contracts` - EOS EVM smart contracts
 
 ### Example
 
 ```bash
-$ cleos push action eosio.yield setcontracts '[myprotocol, [myvault]]' -p myprotocol -p myvault
-```
-
-## ACTION `setevm`
-
-> Sets EVM contracts for the {{protocol}} protocol.
-
-- **authority**: (`protocol` AND `evm`) OR `admin.yield`
-
-### params
-
-- `{name} protocol` - protocol (will be included in EOS contracts)
-- `{set<string>} evm` - additional EVM contracts
-
-### Example
-
-```bash
-$ cleos push action eosio.yield setevm '[myprotocol, ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
+$ cleos push action eosio.yield setcontracts '[myprotocol, [myvault], []]' -p myprotocol
+$ cleos push action eosio.yield setcontracts '[myprotocol, [], ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
 ```
 
 ## ACTION `approve`

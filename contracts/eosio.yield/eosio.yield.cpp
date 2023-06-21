@@ -2,6 +2,10 @@
 #include <eosio.token/eosio.token.hpp>
 #include <eosio.system/eosio.system.hpp>
 
+// EOS EVM
+#include <eosio.evm/eosio.evm.hpp>
+#include <eosio.evm/silkworm.hpp>
+
 // core
 #include <eosio.yield/eosio.yield.hpp>
 
@@ -64,9 +68,7 @@ void yield::setmetadata( const name protocol, const map<name, string> metadata )
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get( protocol.value, "yield::setmetadata: [protocol] does not exists");
 
-    const auto config = get_config();
-    const name ram_payer = has_auth( config.admin_contract ) ? config.admin_contract : protocol;
-    _protocols.modify( itr, ram_payer, [&]( auto& row ) {
+    _protocols.modify( itr, get_ram_payer(protocol), [&]( auto& row ) {
         row.metadata = metadata;
         row.updated_at = current_time_point();
     });
@@ -83,15 +85,12 @@ void yield::setmetadata( const name protocol, const map<name, string> metadata )
 [[eosio::action]]
 void yield::setmetakey( const name protocol, const name key, const optional<string> value )
 {
-    const auto config = get_config();
-    const bool is_admin = has_auth( config.admin_contract );
-    if ( !is_admin ) require_auth( protocol );
+    require_auth_admin(protocol);
 
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get( protocol.value, "yield::setmetakey: [protocol] does not exists");
 
-    const name ram_payer = is_admin ? config.admin_contract : protocol;
-    _protocols.modify( itr, ram_payer, [&]( auto& row ) {
+    _protocols.modify( itr, get_ram_payer(protocol), [&]( auto& row ) {
         if ( value ) row.metadata[key] = *value;
         else row.metadata.erase(key);
         row.updated_at = current_time_point();
@@ -109,10 +108,9 @@ void yield::setmetakey( const name protocol, const name key, const optional<stri
 [[eosio::action]]
 void yield::claim( const name protocol, const optional<name> receiver )
 {
-    require_auth( protocol );
+    require_auth_admin(protocol);
 
     yield::protocols_table _protocols( get_self(), get_self().value );
-    const auto config = get_config();
 
     if ( receiver ) check( is_account( *receiver ), "yield::claim: [receiver] does not exists");
 
@@ -259,8 +257,7 @@ void yield::init( const extended_symbol rewards, const name oracle_contract, con
 [[eosio::action]]
 void yield::unregister( const name protocol )
 {
-    const auto config = get_config();
-    if ( !has_auth( config.admin_contract )) require_auth( protocol );
+    require_auth_admin(protocol);
 
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get(protocol.value, "yield::unregister: [protocol] does not exists");
@@ -334,30 +331,33 @@ void yield::report( const name protocol, const time_point_sec period, const uint
 
 // @protocol or @admin
 [[eosio::action]]
-void yield::setcontracts( const name protocol, const set<name> contracts )
+void yield::setcontracts( const name protocol, const set<name> contracts, const set<string> evm_contracts )
 {
-    const auto config = get_config();
-
     // override permission is required to allow certain protocols with nulled permission to be added to Yield+
-    const bool is_override = has_auth( get_self() );
-    if ( !is_override ) require_auth( protocol );
+    require_auth_admin(protocol);
 
     yield::protocols_table _protocols( get_self(), get_self().value );
     auto & itr = _protocols.get(protocol.value, "yield::setcontracts: [protocol] does not exists");
 
-    // require authority of all EOS contracts linked to protocol
+    // Only support EOS or EVM contracts (not both)
+    if ( evm_contracts.size() && contracts.size() ) check( false, "yield::setcontracts: cannot include both [evm_contracts] with [contracts]");
+
+    // validate contracts
     for ( const name contract : contracts ) {
         check( is_account( contract ), "yield::setcontracts: [contract=" + contract.to_string() + "] account does not exists");
-
-        // override permission does not need to validate contract permission
-        if ( !is_override ) require_auth( contract );
+    }
+    for ( const string evm_contract : evm_contracts ) {
+        check( evm_contract::is_account( *silkworm::from_hex(evm_contract) ), "yield::setcontracts: [evm_contract=" + evm_contract + "] account ID does not exists");
     }
 
     // modify contracts
-    const name ram_payer = is_override ? config.admin_contract : protocol;
-    _protocols.modify( itr, ram_payer, [&]( auto& row ) {
-        check( row.contracts != contracts, "yield::setcontracts: [contracts] was not modified");
+    _protocols.modify( itr, get_ram_payer(protocol), [&]( auto& row ) {
+        // prevent modification if no changes
+        if ( contracts.size() ) check( row.contracts != contracts, "yield::setcontracts: [contracts] was not modified");
+        if ( evm_contracts.size() ) check( row.evm_contracts != evm_contracts, "yield::setcontracts: [evm_contracts] was not modified");
+
         row.contracts = contracts;
+        row.evm_contracts = evm_contracts;
         row.updated_at = current_time_point();
     });
 
@@ -367,40 +367,7 @@ void yield::setcontracts( const name protocol, const set<name> contracts )
 
     // logging
     yield::contractslog_action contractslog( get_self(), { get_self(), "active"_n });
-    contractslog.send( protocol, itr.status, itr.contracts, itr.evm );
-}
-
-// @protocol or @admin
-[[eosio::action]]
-void yield::setevm( const name protocol, const set<string> evm )
-{
-    auto config = get_config();
-    const bool is_admin = has_auth( config.admin_contract );
-    if ( !is_admin ) require_auth( protocol );
-
-    yield::protocols_table _protocols( get_self(), get_self().value );
-    auto & itr = _protocols.get(protocol.value, "yield::setevm: [protocol] does not exists");
-
-    // require authority of all EVM contracts linked to protocol
-    for ( const string contract : evm ) {
-        check(false, "NOT IMPLEMENTED");
-    }
-
-    // modify contracts
-    const set<string> before_evm = itr.evm;
-    _protocols.modify( itr, protocol, [&]( auto& row ) {
-        row.evm = evm;
-        row.contracts.insert(protocol); // always include EOS protocol account
-        row.updated_at = current_time_point();
-        check( row.evm != before_evm, "yield::setevm: [evm] was not modified");
-    });
-
-    // must be re-approved if contracts changed
-    set_status(protocol, "pending"_n);
-
-    // logging
-    yield::contractslog_action contractslog( get_self(), { get_self(), "active"_n });
-    contractslog.send( protocol, itr.status, itr.contracts, itr.evm );
+    contractslog.send( protocol, itr.status, itr.contracts, itr.evm_contracts );
 }
 
 void yield::transfer( const name from, const name to, const extended_asset value, const string& memo )
@@ -440,7 +407,9 @@ time_point_sec yield::get_current_period( const uint32_t period_interval )
 
 bool yield::is_contract( const name contract )
 {
-    // NOT IMPLEMENTED NATIVE TO EOS - feature get code hash
+    // TO-DO: upgrade CDT to v4.0.0
+    // eosio::get_code_hash( contract );
+    // https://github.com/AntelopeIO/cdt/releases/tag/v4.0.0
     return true;
 }
 
@@ -453,4 +422,11 @@ void yield::require_auth_admin( const name account )
 {
     if ( has_auth( get_config().admin_contract ) ) return;
     require_auth( account );
+}
+
+name yield::get_ram_payer( const name account )
+{
+    const name admin = get_config().admin_contract;
+    if ( has_auth( admin ) ) return admin;
+    return account;
 }

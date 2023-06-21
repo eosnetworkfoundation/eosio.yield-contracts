@@ -91,8 +91,8 @@ public:
      * - `{name} protocol` - primary protocol contract
      * - `{name} status="pending"` - status (`pending/active/denied`)
      * - `{name} category` - protocol category (ex: `dexes/lending/staking`)
-     * - `{set<name>} contracts` - additional supporting EOS contracts
-     * - `{set<string>} evm` - additional supporting EVM contracts
+     * - `{set<name>} contracts` - EOS contracts
+     * - `{set<string>} evm_contracts` - EOS EVM contracts
      * - `{asset} tvl` - reported TVL averaged value in EOS
      * - `{asset} usd` - reported TVL averaged value in USD
      * - `{extended_asset} balance` - balance available to be claimed
@@ -110,7 +110,7 @@ public:
      *     "status": "active",
      *     "category": "dexes",
      *     "contracts": ["myprotocol", "mytreasury"],
-     *     "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"],
+     *     "evm_contracts": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"],
      *     "tvl": "200000.0000 EOS",
      *     "usd": "300000.0000 USD",
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
@@ -127,7 +127,7 @@ public:
         name                    status = "pending"_n;
         name                    category;
         set<name>               contracts;
-        set<string>             evm;
+        set<string>             evm_contracts;
         asset                   tvl;
         asset                   usd;
         extended_asset          balance;
@@ -280,37 +280,18 @@ public:
      * ### params
      *
      * - `{name} protocol` - protocol (will be included in EOS contracts)
-     * - `{set<name>} contracts` - additional EOS contracts
+     * - `{set<name>} contracts` - EOS smart contracts
+     * - `{set<string>} evm_contracts` - EOS EVM smart contracts
      *
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield setcontracts '[myprotocol, [myvault]]' -p myprotocol -p myvault
+     * $ cleos push action eosio.yield setcontracts '[myprotocol, [myvault], []]' -p myprotocol
+     * $ cleos push action eosio.yield setcontracts '[myprotocol, [], ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
      * ```
      */
     [[eosio::action]]
-    void setcontracts( const name protocol, const set<name> contracts );
-
-    /**
-     * ## ACTION `setevm`
-     *
-     * > Sets EVM contracts for the {{protocol}} protocol.
-     *
-     * - **authority**: (`protocol` AND `evm`) OR `admin.yield`
-     *
-     * ### params
-     *
-     * - `{name} protocol` - protocol (will be included in EOS contracts)
-     * - `{set<string>} evm` - additional EVM contracts
-     *
-     * ### Example
-     *
-     * ```bash
-     * $ cleos push action eosio.yield setevm '[myprotocol, ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
-     * ```
-     */
-    [[eosio::action]]
-    void setevm( const name protocol, const set<string> evm );
+    void setcontracts( const name protocol, const set<name> contracts, const set<string> evm_contracts );
 
     /**
      * ## ACTION `approve`
@@ -661,6 +642,7 @@ private :
     void require_auth_admin();
     void require_auth_admin( const name account );
     bool is_contract( const name contract );
+    name get_ram_payer( const name account );
 
     // DEBUG (used to help testing)
     #ifdef DEBUG

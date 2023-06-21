@@ -5,6 +5,8 @@
 #include <eosio/system.hpp>
 #include <eosio/crypto.hpp>
 
+#include "silkworm.hpp"
+
 #include <string>
 
 using namespace eosio;
@@ -62,4 +64,25 @@ public:
     [[eosio::action]]
     void exec(const exec_input& input, const std::optional<exec_callback>& callback);
     using exec_action = eosio::action_wrapper<"exec"_n, &evm_contract::exec>;
+
+    static uint64_t get_account_id( const bytes address )
+    {
+        evm_contract::account_table _account( "eosio.evm"_n, "eosio.evm"_n.value );
+
+        auto idx = _account.get_index<"by.address"_n>();
+        auto it = idx.find(make_key(address));
+        auto itr = _account.find( it->id );
+        check( it != idx.end(), "evm_contract::get_account_id: [address=" + silkworm::to_hex(address, true) + "] account not found" );
+        return itr->id;
+    }
+
+    static bool is_account( const bytes address )
+    {
+        evm_contract::account_table _account( "eosio.evm"_n, "eosio.evm"_n.value );
+
+        auto idx = _account.get_index<"by.address"_n>();
+        auto it = idx.find(make_key(address));
+        auto itr = _account.find( it->id );
+        return it != idx.end();
+    }
 };
