@@ -13,6 +13,6 @@ cdt-cpp eosio.yield.cpp -I ../ -I ../../external
 #     eosio-cpp ./include/eosio.system/eosio.system.cpp -I include -o include/eosio.system/eosio.system.wasm
 # fi
 
-# unlock wallet & deploy
-cleos wallet unlock --password $(cat ~/eosio-wallet/.pass)
-cleos set contract eosio.yield . eosio.yield.wasm eosio.yield.abi
+# # unlock wallet & deploy
+# cleos wallet unlock --password $(cat ~/eosio-wallet/.pass)
+# cleos set contract eosio.yield . eosio.yield.wasm eosio.yield.abi
