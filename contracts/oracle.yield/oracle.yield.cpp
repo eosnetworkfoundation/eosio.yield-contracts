@@ -218,10 +218,16 @@ void oracle::addtoken( const symbol_code symcode, const name contract, const opt
     // validate
     const asset supply = eosio::token::get_supply( contract, symcode );
     check( supply.amount > 0,  "oracle::addtoken: [supply] has no supply");
-    const bool is_usdt = symcode == USDT.code() && contract == USDT_CONTRACT;
-    if ( is_usdt ) check( !*defibox_oracle_id && !delphi_oracle_id->value, "oracle::addtoken: USDT Tether does not require any oracle ID");
-    else check( *defibox_oracle_id || delphi_oracle_id->value, "oracle::addtoken: must provide at least one oracle ID");
 
+    // validate Tether
+    if ( symcode == USDT.code() ) check( contract == USDT_CONTRACT, "oracle::addtoken: [contract] Tether must be " + USDT_CONTRACT.to_string());
+
+    // stable tokens do not require oracles
+    if ( symcode == USDT.code() || symcode == USDC.code() || symcode == USD.code() ) {
+        check( !*defibox_oracle_id && !delphi_oracle_id->value, "oracle::addtoken: " + symcode.to_string() + "does not require any oracle IDs");
+    } else {
+        check( *defibox_oracle_id || delphi_oracle_id->value, "oracle::addtoken: must provide at least one oracle ID");
+    }
 
     // validate oracles
     if ( delphi_oracle_id ) {
@@ -389,7 +395,7 @@ void oracle::update( const name oracle, const name protocol )
             balances.push_back( balance );
 
             // price only used for logging purposes
-            prices.push_back( asset{ get_oracle_price( balance.symbol.code() ), USD } );
+            prices.push_back( asset{ get_oracle_price( balance.symbol ), USD } );
         }
         // staked EOS (REX & delegated CPU/NET)
         const asset staked = get_eos_staked( contract );
@@ -397,7 +403,7 @@ void oracle::update( const name oracle, const name protocol )
         balances.push_back( staked );
 
         // EOS price only used for logging purposes
-        prices.push_back( asset{ get_oracle_price( EOS.code() ), USD } );
+        prices.push_back( asset{ get_oracle_price( EOS ), USD } );
     }
 
     // EVM smart contracts TVL
@@ -408,7 +414,7 @@ void oracle::update( const name oracle, const name protocol )
             balances.push_back( balance );
 
             // price only used for logging purposes
-            prices.push_back( asset{ get_oracle_price( balance.symbol.code() ), USD } );
+            prices.push_back( asset{ get_oracle_price( balance.symbol ), USD } );
         }
     }
 
@@ -588,23 +594,25 @@ asset oracle::get_eos_staked( const name owner )
 
 int64_t oracle::calculate_usd_value( const asset quantity )
 {
-    const int64_t price = get_oracle_price( quantity.symbol.code() );
+    const int64_t price = get_oracle_price( quantity.symbol );
     return quantity.amount * price / pow(10, quantity.symbol.precision());
 }
 
 int64_t oracle::convert_usd_to_eos( const int64_t usd )
 {
-    const int64_t price = get_oracle_price( EOS.code() );
+    const int64_t price = get_oracle_price( EOS );
     return usd * pow( 10, PRECISION ) / price;
 }
 
-int64_t oracle::get_oracle_price( const symbol_code symcode )
+int64_t oracle::get_oracle_price( const symbol sym )
 {
-    oracle::tokens_table _tokens( get_self(), get_self().value );
-    auto token = _tokens.get( symcode.raw(), "oracle::calculate_usd_value: [symbol] does not exists");
+    // stable tokens uses fixed prices = 1.0000 USD
+    if ( is_stable( sym ) ) return 10000;
 
-    // USDT price = 1.0000 USD
-    if ( symcode == USDT.code() ) return 10000;
+    oracle::tokens_table _tokens( get_self(), get_self().value );
+    const symbol_code symcode = sym.code();
+    auto token = _tokens.get( symcode.raw(), "oracle::get_oracle_price: [symbol] does not exists");
+    check(token.sym == sym, "oracle::get_oracle_price: [symbol] does not match token");
 
     // Defibox Oracle
     const int64_t price1 = get_defibox_price( *token.defibox_oracle_id );
@@ -674,4 +682,9 @@ void oracle::require_auth_admin( const name account )
 {
     if ( has_auth( get_config().admin_contract ) ) return;
     require_auth( account );
+}
+
+bool oracle::is_stable( const symbol sym )
+{
+    return sym == USDT || sym == USDC || sym == USD;
 }

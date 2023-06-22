@@ -24,6 +24,7 @@ public:
     const symbol EOS = {"EOS", 4};
     const symbol USD = {"USD", 4};
     const symbol USDT = {"USDT", 4};
+    const symbol USDC = {"USDC", 4};
     const name USDT_CONTRACT = "tethertether"_n;
 
     // CONSTANTS
@@ -308,18 +309,18 @@ public:
      * ### params
      *
      * - `{bytes} address` - token EOS EVM address
-     * - `{uint8_t} decimals` - token decimals
-     * - `{symbol_code} symcode` - token symbol code
+     * - `{uint8_t} decimals` - token EOS EVM decimals
+     * - `{symbol} sym` - token symbol
      *
      * ### example
      *
      * ```bash
-     * $ cleos push action oracle.yield addevmtoken '["fa9343c3897324496a05fc75abed6bac29f8a40f", 6, "USDT"]' -p oracle.yield
-     * $ cleos push action oracle.yield addevmtoken '["c00592aA41D32D137dC480d9f6d0Df19b860104F", 18, "EOS"]' -p oracle.yield
+     * $ cleos push action oracle.yield addevmtoken '["fa9343c3897324496a05fc75abed6bac29f8a40f", 6, "4,USDT"]' -p oracle.yield
+     * $ cleos push action oracle.yield addevmtoken '["c00592aA41D32D137dC480d9f6d0Df19b860104F", 18, "4,EOS"]' -p oracle.yield
      * ```
      */
     [[eosio::action]]
-    void addevmtoken( const bytes address, const uint8_t decimals, const symbol_code symcode );
+    void addevmtoken( const bytes address, const uint8_t decimals, const symbol sym );
 
     /**
      * ## ACTION `deltoken`
@@ -838,10 +839,11 @@ private:
     // calculate prices
     int64_t calculate_usd_value( const asset quantity );
     int64_t convert_usd_to_eos( const int64_t usd );
-    int64_t get_oracle_price( const symbol_code symcode );
+    int64_t get_oracle_price( const symbol sym );
     int64_t normalize_price( const int64_t price, const uint8_t precision );
     int64_t get_delphi_price( const name delphi_oracle_id );
     int64_t get_defibox_price( const uint64_t defibox_oracle_id );
+    bool is_stable( const symbol sym );
 
     // EVM
     int64_t bytes_to_int64( const bytes data, const uint8_t decimals );

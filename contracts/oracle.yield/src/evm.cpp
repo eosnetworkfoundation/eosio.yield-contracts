@@ -1,6 +1,6 @@
 // @system
 [[eosio::action]]
-void oracle::addevmtoken( const bytes address, const uint8_t decimals, const symbol_code symcode )
+void oracle::addevmtoken( const bytes address, const uint8_t decimals, const symbol sym )
 {
     require_auth( get_self() );
 
@@ -9,15 +9,19 @@ void oracle::addevmtoken( const bytes address, const uint8_t decimals, const sym
     evm_contract::account_table _account( get_self(), get_self().value );
 
     // validate
-    const auto token = _tokens.get( symcode.raw(), "oracle::addevmtoken: [symcode] token not found" );
     const uint64_t account_id = evm_contract::get_account_id(address);
+
+    if (!is_stable(sym)) {
+        const auto token = _tokens.get( sym.code().raw(), "oracle::addevmtoken: [sym] token not found" );
+        check( token.sym == sym, "oracle::addevmtoken: [sym] does not match with existing token");
+    }
 
     // add supported token
     auto insert = [&]( auto& row ) {
         row.token_id = account_id;
         row.address = address;
         row.decimals = decimals;
-        row.sym = token.sym;
+        row.sym = sym;
     };
 
     // modify or create

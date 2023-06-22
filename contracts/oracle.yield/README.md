@@ -225,14 +225,14 @@ cleos push action oracle.yield deltoken '["EOS"]' -p oracle.yield
 ### params
 
 - `{bytes} address` - token EOS EVM address
-- `{uint8_t} decimals` - token decimals
-- `{symbol_code} symcode` - token symbol code
+- `{uint8_t} decimals` - token EOS EVM decimals
+- `{symbol} symcode` - token symbol
 
 ### example
 
 ```bash
-$ cleos push action oracle.yield addevmtoken '["fa9343c3897324496a05fc75abed6bac29f8a40f", 6, "USDT"]' -p oracle.yield
-$ cleos push action oracle.yield addevmtoken '["c00592aA41D32D137dC480d9f6d0Df19b860104F", 18, "EOS"]' -p oracle.yield
+$ cleos push action oracle.yield addevmtoken '["fa9343c3897324496a05fc75abed6bac29f8a40f", 6, "4,USDT"]' -p oracle.yield
+$ cleos push action oracle.yield addevmtoken '["c00592aA41D32D137dC480d9f6d0Df19b860104F", 18, "4,EOS"]' -p oracle.yield
 ```
 
 ## ACTION `delevmtoken`
