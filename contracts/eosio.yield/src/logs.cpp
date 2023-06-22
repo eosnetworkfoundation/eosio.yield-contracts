@@ -20,7 +20,7 @@ void yield::rewardslog( const name protocol, const name category, const time_poi
 
 // @eosio.code
 [[eosio::action]]
-void yield::claimlog( const name protocol, const name category, const name receiver, const asset claimed, const asset balance )
+void yield::claimlog( const name protocol, const name category, const name receiver, const string evm_receiver, const asset claimed, const asset balance )
 {
     require_auth( get_self() );
     notify_admin();

@@ -106,7 +106,7 @@ void yield::setmetakey( const name protocol, const name key, const optional<stri
 
 // @protocol
 [[eosio::action]]
-void yield::claim( const name protocol, const optional<name> receiver )
+void yield::claim( const name protocol, const optional<name> receiver, const optional<string> evm_receiver )
 {
     require_auth_admin(protocol);
 
@@ -124,8 +124,12 @@ void yield::claim( const name protocol, const optional<name> receiver )
     check( balance >= claimable.quantity, "yield::claim: contract has insuficient balance, please contact administrator");
 
     // transfer funds to receiver
-    const name to = receiver ? *receiver : protocol;
-    transfer( get_self(), to, claimable, "Yield+ TVL reward");
+    if ( evm_receiver ) {
+        transfer( get_self(), "eosio.evm"_n, claimable, *evm_receiver);
+    } else {
+        const name to = receiver ? *receiver : protocol;
+        transfer( get_self(), to, claimable, "Yield+ TVL reward");
+    }
 
     // modify balances
     _protocols.modify( itr, same_payer, [&]( auto& row ) {
@@ -135,7 +139,7 @@ void yield::claim( const name protocol, const optional<name> receiver )
 
     // logging
     yield::claimlog_action claimlog( get_self(), { get_self(), "active"_n });
-    claimlog.send( protocol, itr.category, to, claimable.quantity, itr.balance.quantity );
+    claimlog.send( protocol, itr.category, *receiver, *evm_receiver, claimable.quantity, itr.balance.quantity );
 }
 
 void yield::set_status( const name protocol, const name status )

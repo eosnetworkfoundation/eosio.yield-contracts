@@ -29,11 +29,14 @@ $ cleos push action eosio.yield setcontracts '[protocol, [a.protocol, b.protocol
 # claim rewards
 # > after 24 hours of being approved
 # > claimable every 10 minutes interval
-$ cleos push action eosio.yield claim '[myprotocol, null]' -p myprotocol
+$ cleos push action eosio.yield claim '[myprotocol, null, null]' -p myprotocol
 # //=> rewards sent to myprotocol
 
-$ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
+$ cleos push action eosio.yield claim '[myprotocol, myreceiver, null]' -p myprotocol
 # //=> rewards sent to myreceiver
+
+$ cleos push action eosio.yield claim '[myprotocol, null, "517144a9d542c6325CE77Ba2F94d2b05ACBaA087"]' -p myprotocol
+# // => rewards sent to 517144a9d542c6325CE77Ba2F94d2b05ACBaA087
 ```
 
 ### `ADMIN` (Operators)
@@ -333,15 +336,19 @@ $ cleos push action eosio.yield deny '[myprotocol]' -p admin.yield
 
 - `{name} protocol` - protocol
 - `{name} [receiver=""]` - (optional) receiver of rewards (default=protocol)
+- `{string} [evm_receiver=""]` - (optional) EVM receiver of rewards (default=protocol)
 
 ### Example
 
 ```bash
-$ cleos push action eosio.yield claim '[myprotocol, null]' -p myprotocol
-//=> rewards sent to myprotocol
+$ cleos push action eosio.yield claim '[myprotocol, null, null]' -p myprotocol
+# //=> rewards sent to myprotocol
 
-$ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
-//=> rewards sent to myreceiver
+$ cleos push action eosio.yield claim '[myprotocol, myreceiver, null]' -p myprotocol
+# //=> rewards sent to myreceiver
+
+$ cleos push action eosio.yield claim '[myprotocol, null, "517144a9d542c6325CE77Ba2F94d2b05ACBaA087"]' -p myprotocol
+# //=> rewards sent to 517144a9d542c6325CE77Ba2F94d2b05ACBaA087
 ```
 
 ## ACTION `claimlog`
@@ -355,6 +362,7 @@ $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
 - `{name} protocol` - protocol
 - `{name} category` - protocol category
 - `{name} receiver` - receiver of rewards
+- `{string} evm_receiver` - EVM receiver of rewards
 - `{asset} claimed` - claimed rewards
 
 ### Example
@@ -364,6 +372,7 @@ $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
     "protocol": "myprotocol",
     "category": "dexes",
     "receiver": "myreceiver",
+    "evm_receiver": "517144a9d542c6325CE77Ba2F94d2b05ACBaA087",
     "claimed":"1.5500 EOS"
 }
 ```

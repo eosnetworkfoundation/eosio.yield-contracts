@@ -365,19 +365,23 @@ public:
      *
      * - `{name} protocol` - protocol
      * - `{name} [receiver=""]` - (optional) receiver of rewards (default=protocol)
+     * - `{string} [evm_receiver=""]` - (optional) EVM receiver of rewards (default=protocol)
      *
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield claim '[myprotocol, null]' -p myprotocol
+     * $ cleos push action eosio.yield claim '[myprotocol, null, null]' -p myprotocol
      * //=> rewards sent to myprotocol
      *
-     * $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
+     * $ cleos push action eosio.yield claim '[myprotocol, myreceiver, null]' -p myprotocol
      * //=> rewards sent to myreceiver
+     *
+     * $ cleos push action eosio.yield claim '[myprotocol, null, "517144a9d542c6325CE77Ba2F94d2b05ACBaA087"]' -p myprotocol
+     * //=> rewards sent to 517144a9d542c6325CE77Ba2F94d2b05ACBaA087
      * ```
      */
     [[eosio::action]]
-    void claim( const name protocol, const optional<name> receiver );
+    void claim( const name protocol, const optional<name> receiver, const optional<string> evm_receiver );
 
     /**
      * ## ACTION `report`
@@ -415,6 +419,7 @@ public:
      * - `{name} protocol` - protocol
      * - `{name} category` - protocol category
      * - `{name} [receiver=""]` - (optional) receiver of rewards
+     * - `{string} [evm_receiver=""]` - (optional) EVM receiver of rewards
      * - `{asset} claimed` - claimed rewards
      * - `{asset} balance` - balance available to be claimed
      *
@@ -425,13 +430,14 @@ public:
      *     "protocol": "myprotocol",
      *     "category": "dexes",
      *     "receiver": "myreceiver",
+     *     "evm_receiver": "517144a9d542c6325CE77Ba2F94d2b05ACBaA087",
      *     "claimed": "1.5500 EOS",
      *     "balance": 0.0000 EOS"
      * }
      * ```
      */
     [[eosio::action]]
-    void claimlog( const name protocol, const name category, const name receiver, const asset claimed, const asset balance );
+    void claimlog( const name protocol, const name category, const name receiver, const string evm_receiver, const asset claimed, const asset balance );
 
     /**
      * ## ACTION `rewardslog`
