@@ -49,13 +49,12 @@ void oracle::setbalance( const bytes contract, const bytes address, const asset 
 {
     require_auth( get_self() );
 
-    oracle::tokens_table _tokens( get_self(), get_self().value );
     oracle::evm_tokens_table _evm_tokens( get_self(), get_self().value );
 
     // validate
-    _tokens.get( balance.symbol.code().raw(), "oracle::setbalance: [balance.symbol.code] token not found" );
     const uint64_t token_id = evm_contract::get_account_id(contract);
     const uint64_t address_id = evm_contract::get_account_id(address);
+    _evm_tokens.get( token_id, "oracle::setbalance: [token_id] token not found" );
 
     // add supported token
     auto insert = [&]( auto& row ) {
@@ -78,6 +77,6 @@ asset oracle::get_evm_balance_quantity(const uint64_t token_id, const string evm
 
     const auto itr = _evm_balances.find( address_id );
     if ( itr == _evm_balances.end() ) return { 0, sym };
-    check( itr->balance.symbol == sym, "oracle::get_balance_amount: [sym] does not match");
+    check( itr->balance.symbol == sym, "oracle::get_evm_balance_quantity: [sym] does not match");
     return itr->balance;
 }
