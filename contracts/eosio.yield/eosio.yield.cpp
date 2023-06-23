@@ -206,7 +206,7 @@ void yield::deny( const name protocol )
 
 // @system
 [[eosio::action]]
-void yield::setrate( const int16_t annual_rate, const asset min_tvl_report, const asset max_tvl_report )
+void yield::setrate( const optional<int16_t> annual_rate, const optional<asset> min_tvl_report, const optional<asset> max_tvl_report )
 {
     require_auth( get_self() );
 
@@ -214,16 +214,15 @@ void yield::setrate( const int16_t annual_rate, const asset min_tvl_report, cons
     check( _config.exists(), "yield::setrate: contract must first call [init] action");
     auto config = get_config();
 
-    check( annual_rate <= MAX_ANNUAL_RATE, "yield::setrate: [annual_rate] exceeds maximum annual rate");
-    check( min_tvl_report <= max_tvl_report, "yield::setrate: [min_tvl_report] must be less than [max_tvl_report]");
+    if ( annual_rate ) config.annual_rate = *annual_rate;
+    if ( min_tvl_report ) config.min_tvl_report = *min_tvl_report;
+    if ( max_tvl_report ) config.max_tvl_report = *max_tvl_report;
 
-    // validate symbols
-    check( min_tvl_report.symbol == EOS, "yield::setrate: [min_tvl_report] invalid EOS symbol");
-    check( max_tvl_report.symbol == EOS, "yield::setrate: [min_tvl_report] invalid EOS symbol");
+    check( config.annual_rate <= MAX_ANNUAL_RATE, "yield::setrate: [annual_rate] exceeds maximum annual rate");
+    check( config.min_tvl_report <= config.max_tvl_report, "yield::setrate: [min_tvl_report] must be less than [max_tvl_report]");
+    check( config.min_tvl_report.symbol == EOS, "yield::setrate: [min_tvl_report] invalid EOS symbol");
+    check( config.max_tvl_report.symbol == EOS, "yield::setrate: [min_tvl_report] invalid EOS symbol");
 
-    config.annual_rate = annual_rate;
-    config.min_tvl_report = min_tvl_report;
-    config.max_tvl_report = max_tvl_report;
     _config.set(config, get_self());
 }
 

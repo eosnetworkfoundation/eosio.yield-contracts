@@ -172,18 +172,19 @@ public:
      *
      * ### params
      *
-     * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
-     * - `{asset} min_tvl_report` - minimum TVL report
-     * - `{asset} max_tvl_report` - maximum TVL report
+     * - `{uint16_t} [annual_rate]` - (optional) annual rate (pips 1/100 of 1%)
+     * - `{asset} [min_tvl_report]` - (optional) minimum TVL report
+     * - `{asset} [max_tvl_report]` - (optional) maximum TVL report
      *
      * ### Example
      *
      * ```bash
      * $ cleos push action eosio.yield setrate '[500, "200000.0000 EOS", "6000000.0000 EOS"]' -p eosio.yield
+     * $ cleos push action eosio.yield setrate '[500, null, null]' -p eosio.yield
      * ```
      */
     [[eosio::action]]
-    void setrate( const int16_t annual_rate, const asset min_tvl_report, const asset max_tvl_report );
+    void setrate( const optional<int16_t> annual_rate, const optional<asset> min_tvl_report, const optional<asset> max_tvl_report );
 
     /**
      * ## ACTION `regprotocol`
