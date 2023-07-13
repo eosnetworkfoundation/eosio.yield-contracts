@@ -24,6 +24,7 @@ public:
     const symbol EOS = {"EOS", 4};
     const symbol USD = {"USD", 4};
     const symbol USDT = {"USDT", 4};
+    const symbol USDC = {"USDC", 4};
     const name USDT_CONTRACT = "tethertether"_n;
 
     // CONSTANTS
@@ -98,6 +99,75 @@ public:
     typedef eosio::multi_index< "tokens"_n, tokens_row> tokens_table;
 
     /**
+     * ## TABLE `evm.tokens`
+     *
+     * ### params
+     *
+     * - `{uint64_t} token_id` - (primary key) EOS EVM token account ID
+     * - `{bytes} address` - EOS EVM token address
+     * - `{uint8_t} decimals` - EOS EVM token decimals
+     * - `{symbol} sym` - token symbol
+     *
+     * ### example
+     *
+     * ```json
+     * [
+     *     {
+     *         "token_id": 2,
+     *         "address": "c00592aA41D32D137dC480d9f6d0Df19b860104F",
+     *         "decimals": "18",
+     *         "sym": "4,EOS"
+     *     }
+     *     {
+     *         "token_id": 201,
+     *         "address": "fa9343c3897324496a05fc75abed6bac29f8a40f",
+     *         "decimals": "6",
+     *         "sym": "4,USDT"
+     *     },
+     * ]
+     * ```
+     */
+    struct [[eosio::table("evm.tokens")]] evm_tokens_row {
+        uint64_t                token_id;
+        bytes                   address;
+        uint8_t                 decimals;
+        symbol                  sym;
+
+        uint64_t primary_key() const { return token_id; }
+    };
+    typedef eosio::multi_index< "evm.tokens"_n, evm_tokens_row> evm_tokens_table;
+
+    /**
+     * ## TABLE `evm.balances`
+     *
+     * **Scope**: `<uint64_t> token_id`
+     *
+     * ### params
+     *
+     * - `{uint64_t} address_id` - (primary key) EOS EVM address account ID
+     * - `{bytes} address` - EOS EVM address
+     * - `{asset} balance` - current token balance
+     *
+     * ### example
+     *
+     * ```json
+     * {
+     *     "address_id": 663,
+     *     "address": "671A5e209A5496256ee21386EC3EaB9054d658A2",
+     *     "balance": "173151.7110 USDT"
+     * }
+     * ```
+     */
+    struct [[eosio::table("evm.balances")]] evm_balances_row {
+        uint64_t                address_id;
+        bytes                   address;
+        asset                   balance;
+
+        uint64_t primary_key() const { return address_id; }
+    };
+    typedef eosio::multi_index< "evm.balances"_n, evm_balances_row> evm_balances_table;
+
+    /**
      * ## TABLE `periods`
      *
      * - scope: `{name} protocol`
@@ -107,8 +177,8 @@ public:
      * - `{time_point_sec} period` - (primary key) period at time
      * - `{name} protocol` - protocol contract
      * - `{name} category` - protocol category
-     * - `{set<name>} contracts.eos` - additional supporting EOS contracts
-     * - `{set<string>} contracts.evm` - additional supporting EVM contracts
+     * - `{set<name>} contracts` - EOS contracts
+     * - `{set<string>} evm_contracts` - EOS EVM contracts
      * - `{vector<asset>} balances` - asset balances
      * - `{vector<asset>} prices` - currency prices
      * - `{asset} tvl` - reported TVL averaged value in EOS
@@ -121,7 +191,7 @@ public:
      *     "period": "2022-05-13T00:00:00",
      *     "protocol": "myprotocol",
      *     "contracts": ["myprotocol", "mytreasury"],
-     *     "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"],
+     *     "evm_contracts": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"],
      *     "balances": ["1000.0000 EOS", "1500.0000 USDT"],
      *     "prices": ["1.5000 USD", "1.0000 USD"],
      *     "tvl": "200000.0000 EOS",
@@ -134,7 +204,7 @@ public:
         name                    protocol;
         name                    category;
         set<name>               contracts;
-        set<string>             evm;
+        set<string>             evm_contracts;
         vector<asset>           balances;
         vector<asset>           prices;
         asset                   tvl;
@@ -230,6 +300,29 @@ public:
     void addtoken( const symbol_code symcode, const name contract, const optional<uint64_t> defibox_oracle_id, const optional<name> delphi_oracle_id );
 
     /**
+     * ## ACTION `addevmtoken`
+     *
+     * - **authority**: `get_self()`
+     *
+     * > Add {{sym}} token using {{address}} EOS EVM address.
+     *
+     * ### params
+     *
+     * - `{bytes} address` - token EOS EVM address
+     * - `{uint8_t} decimals` - token EOS EVM decimals
+     * - `{symbol} sym` - token symbol
+     *
+     * ### example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield addevmtoken '["fa9343c3897324496a05fc75abed6bac29f8a40f", 6, "4,USDT"]' -p oracle.yield
+     * $ cleos push action oracle.yield addevmtoken '["c00592aA41D32D137dC480d9f6d0Df19b860104F", 18, "4,EOS"]' -p oracle.yield
+     * ```
+     */
+    [[eosio::action]]
+    void addevmtoken( const bytes address, const uint8_t decimals, const symbol sym );
+
+    /**
      * ## ACTION `deltoken`
      *
      * - **authority**: `get_self()`
@@ -248,6 +341,26 @@ public:
      */
     [[eosio::action]]
     void deltoken( const symbol_code symcode );
+
+    /**
+     * ## ACTION `delevmtoken`
+     *
+     * - **authority**: `get_self()`
+     *
+     * > Delete {{address}} EOS EVM token as supported asset
+     *
+     * ### params
+     *
+     * - `{bytes} address` - EOS EVM token address
+     *
+     * ### example
+     *
+     * ```bash
+     * $ cleos push action oracle.yield deltoken '["fa9343c3897324496a05fc75abed6bac29f8a40f"]' -p oracle.yield
+     * ```
+     */
+    [[eosio::action]]
+    void delevmtoken( const bytes address );
 
     /**
      * ## ACTION `setreward`
@@ -658,6 +771,17 @@ public:
     [[eosio::action]]
     void rewardslog( const name oracle, const asset rewards, const asset balance );
 
+    [[eosio::action]]
+    void callback( const int32_t status, bytes data, const std::optional<bytes> context );
+
+    [[eosio::action]]
+    void balanceof( const bytes contract, const bytes address );
+    using balanceof_action = eosio::action_wrapper<"balanceof"_n, &oracle::balanceof>;
+
+    [[eosio::action]]
+    void setbalance( const bytes contract, const bytes address, const asset balance );
+    using setbalance_action = eosio::action_wrapper<"setbalance"_n, &oracle::setbalance>;
+
     [[eosio::on_notify("*::transfer")]]
     void on_transfer( const name from, const name to, const asset quantity, const std::string memo );
 
@@ -715,10 +839,15 @@ private:
     // calculate prices
     int64_t calculate_usd_value( const asset quantity );
     int64_t convert_usd_to_eos( const int64_t usd );
-    int64_t get_oracle_price( const symbol_code symcode );
+    int64_t get_oracle_price( const symbol sym );
     int64_t normalize_price( const int64_t price, const uint8_t precision );
     int64_t get_delphi_price( const name delphi_oracle_id );
     int64_t get_defibox_price( const uint64_t defibox_oracle_id );
+    bool is_stable( const symbol sym );
+
+    // EVM
+    int64_t bytes_to_int64( const bytes data, const uint8_t decimals );
+    asset get_evm_balance_quantity(const uint64_t token_id, const string evm_contract, const symbol sym );
 
     // DEBUG (used to help testing)
     #ifdef DEBUG

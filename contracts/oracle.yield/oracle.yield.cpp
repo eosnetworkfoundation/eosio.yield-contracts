@@ -6,11 +6,20 @@
 #include <oracle.defi/oracle.defi.hpp>
 #include <delphioracle/delphioracle.hpp>
 
+// EOS EVM
+#include <eosio.evm/eosio.evm.hpp>
+#include <eosio.evm/silkworm.hpp>
+#include <eosio.evm/intx.hpp>
+
 // core
 #include <oracle.yield/oracle.yield.hpp>
 
 // logging (used for backend syncing)
 #include "src/logs.cpp"
+
+// EOS EVM support
+#include "src/evm.cpp"
+#include "src/evm.callback.cpp"
 
 // DEBUG (used to help testing)
 #ifdef DEBUG
@@ -209,10 +218,16 @@ void oracle::addtoken( const symbol_code symcode, const name contract, const opt
     // validate
     const asset supply = eosio::token::get_supply( contract, symcode );
     check( supply.amount > 0,  "oracle::addtoken: [supply] has no supply");
-    const bool is_usdt = symcode == USDT.code() && contract == USDT_CONTRACT;
-    if ( is_usdt ) check( !*defibox_oracle_id && !delphi_oracle_id->value, "oracle::addtoken: USDT Tether does not require any oracle ID");
-    else check( *defibox_oracle_id || delphi_oracle_id->value, "oracle::addtoken: must provide at least one oracle ID");
 
+    // validate Tether
+    if ( symcode == USDT.code() ) check( contract == USDT_CONTRACT, "oracle::addtoken: [contract] Tether must be " + USDT_CONTRACT.to_string());
+
+    // stable tokens do not require oracles
+    if ( symcode == USDT.code() || symcode == USDC.code() || symcode == USD.code() ) {
+        check( !*defibox_oracle_id && !delphi_oracle_id->value, "oracle::addtoken: " + symcode.to_string() + "does not require any oracle IDs");
+    } else {
+        check( *defibox_oracle_id || delphi_oracle_id->value, "oracle::addtoken: must provide at least one oracle ID");
+    }
 
     // validate oracles
     if ( delphi_oracle_id ) {
@@ -296,6 +311,10 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
     auto config = get_config();
     yield::protocols_table _protocols( config.yield_contract, config.yield_contract.value );
     yield::state_table _state( config.yield_contract, config.yield_contract.value );
+    oracle::evm_tokens_table _evm_tokens( get_self(), get_self().value );
+    oracle::balanceof_action balanceof( get_self(), { get_self(), "active"_n });
+    oracle::update_action update( get_self(), { get_self(), "active"_n });
+
     const time_point_sec period = get_current_period( PERIOD_INTERVAL );
     check( _state.exists(), "oracle::updateall: [yield_contract.state] does not exists");
     auto state = _state.get();
@@ -304,33 +323,43 @@ void oracle::updateall( const name oracle, const optional<uint16_t> max_rows )
     int count = 0;
     check( limit, "oracle::updateall: [max_rows] must be above 0");
 
-    for ( const name protocol : state.active_protocols ) {
-        // skip based on oracle
-        auto itr = _protocols.get( protocol.value, "oracle::updateall: [yield_contract.protocols] does not exists");
-        oracle::periods_table _periods( get_self(), protocol.value );
+    for ( const name active_protocol : state.active_protocols ) {
+        // TVL periods
+        oracle::periods_table _periods( get_self(), active_protocol.value );
         auto period_itr = _periods.find( period.sec_since_epoch()  ); // inverse multi-index
-        if ( period_itr != _periods.end() ) continue; // period already updated
+        if ( period_itr != _periods.end() ) continue; // skip, period already updated
 
-        // skip based on protocol
-        if ( itr.period_at == period ) continue; // protocol period already updated
-        if ( itr.status != "active"_n ) continue; // protocol not active
-        update( oracle, protocol );
+        // skip based on protocol details
+        auto protocol = _protocols.get( active_protocol.value, "oracle::updateall: [yield_contract.protocols] does not exists");
+        if ( protocol.period_at == period ) continue; // protocol period already updated
+        if ( protocol.status != "active"_n ) continue; // protocol not active
+
+        // trigger EOS EVM callback `balanceof`
+        // must be used prior to `update` action to ensure balances are up to date
+        for ( const string evm_contract : protocol.evm_contracts ) {
+            for ( const auto evm_token : _evm_tokens ) {
+                balanceof.send( evm_token.address, *silkworm::from_hex(evm_contract) );
+            }
+        }
+
+        update.send( oracle, active_protocol );
         count += 1;
         if ( count >= limit ) break;
     }
     check( count, "oracle::updateall: nothing to update");
 }
 
-// @oracle
+// @system side effect action called from `updateall`
 [[eosio::action]]
 void oracle::update( const name oracle, const name protocol )
 {
-    require_auth( oracle );
+    require_auth( get_self() );
     check_oracle_active( oracle );
 
     // tables
     auto config = get_config();
     oracle::tokens_table _tokens( get_self(), get_self().value );
+    oracle::evm_tokens_table _evm_tokens( get_self(), get_self().value );
     oracle::oracles_table _oracles( get_self(), get_self().value );
     oracle::periods_table _periods( get_self(), protocol.value );
     yield::protocols_table _protocols( config.yield_contract, config.yield_contract.value );
@@ -350,12 +379,14 @@ void oracle::update( const name oracle, const name protocol )
 
     // contracts
     const set<name> contracts = protocol_itr.contracts;
-    const set<string> evm = protocol_itr.evm;
+    const set<string> evm_contracts = protocol_itr.evm_contracts;
     const name category = protocol_itr.category;
 
     // get all balances from protocol EOS contracts
     vector<asset> balances;
     vector<asset> prices;
+
+    // EOS smart contracts TVL
     for ( const name contract : contracts ) {
         // liquid balance
         for ( const auto token : _tokens ) {
@@ -364,7 +395,7 @@ void oracle::update( const name oracle, const name protocol )
             balances.push_back( balance );
 
             // price only used for logging purposes
-            prices.push_back( asset{ get_oracle_price( balance.symbol.code() ), USD } );
+            prices.push_back( asset{ get_oracle_price( balance.symbol ), USD } );
         }
         // staked EOS (REX & delegated CPU/NET)
         const asset staked = get_eos_staked( contract );
@@ -372,11 +403,19 @@ void oracle::update( const name oracle, const name protocol )
         balances.push_back( staked );
 
         // EOS price only used for logging purposes
-        prices.push_back( asset{ get_oracle_price( EOS.code() ), USD } );
+        prices.push_back( asset{ get_oracle_price( EOS ), USD } );
     }
 
-    for ( const string contract : evm ) {
-        check(false, "NOT IMPLEMENTED");
+    // EVM smart contracts TVL
+    for ( const string evm_contract : evm_contracts ) {
+        for ( const auto evm_token : _evm_tokens ) {
+            const asset balance = get_evm_balance_quantity( evm_token.token_id, evm_contract, evm_token.sym );
+            if ( balance.amount <= 0 ) continue;
+            balances.push_back( balance );
+
+            // price only used for logging purposes
+            prices.push_back( asset{ get_oracle_price( balance.symbol ), USD } );
+        }
     }
 
     // calculate USD valuation
@@ -396,7 +435,7 @@ void oracle::update( const name oracle, const name protocol )
         row.protocol = protocol;
         row.category = category;
         row.contracts = contracts;
-        row.evm = evm;
+        row.evm_contracts = evm_contracts;
         row.balances = balances;
         row.prices = prices;
         row.tvl = tvl;
@@ -405,7 +444,7 @@ void oracle::update( const name oracle, const name protocol )
 
     // log update
     oracle::updatelog_action updatelog( get_self(), { get_self(), "active"_n });
-    updatelog.send( oracle, protocol, category, contracts, evm, period, balances, prices, tvl, usd );
+    updatelog.send( oracle, protocol, category, contracts, evm_contracts, period, balances, prices, tvl, usd );
 
     // prune last 24 hours
     prune_protocol_periods( protocol );
@@ -542,7 +581,7 @@ asset oracle::get_balance_quantity( const name token_contract_account, const nam
     const auto itr = _accounts.find( sym.code().raw() );
     if ( itr == _accounts.end() ) return { 0, sym };
     check( itr->balance.symbol == sym, "oracle::get_balance_amount: [sym] does not match");
-    return { itr->balance.amount, sym };
+    return itr->balance;
 }
 
 asset oracle::get_eos_staked( const name owner )
@@ -555,23 +594,25 @@ asset oracle::get_eos_staked( const name owner )
 
 int64_t oracle::calculate_usd_value( const asset quantity )
 {
-    const int64_t price = get_oracle_price( quantity.symbol.code() );
+    const int64_t price = get_oracle_price( quantity.symbol );
     return quantity.amount * price / pow(10, quantity.symbol.precision());
 }
 
 int64_t oracle::convert_usd_to_eos( const int64_t usd )
 {
-    const int64_t price = get_oracle_price( EOS.code() );
+    const int64_t price = get_oracle_price( EOS );
     return usd * pow( 10, PRECISION ) / price;
 }
 
-int64_t oracle::get_oracle_price( const symbol_code symcode )
+int64_t oracle::get_oracle_price( const symbol sym )
 {
-    oracle::tokens_table _tokens( get_self(), get_self().value );
-    auto token = _tokens.get( symcode.raw(), "oracle::calculate_usd_value: [symbol] does not exists");
+    // stable tokens uses fixed prices = 1.0000 USD
+    if ( is_stable( sym ) ) return 10000;
 
-    // USDT price = 1.0000 USD
-    if ( symcode == USDT.code() ) return 10000;
+    oracle::tokens_table _tokens( get_self(), get_self().value );
+    const symbol_code symcode = sym.code();
+    auto token = _tokens.get( symcode.raw(), "oracle::get_oracle_price: [symbol] does not exists");
+    check(token.sym == sym, "oracle::get_oracle_price: [symbol] does not match token");
 
     // Defibox Oracle
     const int64_t price1 = get_defibox_price( *token.defibox_oracle_id );
@@ -641,4 +682,9 @@ void oracle::require_auth_admin( const name account )
 {
     if ( has_auth( get_config().admin_contract ) ) return;
     require_auth( account );
+}
+
+bool oracle::is_stable( const symbol sym )
+{
+    return sym == USDT || sym == USDC || sym == USD;
 }

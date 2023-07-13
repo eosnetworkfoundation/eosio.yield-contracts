@@ -29,11 +29,14 @@ $ cleos push action eosio.yield setcontracts '[protocol, [a.protocol, b.protocol
 # claim rewards
 # > after 24 hours of being approved
 # > claimable every 10 minutes interval
-$ cleos push action eosio.yield claim '[myprotocol, null]' -p myprotocol
+$ cleos push action eosio.yield claim '[myprotocol, null, null]' -p myprotocol
 # //=> rewards sent to myprotocol
 
-$ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
+$ cleos push action eosio.yield claim '[myprotocol, myreceiver, null]' -p myprotocol
 # //=> rewards sent to myreceiver
+
+$ cleos push action eosio.yield claim '[myprotocol, null, "517144a9d542c6325CE77Ba2F94d2b05ACBaA087"]' -p myprotocol
+# // => rewards sent to 517144a9d542c6325CE77Ba2F94d2b05ACBaA087
 ```
 
 ### `ADMIN` (Operators)
@@ -243,7 +246,7 @@ $ cleos push action eosio.yield setmetakey '[myprotocol, website, "https://mypro
 
 > Unregister the {{protocol}} protocol.
 
-- **authority**: `protocol`
+- **authority**: `protocol` or `admin.yield`
 
 ### params
 
@@ -264,29 +267,14 @@ $ cleos push action eosio.yield unregister '[myprotocol]' -p myprotocol
 ### params
 
 - `{name} protocol` - protocol (will be included in EOS contracts)
-- `{set<name>} contracts` - additional EOS contracts
+- `{set<name>} contracts` - EOS smart contracts
+- `{set<string>} evm_contracts` - EOS EVM smart contracts
 
 ### Example
 
 ```bash
-$ cleos push action eosio.yield setcontracts '[myprotocol, [myvault]]' -p myprotocol -p myvault
-```
-
-## ACTION `setevm`
-
-> Sets EVM contracts for the {{protocol}} protocol.
-
-- **authority**: (`protocol` AND `evm`) OR `admin.yield`
-
-### params
-
-- `{name} protocol` - protocol (will be included in EOS contracts)
-- `{set<string>} evm` - additional EVM contracts
-
-### Example
-
-```bash
-$ cleos push action eosio.yield setevm '[myprotocol, ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
+$ cleos push action eosio.yield setcontracts '[myprotocol, [myvault], []]' -p myprotocol
+$ cleos push action eosio.yield setcontracts '[myprotocol, [], ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
 ```
 
 ## ACTION `approve`
@@ -348,15 +336,19 @@ $ cleos push action eosio.yield deny '[myprotocol]' -p admin.yield
 
 - `{name} protocol` - protocol
 - `{name} [receiver=""]` - (optional) receiver of rewards (default=protocol)
+- `{string} [evm_receiver=""]` - (optional) EVM receiver of rewards (default=protocol)
 
 ### Example
 
 ```bash
-$ cleos push action eosio.yield claim '[myprotocol, null]' -p myprotocol
-//=> rewards sent to myprotocol
+$ cleos push action eosio.yield claim '[myprotocol, null, null]' -p myprotocol
+# //=> rewards sent to myprotocol
 
-$ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
-//=> rewards sent to myreceiver
+$ cleos push action eosio.yield claim '[myprotocol, myreceiver, null]' -p myprotocol
+# //=> rewards sent to myreceiver
+
+$ cleos push action eosio.yield claim '[myprotocol, null, "517144a9d542c6325CE77Ba2F94d2b05ACBaA087"]' -p myprotocol
+# //=> rewards sent to 517144a9d542c6325CE77Ba2F94d2b05ACBaA087
 ```
 
 ## ACTION `claimlog`
@@ -370,6 +362,7 @@ $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
 - `{name} protocol` - protocol
 - `{name} category` - protocol category
 - `{name} receiver` - receiver of rewards
+- `{string} evm_receiver` - EVM receiver of rewards
 - `{asset} claimed` - claimed rewards
 
 ### Example
@@ -379,6 +372,7 @@ $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
     "protocol": "myprotocol",
     "category": "dexes",
     "receiver": "myreceiver",
+    "evm_receiver": "517144a9d542c6325CE77Ba2F94d2b05ACBaA087",
     "claimed":"1.5500 EOS"
 }
 ```

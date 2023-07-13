@@ -28,6 +28,7 @@ public:
     const set<name> PROTOCOL_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
     const uint16_t MAX_ANNUAL_RATE = 1000; // maximum rate of 10%
     const uint32_t YEAR = 31536000; // 365 days in seconds
+    const uint16_t MAX_CONTRACTS = 10; // maximum 10 contracts per protocol (due to CPU limitations to compute TVL)
 
     // ERROR MESSAGES
     const string ERROR_CONFIG_NOT_EXISTS = "yield::error: contract is under maintenance";
@@ -91,8 +92,8 @@ public:
      * - `{name} protocol` - primary protocol contract
      * - `{name} status="pending"` - status (`pending/active/denied`)
      * - `{name} category` - protocol category (ex: `dexes/lending/staking`)
-     * - `{set<name>} contracts` - additional supporting EOS contracts
-     * - `{set<string>} evm` - additional supporting EVM contracts
+     * - `{set<name>} contracts` - EOS contracts
+     * - `{set<string>} evm_contracts` - EOS EVM contracts
      * - `{asset} tvl` - reported TVL averaged value in EOS
      * - `{asset} usd` - reported TVL averaged value in USD
      * - `{extended_asset} balance` - balance available to be claimed
@@ -110,7 +111,7 @@ public:
      *     "status": "active",
      *     "category": "dexes",
      *     "contracts": ["myprotocol", "mytreasury"],
-     *     "evm": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"],
+     *     "evm_contracts": ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"],
      *     "tvl": "200000.0000 EOS",
      *     "usd": "300000.0000 USD",
      *     "balance": {"quantity": "2.5000 EOS", "contract": "eosio.token"},
@@ -127,7 +128,7 @@ public:
         name                    status = "pending"_n;
         name                    category;
         set<name>               contracts;
-        set<string>             evm;
+        set<string>             evm_contracts;
         asset                   tvl;
         asset                   usd;
         extended_asset          balance;
@@ -172,18 +173,19 @@ public:
      *
      * ### params
      *
-     * - `{uint16_t} annual_rate` - annual rate (pips 1/100 of 1%)
-     * - `{asset} min_tvl_report` - minimum TVL report
-     * - `{asset} max_tvl_report` - maximum TVL report
+     * - `{uint16_t} [annual_rate]` - (optional) annual rate (pips 1/100 of 1%)
+     * - `{asset} [min_tvl_report]` - (optional) minimum TVL report
+     * - `{asset} [max_tvl_report]` - (optional) maximum TVL report
      *
      * ### Example
      *
      * ```bash
      * $ cleos push action eosio.yield setrate '[500, "200000.0000 EOS", "6000000.0000 EOS"]' -p eosio.yield
+     * $ cleos push action eosio.yield setrate '[500, null, null]' -p eosio.yield
      * ```
      */
     [[eosio::action]]
-    void setrate( const int16_t annual_rate, const asset min_tvl_report, const asset max_tvl_report );
+    void setrate( const optional<int16_t> annual_rate, const optional<asset> min_tvl_report, const optional<asset> max_tvl_report );
 
     /**
      * ## ACTION `regprotocol`
@@ -255,7 +257,7 @@ public:
      *
      * > Unregister the {{protocol}} protocol.
      *
-     * - **authority**: `protocol`
+     * - **authority**: `protocol` or `admin.yield`
      *
      * ### params
      *
@@ -280,37 +282,18 @@ public:
      * ### params
      *
      * - `{name} protocol` - protocol (will be included in EOS contracts)
-     * - `{set<name>} contracts` - additional EOS contracts
+     * - `{set<name>} contracts` - EOS smart contracts
+     * - `{set<string>} evm_contracts` - EOS EVM smart contracts
      *
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield setcontracts '[myprotocol, [myvault]]' -p myprotocol -p myvault
+     * $ cleos push action eosio.yield setcontracts '[myprotocol, [myvault], []]' -p myprotocol
+     * $ cleos push action eosio.yield setcontracts '[myprotocol, [], ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
      * ```
      */
     [[eosio::action]]
-    void setcontracts( const name protocol, const set<name> contracts );
-
-    /**
-     * ## ACTION `setevm`
-     *
-     * > Sets EVM contracts for the {{protocol}} protocol.
-     *
-     * - **authority**: (`protocol` AND `evm`) OR `admin.yield`
-     *
-     * ### params
-     *
-     * - `{name} protocol` - protocol (will be included in EOS contracts)
-     * - `{set<string>} evm` - additional EVM contracts
-     *
-     * ### Example
-     *
-     * ```bash
-     * $ cleos push action eosio.yield setevm '[myprotocol, ["0x2f9ec37d6ccfff1cab21733bdadede11c823ccb0"]]' -p myprotocol
-     * ```
-     */
-    [[eosio::action]]
-    void setevm( const name protocol, const set<string> evm );
+    void setcontracts( const name protocol, const set<name> contracts, const set<string> evm_contracts );
 
     /**
      * ## ACTION `approve`
@@ -384,19 +367,23 @@ public:
      *
      * - `{name} protocol` - protocol
      * - `{name} [receiver=""]` - (optional) receiver of rewards (default=protocol)
+     * - `{string} [evm_receiver=""]` - (optional) EVM receiver of rewards (default=protocol)
      *
      * ### Example
      *
      * ```bash
-     * $ cleos push action eosio.yield claim '[myprotocol, null]' -p myprotocol
+     * $ cleos push action eosio.yield claim '[myprotocol, null, null]' -p myprotocol
      * //=> rewards sent to myprotocol
      *
-     * $ cleos push action eosio.yield claim '[myprotocol, myreceiver]' -p myprotocol
+     * $ cleos push action eosio.yield claim '[myprotocol, myreceiver, null]' -p myprotocol
      * //=> rewards sent to myreceiver
+     *
+     * $ cleos push action eosio.yield claim '[myprotocol, null, "517144a9d542c6325CE77Ba2F94d2b05ACBaA087"]' -p myprotocol
+     * //=> rewards sent to 517144a9d542c6325CE77Ba2F94d2b05ACBaA087
      * ```
      */
     [[eosio::action]]
-    void claim( const name protocol, const optional<name> receiver );
+    void claim( const name protocol, const optional<name> receiver, const optional<string> evm_receiver );
 
     /**
      * ## ACTION `report`
@@ -434,6 +421,7 @@ public:
      * - `{name} protocol` - protocol
      * - `{name} category` - protocol category
      * - `{name} [receiver=""]` - (optional) receiver of rewards
+     * - `{string} [evm_receiver=""]` - (optional) EVM receiver of rewards
      * - `{asset} claimed` - claimed rewards
      * - `{asset} balance` - balance available to be claimed
      *
@@ -444,13 +432,14 @@ public:
      *     "protocol": "myprotocol",
      *     "category": "dexes",
      *     "receiver": "myreceiver",
+     *     "evm_receiver": "517144a9d542c6325CE77Ba2F94d2b05ACBaA087",
      *     "claimed": "1.5500 EOS",
      *     "balance": 0.0000 EOS"
      * }
      * ```
      */
     [[eosio::action]]
-    void claimlog( const name protocol, const name category, const name receiver, const asset claimed, const asset balance );
+    void claimlog( const name protocol, const name category, const name receiver, const string evm_receiver, const asset claimed, const asset balance );
 
     /**
      * ## ACTION `rewardslog`
@@ -661,6 +650,7 @@ private :
     void require_auth_admin();
     void require_auth_admin( const name account );
     bool is_contract( const name contract );
+    name get_ram_payer( const name account );
 
     // DEBUG (used to help testing)
     #ifdef DEBUG

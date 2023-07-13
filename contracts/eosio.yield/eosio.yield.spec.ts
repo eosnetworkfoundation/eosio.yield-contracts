@@ -141,17 +141,12 @@ describe('eosio.yield', () => {
 
   it("setcontracts", async () => {
     const auth = eos_contracts.map(contract => { return { actor: contract, permission: "active"} });
-    await contracts.yield.eosio.actions.setcontracts([ "myprotocol", eos_contracts ]).send(auth);
+    await contracts.yield.eosio.actions.setcontracts([ "myprotocol", eos_contracts, [] ]).send(auth);
     const protocol = getProtocol("myprotocol");
     expect(protocol.contracts).toEqual(eos_contracts);
 
-    const action = contracts.yield.eosio.actions.setcontracts([ "not.exists", eos_contracts ]).send();
-    await expectToThrow(action, "does not exists");
-  });
-
-  it("setevm", async () => {
-    const action = contracts.yield.eosio.actions.setevm([ "myprotocol", evm_contracts ]).send("myprotocol@active");
-    await expectToThrow(action, "NOT IMPLEMENTED");
+    const action = contracts.yield.eosio.actions.setcontracts([ "not.exists", eos_contracts, [] ]).send();
+    await expectToThrow(action, "missing required authority not.exists");
   });
 
   it("admin::approve", async () => {
@@ -164,7 +159,7 @@ describe('eosio.yield', () => {
   });
 
   it("setcontracts - protocol not included by default", async () => {
-    await contracts.yield.eosio.actions.setcontracts([ "myprotocol", ["vault"] ]).send();
+    await contracts.yield.eosio.actions.setcontracts([ "myprotocol", ["vault"], [] ]).send("myprotocol@active");
     const protocol = getProtocol("myprotocol");
     expect(protocol.contracts).toEqual(["vault"]);
   });
