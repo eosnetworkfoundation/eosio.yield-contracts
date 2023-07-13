@@ -345,6 +345,10 @@ void yield::setcontracts( const name protocol, const set<name> contracts, const 
     // Only support EOS or EVM contracts (not both)
     if ( evm_contracts.size() && contracts.size() ) check( false, "yield::setcontracts: cannot include both [evm_contracts] with [contracts]");
 
+    // maximum contracts per protocol (due to CPU limitations to compute TVL)
+    check( contracts.size() <= MAX_CONTRACTS, "yield::setcontracts: [contracts] cannot exceed 10 contracts per protocol");
+    check( evm_contracts.size() <= MAX_CONTRACTS, "yield::setcontracts: [evm_contracts] cannot exceed 10 contracts per protocol");
+
     // validate contracts
     for ( const name contract : contracts ) {
         check( is_account( contract ), "yield::setcontracts: [contract=" + contract.to_string() + "] account does not exists");

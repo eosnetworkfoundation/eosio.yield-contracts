@@ -28,6 +28,7 @@ public:
     const set<name> PROTOCOL_STATUS_TYPES = set<name>{"pending"_n, "active"_n, "denied"_n};
     const uint16_t MAX_ANNUAL_RATE = 1000; // maximum rate of 10%
     const uint32_t YEAR = 31536000; // 365 days in seconds
+    const uint16_t MAX_CONTRACTS = 10; // maximum 10 contracts per protocol (due to CPU limitations to compute TVL)
 
     // ERROR MESSAGES
     const string ERROR_CONFIG_NOT_EXISTS = "yield::error: contract is under maintenance";
