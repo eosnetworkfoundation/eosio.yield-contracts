@@ -1,5 +1,5 @@
 
-# EOS Yield+ [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/facebook/react/blob/main/LICENSE) [![EOSIO Smart Contract](https://github.com/eos-nation/eosio.yield-contracts/actions/workflows/tests.yml/badge.svg)](https://github.com/EOS-Nation/eosio.yield-contracts/actions/workflows/tests.yml)
+# EOS & EVM Yield+ V2 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/facebook/react/blob/main/LICENSE) [![EOSIO Smart Contract](https://github.com/eos-nation/eosio.yield-contracts/actions/workflows/tests.yml/badge.svg)](https://github.com/EOS-Nation/eosio.yield-contracts/actions/workflows/tests.yml)
 
 ## Bluepaper
 
