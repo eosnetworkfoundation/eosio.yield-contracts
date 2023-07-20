@@ -124,7 +124,7 @@ void yield::claim( const name protocol, const optional<name> receiver, const opt
     check( balance >= claimable.quantity, "yield::claim: contract has insuficient balance, please contact administrator");
 
     // transfer funds to receiver
-    if ( evm_receiver ) {
+    if ( evm_receiver->length() ) {
         transfer( get_self(), "eosio.evm"_n, claimable, *evm_receiver);
     } else {
         const name to = receiver ? *receiver : protocol;
